@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2 class="mb-4">Faculty Dashboard</h2>
+<div class="row">
+    <div class="col-md-4">
+        <div class="card bg-white shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <h5 class="card-title fw-bold">Create Exam</h5>
+                <p class="card-text text-muted">Set up a new MCQ exam and upload questions.</p>
+                <a href="{{ url_for('create_exam') }}" class="btn btn-outline-success">Create Exam</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-white shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <h5 class="card-title fw-bold">Analytics</h5>
+                <p class="card-text text-muted">View AI-generated performance reports.</p>
+                <a href="{{ url_for('faculty_analytics') }}" class="btn btn-outline-info">View Reports</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h4 class="mt-4">Your Exams</h4>
+<table class="table table-hover mt-3 shadow-sm bg-white rounded">
+    <thead class="table-light">
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Duration</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for exam in exams %}
+        <tr>
+            <td>{{ exam.id }}</td>
+            <td>{{ exam.title }}</td>
+            <td>{{ exam.duration_minutes }} mins</td>
+            <td>
+                {% if exam.is_published %}
+                <span class="badge bg-success">Published</span>
+                {% else %}
+                <span class="badge bg-warning text-dark">Draft</span>
+                {% endif %}
+            </td>
+            <td>
+                <a href="{{ url_for('edit_exam', exam_id=exam.id) }}" class="btn btn-sm btn-primary">Edit / Push</a>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="5" class="text-center text-muted">No exams created yet.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

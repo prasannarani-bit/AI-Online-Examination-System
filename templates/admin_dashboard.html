@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2 class="mb-4">Admin Dashboard</h2>
+<div class="row">
+    <div class="col-md-4">
+        <div class="card bg-white shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <h5 class="card-title fw-bold">Manage Users</h5>
+                <p class="card-text text-muted">Create Faculty and Student accounts.</p>
+                <a href="{{ url_for('manage_users') }}" class="btn btn-outline-primary">Go to Users</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-white shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <h5 class="card-title fw-bold">Monitor Exams</h5>
+                <p class="card-text text-muted">View live proctoring logs and ongoing exams.</p>
+                <a href="{{ url_for('monitor_exams') }}" class="btn btn-outline-warning">Monitor</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

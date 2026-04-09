@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Exam Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">Agentic Exam System</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0" id="user-nav"></ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <div id="loading" class="text-center mt-5">
+            <div class="spinner-border"></div>
+        </div>
+
+        <div id="content" class="d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 id="pageTitle">Exam Result: </h2>
+                <a href="student_dashboard.html" class="btn btn-outline-secondary">Back to Dashboard</a>
+            </div>
+
+            <div id="violationAlert" class="alert alert-danger d-none shadow-sm mb-4 border-0">
+                <div class="d-flex align-items-center">
+                    <div class="fs-1 me-3">⚠️</div>
+                    <div>
+                        <h4 class="alert-heading fw-bold">Proctoring Violation Detected!</h4>
+                        <p class="mb-0">Our AI Proctoring system has flagged this attempt for suspicious activity (e.g., tab switching, phone detected, or face not seen). Your result has been marked with a <strong>'Bad Review'</strong> status and reported to the faculty.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0 h-100 text-center py-5">
+                        <h4 class="text-muted">Your Score</h4>
+                        <h1 id="scoreDisplay" class="display-1 fw-bold"></h1>
+                        <p class="fs-5 mt-2" id="passFailBadge">
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0 h-100 p-4">
+                        <h5 class="mb-3 text-primary">Performance Summary</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Passing Score Required
+                                <span class="badge bg-secondary rounded-pill" id="passingScore"></span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Time Started
+                                <span class="text-muted small" id="timeStarted"></span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Time Completed
+                                <span class="text-muted small" id="timeCompleted"></span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/api.js"></script>
+    <script>
+        ApiClient.checkAuth(['student']);
+        ApiClient.setupNav();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const attemptId = urlParams.get('attempt_id');
+
+        async function loadResult() {
+            const res = await ApiClient.get(`/student/attempts/${attemptId}/result`);
+            if (res.ok) {
+                const a = res.data.attempt;
+                document.getElementById('loading').classList.add('d-none');
+                document.getElementById('content').classList.remove('d-none');
+
+                document.getElementById('pageTitle').textContent = `Exam Result: ${a.title}`;
+
+                const scoreElem = document.getElementById('scoreDisplay');
+                scoreElem.textContent = `${a.score}%`;
+                if (a.score >= a.passing_score) {
+                    scoreElem.classList.add('text-success');
+                    document.getElementById('passFailBadge').innerHTML = `<span class="badge bg-success">Passed</span>`;
+                } else {
+                    scoreElem.classList.add('text-danger');
+                    document.getElementById('passFailBadge').innerHTML = `<span class="badge bg-danger">Failed</span>`;
+                }
+
+                document.getElementById('passingScore').textContent = `${a.passing_score}%`;
+                document.getElementById('timeStarted').textContent = a.start_time;
+                document.getElementById('timeCompleted').textContent = a.end_time;
+
+                if (a.violation_count > 0) {
+                    document.getElementById('violationAlert').classList.remove('d-none');
+                }
+            } else {
+                window.location.href = 'student_dashboard.html';
+            }
+        }
+
+        if (attemptId) loadResult();
+        else window.location.href = 'student_dashboard.html';
+    </script>
+</body>
+
+</html>

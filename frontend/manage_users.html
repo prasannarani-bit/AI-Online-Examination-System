@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Users - Agentic Exam System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">Agentic Exam System</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0" id="user-nav"></ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2><i class="bi bi-people me-2"></i>Manage Users</h2>
+        <div id="alertMsg"></div>
+
+        <!-- Add User Form -->
+        <div class="card mb-4 shadow-sm border-0">
+            <div class="card-header fw-bold bg-primary text-white">
+                <i class="bi bi-person-plus me-2"></i>Add New User
+            </div>
+            <div class="card-body">
+                <form id="addUserForm">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <input type="text" id="new_full_name" class="form-control" placeholder="Full Name" required>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="email" id="new_email" class="form-control" placeholder="Email (login ID)" required>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="password" id="new_password" class="form-control" placeholder="Password" required>
+                        </div>
+                        <div class="col-md-2">
+                            <select id="new_role" class="form-select" required>
+                                <option value="faculty">Faculty</option>
+                                <option value="student">Student</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">Add User</button>
+                        </div>
+                    </div>
+                    <!-- Role-specific extra fields -->
+                    <div id="admin_studentFields" class="row g-3 mt-1 d-none">
+                        <div class="col-md-4">
+                            <input type="text" id="new_class_name" class="form-control" placeholder="Class / Batch (optional)">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" id="new_roll_number" class="form-control" placeholder="Roll Number (optional)">
+                        </div>
+                    </div>
+                    <div id="admin_facultyFields" class="row g-3 mt-1">
+                        <div class="col-md-4">
+                            <input type="text" id="new_department" class="form-control" placeholder="Department (optional)">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="card shadow-sm border-0">
+            <div class="card-header fw-bold bg-secondary text-white">
+                <i class="bi bi-table me-2"></i>All Users
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Full Name</th>
+                                <th>Email (Login)</th>
+                                <th>Role</th>
+                                <th>Extra Info</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        ApiClient.checkAuth(['admin']);
+        ApiClient.setupNav();
+
+        // Toggle role-specific extra fields
+        document.getElementById('new_role').addEventListener('change', function () {
+            const isStudent = this.value === 'student';
+            document.getElementById('admin_studentFields').classList.toggle('d-none', !isStudent);
+            document.getElementById('admin_facultyFields').classList.toggle('d-none', isStudent);
+        });
+
+        async function loadUsers() {
+            const res = await ApiClient.get('/admin/users');
+            if (res.ok) {
+                const tbody = document.getElementById('usersTableBody');
+                tbody.innerHTML = res.data.map(u => {
+                    let extra = '';
+                    if (u.role === 'student') {
+                        extra = [u.class_name, u.roll_number].filter(Boolean).join(' | ') || '—';
+                    } else if (u.role === 'faculty') {
+                        extra = u.department || '—';
+                    } else {
+                        extra = '—';
+                    }
+                    const badgeColor = u.role === 'admin' ? 'danger' : u.role === 'faculty' ? 'primary' : 'success';
+                    return `
+                        <tr>
+                            <td>${u.id}</td>
+                            <td>${u.full_name || '<span class="text-muted">—</span>'}</td>
+                            <td><code>${u.username}</code></td>
+                            <td><span class="badge bg-${badgeColor}">${u.role}</span></td>
+                            <td class="text-muted small">${extra}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+
+        document.getElementById('addUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const role = document.getElementById('new_role').value;
+            const payload = {
+                email:       document.getElementById('new_email').value.trim().toLowerCase(),
+                password:    document.getElementById('new_password').value,
+                role:        role,
+                full_name:   document.getElementById('new_full_name').value.trim(),
+                class_name:  role === 'student' ? document.getElementById('new_class_name').value.trim() : '',
+                roll_number: role === 'student' ? document.getElementById('new_roll_number').value.trim() : '',
+                department:  role === 'faculty' ? document.getElementById('new_department').value.trim() : ''
+            };
+
+            const res = await ApiClient.post('/admin/users', payload);
+            const alertEl = document.getElementById('alertMsg');
+            if (res.ok) {
+                alertEl.innerHTML = `<div class="alert alert-success">${res.data.message}</div>`;
+                document.getElementById('addUserForm').reset();
+                // Reset role-specific fields visibility
+                document.getElementById('admin_studentFields').classList.add('d-none');
+                document.getElementById('admin_facultyFields').classList.remove('d-none');
+                loadUsers();
+            } else {
+                alertEl.innerHTML = `<div class="alert alert-danger">${res.data.message}</div>`;
+            }
+        });
+
+        loadUsers();
+    </script>
+</body>
+
+</html>

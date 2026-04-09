@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Create Exam</h2>
+<div class="card bg-white shadow-sm border-0 mb-4 p-3">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('create_exam') }}">
+            <div class="mb-3">
+                <label class="form-label fw-bold">Exam Title</label>
+                <input type="text" name="title" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Description</label>
+                <textarea name="description" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Duration (Minutes)</label>
+                    <input type="number" name="duration" class="form-control" min="1" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Passing Score (%)</label>
+                    <input type="number" name="passing_score" class="form-control" min="0" max="100" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-success mt-2">Create Exam Container</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

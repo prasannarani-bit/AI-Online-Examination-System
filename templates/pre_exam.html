@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Pre-Exam Checkout: {{ exam.title }}</h2>
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card shadow border-0">
+            <div class="card-body">
+                <h5 class="fw-bold text-primary">Instructions</h5>
+                <ul class="text-muted">
+                    <li>Ensure you are in a quiet room with sufficient lighting.</li>
+                    <li>Your webcam must be turned ON. The AI proctor will monitor multiple faces or absence of face.
+                    </li>
+                    <li>Do not switch tabs or open other applications. Doing so will be logged as malpractice.</li>
+                    <li>The exam duration is <strong>{{ exam.duration_minutes }} minutes</strong>. It will automatically
+                        submit when time is up.</li>
+                </ul>
+            </div>
+            <div class="card-footer bg-light text-end">
+                <form method="POST" action="{{ url_for('start_exam_action', exam_id=exam.id) }}">
+                    <button type="submit" class="btn btn-primary fw-bold px-4">Accept & Start</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

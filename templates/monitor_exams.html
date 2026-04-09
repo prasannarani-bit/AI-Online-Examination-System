@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Live Exam Monitoring</h2>
+    <button onclick="window.location.reload();" class="btn btn-primary"><i class="bi bi-arrow-clockwise"></i>
+        Refresh</button>
+</div>
+<div class="row mt-4">
+    {% for log in logs %}
+    <div class="col-md-4 mb-3">
+        <div class="card border-warning shadow-sm">
+            <div class="card-header bg-warning text-dark fw-bold">
+                <i class="bi bi-exclamation-triangle"></i> {{ log.log_type|replace('_', ' ')|capitalize }}
+            </div>
+            <div class="card-body">
+                <p class="mb-1"><strong>Attempt ID:</strong> {{ log.attempt_id }}</p>
+                <p class="mb-1"><strong>Student:</strong> {{ log.username }}</p>
+                <p class="mb-1"><strong>Exam:</strong> {{ log.exam_title }}</p>
+                <p class="mb-2 text-muted small"><i class="bi bi-clock"></i> {{ log.timestamp }}</p>
+                {% if log.image_blob %}
+                <img src="{{ log.image_blob }}" class="img-fluid rounded border border-danger">
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-success"><i class="bi bi-check-circle"></i> No proctoring violations detected across recent
+        exams.</div>
+    {% endfor %}
+</div>
+{% endblock %}

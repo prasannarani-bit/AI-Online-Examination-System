@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Create Exam</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">Agentic Exam System</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0" id="user-nav"></ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <h2>Create Exam</h2>
+        <div id="alertMsg"></div>
+        <div class="card bg-white shadow-sm border-0 mb-4 p-3">
+            <div class="card-body">
+                <form id="createExamForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Exam Title</label>
+                        <input type="text" id="title" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Description</label>
+                        <textarea id="description" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Duration (Minutes)</label>
+                            <input type="number" id="duration" class="form-control" min="1" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Passing Score (%)</label>
+                            <input type="number" id="passing_score" class="form-control" min="0" max="100" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success mt-2">Create Exam Container</button>
+                    <a href="faculty_dashboard.html" class="btn btn-outline-secondary mt-2 ms-2">Back to Dashboard</a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        ApiClient.checkAuth(['faculty']);
+        ApiClient.setupNav();
+
+        document.getElementById('createExamForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const res = await ApiClient.post('/faculty/exams', {
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                duration: document.getElementById('duration').value,
+                passing_score: document.getElementById('passing_score').value
+            });
+            const alert = document.getElementById('alertMsg');
+            if (res.ok) {
+                alert.innerHTML = `<div class="alert alert-success">${res.data.message} Redirecting to add questions...</div>`;
+                setTimeout(() => window.location.href = `edit_exam.html?id=${res.data.exam_id}`, 1500);
+            } else {
+                alert.innerHTML = `<div class="alert alert-danger">${res.data.message}</div>`;
+            }
+        });
+    </script>
+</body>
+
+</html>
