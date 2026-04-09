@@ -14,6 +14,8 @@ from agents.evaluation_agent import EvaluationAgent
 from agents.analytics_agent import AnalyticsAgent
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+port = int(os.environ.get("PORT", 5000))
+app.run(host="0.0.0.0", port=port)
 
 app = Flask(__name__, static_folder='frontend', static_url_path='/')
 CORS(app) # Enable CORS for all routes
