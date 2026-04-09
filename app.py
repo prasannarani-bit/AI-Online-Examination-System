@@ -23,6 +23,9 @@ app.config['SECRET_KEY'] = 'super_secret_agentic_key'
 port = int(os.environ.get("PORT", 5000))
 app.run(host="0.0.0.0", port=port)
 
+@app.route("/")
+def home():
+    return render_template("login.html")
 
 proctor_agent = ProctorAgent()
 
