@@ -803,15 +803,7 @@ def storage_generate_exam(current_user):
     conn.close()
     return jsonify({'message': msg, 'exam_id': exam_id})
 
-@app.route('/')
-def index():
-    return app.send_static_file('index.html')
 
-@app.route('/<path:path>')
-def serve_static(path):
-    if os.path.exists(os.path.join(app.static_folder, path)):
-        return app.send_static_file(path)
-    return app.send_static_file('index.html') # fallback to index
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
