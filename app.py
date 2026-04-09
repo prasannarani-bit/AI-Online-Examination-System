@@ -58,7 +58,7 @@ def token_required(f):
 # --- AUTHENTICATION ---
 @app.route('/api/login', methods=['POST'])
 def login():
-    data = request.json
+    data = request.form
     # Accept either 'email' or legacy 'username' field
     email = data.get('email') or data.get('username')
     if not data or not email or not data.get('password'):
