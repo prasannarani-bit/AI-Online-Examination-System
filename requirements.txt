@@ -8,3 +8,4 @@ PyJWT
 google-genai
 PyPDF2
 python-docx
+gunicorn
