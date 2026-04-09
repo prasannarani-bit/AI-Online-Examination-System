@@ -1,4 +1,4 @@
-const API_URL = '/api/login';
+const API_URL = '/api';
 
 class ApiClient {
     static getToken() {
