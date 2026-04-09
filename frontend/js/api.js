@@ -1,4 +1,4 @@
-const API_URL = 'https://ai-online-examination-system-1.onrender.com/api/login';
+const API_URL = '/api/login';
 
 class ApiClient {
     static getToken() {
