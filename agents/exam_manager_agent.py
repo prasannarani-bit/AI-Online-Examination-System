@@ -8,8 +8,11 @@ import time
 import os
 
 API_KEY = os.environ.get("API_KEY")
-client = genai.Client(api_key=API_KEY)
 
+if not API_KEY:
+    raise ValueError("API_KEY is not set in environment variables")
+
+client = genai.Client(api_key=API_KEY)
 class ExamManagerAgent:
     @staticmethod
     def validate_exam_creation(faculty_id, title, duration, passing_score):
