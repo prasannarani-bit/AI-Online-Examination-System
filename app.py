@@ -8,6 +8,7 @@ from functools import wraps
 import os
 import random
 import string
+from fpdf import FPDF
 
 from models.database import init_db, get_db_connection, migrate_db
 from agents.exam_manager_agent import ExamManagerAgent
