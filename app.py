@@ -18,7 +18,7 @@ from agents.analytics_agent import AnalyticsAgent
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
-app = Flask(__name__, static_folder='build', static_url_path='')
+app = Flask(__name__, static_folder='frontend', static_url_path='')
 CORS(app) # Enable CORS for all routes
 app.config['SECRET_KEY'] = 'super_secret_agentic_key'
 
