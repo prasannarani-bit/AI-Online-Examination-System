@@ -10,4 +10,5 @@ PyPDF2
 python-docx
 flask
 gunicorn
+fpdf2
 
