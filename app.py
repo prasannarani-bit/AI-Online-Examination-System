@@ -18,18 +18,11 @@ from agents.analytics_agent import AnalyticsAgent
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='build', static_url_path='')
 CORS(app) # Enable CORS for all routes
 app.config['SECRET_KEY'] = 'super_secret_agentic_key'
 
-port = int(os.environ.get("PORT", 5000))
-app.run(host="0.0.0.0", port=port)
-
 proctor_agent = ProctorAgent()
-
-@app.route("/")
-def home():
-    return render_template("index.html")
 
 if not os.path.exists('database.db'):
     init_db()
@@ -1084,4 +1077,4 @@ def serve_static(path):
     return app.send_static_file('index.html') # fallback to index
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(host="0.0.0.0", port=5000)
