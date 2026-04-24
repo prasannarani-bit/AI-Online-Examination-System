@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Exam Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts for Certificate -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Great+Vibes&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <!-- PDF Generation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary-blue: #102C57;
+            --gold: #C5A059;
+            --cream: #FDFBF4;
+        }
+
+        /* Certificate Styles */
+        #certificate-template {
+            width: 1123px; /* A4 Landscape at 96 DPI */
+            height: 794px;
+            background: var(--cream); /* Cream background */
+            position: fixed;
+            left: -9999px; /* Hide from view */
+            top: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+            color: #1a1a1a;
+            border: 2px solid var(--gold);
+            overflow: hidden; /* CRITICAL: Prevent content expansion */
+            page-break-inside: avoid;
+            page-break-after: avoid;
+        }
+
+        .cert-border-outer {
+            position: absolute;
+            top: 15px; left: 15px; right: 15px; bottom: 15px;
+            border: 1px solid var(--gold);
+            pointer-events: none;
+        }
+
+        .cert-border-inner {
+            position: absolute;
+            top: 25px; left: 25px; right: 25px; bottom: 25px;
+            border: 2px solid var(--gold);
+            pointer-events: none;
+        }
+
+        /* Geometric Shapes */
+        .geo-shape {
+            position: absolute;
+            background-color: var(--primary-blue);
+            z-index: 1;
+        }
+
+        .shape-tr-1 {
+            top: -50px; right: -50px; width: 300px; height: 200px;
+            rotate: -35deg; clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 50% 80%);
+            opacity: 0.95;
+        }
+        .shape-tr-2 {
+            top: -20px; right: -80px; width: 350px; height: 250px;
+            rotate: -40deg; clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 30% 70%);
+            opacity: 0.85; background-color: #1a3c6e;
+        }
+        .tr-gold-line {
+            position: absolute; top: 110px; right: -20px; width: 400px; height: 2px;
+            background: var(--gold); rotate: -35deg; z-index: 2;
+        }
+
+        .shape-bl-1 {
+            bottom: -50px; left: -50px; width: 350px; height: 250px;
+            rotate: -35deg; clip-path: polygon(50% 20%, 100% 0%, 100% 100%, 0% 100%);
+            opacity: 0.95;
+        }
+        .shape-bl-2 {
+            bottom: -30px; left: -80px; width: 400px; height: 300px;
+            rotate: -40deg; clip-path: polygon(30% 30%, 100% 0%, 100% 100%, 0% 100%);
+            opacity: 0.85; background-color: #1a3c6e;
+        }
+        .bl-gold-line {
+            position: absolute; bottom: 120px; left: -30px; width: 400px; height: 2px;
+            background: var(--gold); rotate: -35deg; z-index: 2;
+        }
+
+        .floral-corner {
+            position: absolute; width: 180px; z-index: 5;
+        }
+        .floral-tl { top: 40px; left: 40px; }
+        .floral-br { bottom: 40px; right: 40px; transform: rotate(180deg); }
+
+        .cert-header {
+            padding-top: 70px; text-align: center; position: relative; z-index: 10;
+        }
+        .header-text-container-cert {
+            display: inline-block;
+        }
+
+        .cert-content {
+            text-align: center; z-index: 10; position: relative; padding: 0 100px;
+        }
+
+        .univ-name-cert {
+            font-family: 'Playfair Display', serif; font-size: 26px; color: var(--primary-blue);
+            text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 5px; font-weight: 700;
+        }
+        .univ-loc-cert {
+            font-family: 'Playfair Display', serif; font-size: 20px; color: var(--primary-blue);
+            text-transform: uppercase; letter-spacing: 3px; margin-bottom: 25px; font-weight: 700;
+        }
+
+        .main-title-cert {
+            font-family: 'Playfair Display', serif; font-size: 48px; color: var(--primary-blue);
+            letter-spacing: 8px; text-transform: uppercase; margin: 0;
+        }
+        .sub-title-cert {
+            font-family: 'Playfair Display', serif; font-size: 22px; color: var(--primary-blue);
+            letter-spacing: 5px; text-transform: uppercase; font-weight: 600; margin-bottom: 10px;
+        }
+
+        .ornament-cert { margin: 10px 0; font-size: 20px; color: var(--gold); }
+        .cert-intro-cert { font-size: 16px; text-transform: uppercase; letter-spacing: 2px; color: #333; margin-bottom: 15px; }
+
+        .student-name-cert {
+            font-family: 'Great Vibes', cursive; font-size: 82px; color: #1a1a1a;
+            margin: 15px 0; border-bottom: 1px solid rgba(0,0,0,0.1); display: inline-block; min-width: 600px;
+        }
+
+        .details-line { font-size: 17px; margin-bottom: 15px; color: #444; }
+        .details-val { font-weight: 600; border-bottom: 1px solid #999; padding: 0 10px; color: var(--primary-blue); }
+
+        .achievement-text-cert {
+            font-size: 16px; line-height: 1.6; max-width: 850px; margin: 0 auto 30px; color: #444;
+        }
+
+        .cert-footer-cert {
+            display: flex; justify-content: space-between; align-items: flex-end; padding: 0 100px; margin-top: 20px;
+        }
+
+        .sig-box { text-align: center; width: 250px; }
+        .sig-line-cert { border-top: 1px solid var(--gold); margin-bottom: 8px; }
+        .sig-name-cert { font-weight: 600; font-size: 15px; color: var(--primary-blue); }
+        .sig-title-cert { font-size: 13px; color: #666; text-transform: uppercase; }
+        .footer-seal { height: 70px; opacity: 0.6; }
+    </style>
+</head>
+
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">Agentic Exam System</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0" id="user-nav"></ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <div id="loading" class="text-center mt-5">
+            <div class="spinner-border"></div>
+        </div>
+
+        <div id="content" class="d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 id="pageTitle">Exam Result: </h2>
+                <a href="student_dashboard.html" class="btn btn-outline-secondary">Back to Dashboard</a>
+            </div>
+
+            <div id="violationAlert" class="alert alert-danger d-none shadow-sm mb-4 border-0">
+                <div class="d-flex align-items-center">
+                    <div class="fs-1 me-3">⚠️</div>
+                    <div>
+                        <h4 class="alert-heading fw-bold">Proctoring Violation Detected!</h4>
+                        <p class="mb-0">Our AI Proctoring system has flagged this attempt for suspicious activity (e.g., tab switching, phone detected, or face not seen). Your result has been marked with a <strong>'Bad Review'</strong> status and reported to the faculty.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0 h-100 text-center py-5">
+                        <h4 class="text-muted">Your Score</h4>
+                        <h1 id="scoreDisplay" class="display-1 fw-bold"></h1>
+                        <p class="fs-5 mt-2" id="passFailBadge"></p>
+                        <div id="certificateBtnContainer" class="mt-3 d-none">
+                            <button id="downloadCertBtn" class="btn btn-gold btn-lg shadow-sm" style="background-color: #D4AF37; color: white;">
+                                📜 Download Professional E-Certificate
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0 h-100 p-4">
+                        <h5 class="mb-3 text-primary">Performance Summary</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Passing Score Required
+                                <span class="badge bg-secondary rounded-pill" id="passingScore"></span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Time Started
+                                <span class="text-muted small" id="timeStarted"></span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Time Completed
+                                <span class="text-muted small" id="timeCompleted"></span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Certificate Template -->
+    <div id="certificate-template">
+        <!-- Borders -->
+        <div class="cert-border-outer"></div>
+        <div class="cert-border-inner"></div>
+
+        <!-- Geometric Shapes TR -->
+        <div class="geo-shape shape-tr-2"></div>
+        <div class="geo-shape shape-tr-1"></div>
+        <div class="tr-gold-line"></div>
+
+        <!-- Geometric Shapes BL -->
+        <div class="geo-shape shape-bl-2"></div>
+        <div class="geo-shape shape-bl-1"></div>
+        <div class="bl-gold-line"></div>
+
+        <!-- Floral Corners -->
+        <img src="images/floral_corner.png" class="floral-corner floral-tl" alt="">
+        <img src="images/floral_corner.png" class="floral-corner floral-br" alt="">
+
+        <!-- University Header -->
+        <div class="cert-header">
+            <div class="header-text-container-cert">
+                <div class="univ-name-cert">Jawaharlal Nehru Technological University</div>
+                <div class="univ-loc-cert">Gurajada Vizianagaram</div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="cert-content">
+
+            <h2 class="main-title-cert">Certificate</h2>
+            <h4 class="sub-title-cert">Of Achievement</h4>
+
+            <div class="ornament-cert">❧ ━━━━━━ ❦ ━━━━━━ ☙</div>
+
+            <div class="cert-intro-cert">This is to certify that</div>
+
+            <div class="student-name-cert" id="cert-student-name">...</div>
+
+            <div class="details-line">
+                of <span class="details-val" id="cert-college">...</span>
+                studying <span class="details-val" id="cert-course">...</span>
+            </div>
+
+            <p class="achievement-text-cert">
+                has successfully passed the assessment for the exam<br>
+                <strong id="cert-exam-title">...</strong><br>
+                conducted on <span id="cert-date">...</span>
+            </p>
+
+            <div class="cert-footer-cert">
+                <div class="sig-box" style="visibility: hidden;">
+                    <div class="sig-line-cert"></div>
+                    <div class="sig-name-cert">-</div>
+                </div>
+                
+                <img src="https://www.freeiconspng.com/uploads/blue-seal-png-15.png" class="footer-seal" alt="">
+
+                <div class="sig-box">
+                    <div style="height: 40px;"></div>
+                    <div class="sig-line-cert"></div>
+                    <div class="sig-name-cert">Registrar</div>
+                    <div class="sig-title-cert">JNTU-GV</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        ApiClient.checkAuth(['student']);
+        ApiClient.setupNav();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const attemptId = urlParams.get('attempt_id');
+
+        async function loadResult() {
+            const res = await ApiClient.get(`/student/attempts/${attemptId}/result`);
+            if (res.ok) {
+                const a = res.data.attempt;
+                document.getElementById('loading').classList.add('d-none');
+                document.getElementById('content').classList.remove('d-none');
+
+                document.getElementById('pageTitle').textContent = `Exam Result: ${a.title}`;
+
+                const scoreElem = document.getElementById('scoreDisplay');
+                scoreElem.textContent = `${a.score}%`;
+                if (a.score >= a.passing_score) {
+                    scoreElem.classList.add('text-success');
+                    document.getElementById('passFailBadge').innerHTML = `<span class="badge bg-success">Passed</span>`;
+                } else {
+                    scoreElem.classList.add('text-danger');
+                    document.getElementById('passFailBadge').innerHTML = `<span class="badge bg-danger">Failed</span>`;
+                }
+
+                document.getElementById('passingScore').textContent = `${a.passing_score}%`;
+                
+                // Convert UTC time from server to local browser time
+                const formatTime = (utcStr) => {
+                    if (!utcStr) return '—';
+                    const date = new Date(utcStr + ' UTC');
+                    return date.toLocaleString(undefined, {
+                        year: 'numeric', month: 'short', day: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
+                    });
+                };
+                
+                document.getElementById('timeStarted').textContent = formatTime(a.start_time);
+                document.getElementById('timeCompleted').textContent = formatTime(a.end_time);
+
+                if (a.violation_count > 0) {
+                    document.getElementById('violationAlert').classList.remove('d-none');
+                }
+
+                if (a.score >= a.passing_score) {
+                    document.getElementById('certificateBtnContainer').classList.remove('d-none');
+                    setupCertificate(a);
+                }
+            } else {
+                window.location.href = 'student_dashboard.html';
+            }
+        }
+
+        async function setupCertificate(attempt) {
+            // Fetch student profile for full name and college
+            const res = await ApiClient.get('/verify');
+            if (res.ok) {
+                const user = res.data;
+                document.getElementById('cert-student-name').textContent = user.full_name || user.username;
+                document.getElementById('cert-exam-title').textContent = attempt.title;
+                document.getElementById('cert-date').textContent = new Date(attempt.end_time).toLocaleDateString(undefined, {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                });
+                
+                document.getElementById('cert-college').textContent = user.college || 'JNTU-GV College of Engineering';
+                document.getElementById('cert-course').textContent = user.branch || user.department || 'II MCA';
+            }
+
+            document.getElementById('downloadCertBtn').onclick = async () => {
+                const { jsPDF } = window.jspdf;
+                const element = document.getElementById('certificate-template');
+                
+                // Temporarily show it for capture
+                element.style.left = '0';
+                
+                const canvas = await html2canvas(element, {
+                    scale: 2, // Consistency with user requirement
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#FDFBF4',
+                    width: 1123,
+                    height: 794
+                });
+                
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'px',
+                    format: [1123, 794]
+                });
+                
+                pdf.addImage(imgData, 'PNG', 0, 0, 1123, 794, undefined, 'FAST');
+                pdf.save(`Certificate_${attempt.title.replace(/\s+/g, '_')}.pdf`);
+                
+                // Hide it back
+                element.style.left = '-9999px';
+            };
+        }
+
+        if (attemptId) loadResult();
+        else window.location.href = 'student_dashboard.html';
+    </script>
+</body>
+
+</html>

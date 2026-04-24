@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>All Results - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">Agentic Exam System</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0" id="user-nav"></ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>All Student Results</h2>
+            <a href="admin_dashboard.html" class="btn btn-outline-secondary">Back to Dashboard</a>
+        </div>
+        
+        <div class="card bg-white shadow-sm border-0">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Attempt ID</th>
+                                <th>Student</th>
+                                <th>Exam</th>
+                                <th>Score</th>
+                                <th>Violations</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center">Loading results...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        ApiClient.checkAuth(['admin']);
+        ApiClient.setupNav();
+
+        async function loadAllResults() {
+            const res = await ApiClient.get('/admin/attempts');
+            const tbody = document.getElementById('resultsTableBody');
+            if (res.ok) {
+                if (res.data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center">No exam attempts found.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = res.data.map(att => `
+                    <tr>
+                        <td>${att.id}</td>
+                        <td><strong>${att.student_name}</strong></td>
+                        <td>${att.exam_title}</td>
+                        <td>${att.score !== null ? att.score : '-'}</td>
+                        <td>
+                            <span class="badge ${att.violation_count > 0 ? 'bg-danger' : 'bg-success'}">
+                                ${att.violation_count}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge ${getStatusBadge(att.status)}">
+                                ${att.status}
+                            </span>
+                        </td>
+                        <td>${new Date(att.start_time).toLocaleDateString()}</td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Error: ${res.data.message}</td></tr>`;
+            }
+        }
+
+        function getStatusBadge(status) {
+            switch(status) {
+                case 'evaluated': return 'bg-success';
+                case 'submitted': return 'bg-info';
+                case 'in_progress': return 'bg-warning text-dark';
+                default: return 'bg-secondary';
+            }
+        }
+
+        loadAllResults();
+    </script>
+</body>
+
+</html>

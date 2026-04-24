@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Certificate Generator | JNTU-GV</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Great+Vibes&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary-blue: #102C57;
+            --gold: #C5A059;
+            --cream: #FDFBF4;
+        }
+
+        body {
+            background-color: #f4f4f9;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .generator-container {
+            max-width: 1400px;
+            margin: 40px auto;
+            display: flex;
+            gap: 30px;
+            padding: 0 20px;
+        }
+
+        .form-panel {
+            flex: 1;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .preview-panel {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Certificate Design */
+        #certificate-preview {
+            width: 1123px; /* A4 Landscape at 96 DPI */
+            height: 794px;
+            background-color: var(--cream);
+            position: relative;
+            box-sizing: border-box;
+            border: 2px solid var(--gold);
+            overflow: hidden; /* CRITICAL: Prevent content from expanding container */
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            transform-origin: top center;
+            page-break-inside: avoid; /* Prevent browser print breaks */
+            page-break-after: avoid;
+        }
+
+        .cert-border-outer {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            bottom: 15px;
+            border: 1px solid var(--gold);
+            pointer-events: none;
+        }
+
+        .cert-border-inner {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            right: 25px;
+            bottom: 25px;
+            border: 2px solid var(--gold);
+            pointer-events: none;
+        }
+
+        /* Geometric Shapes */
+        .geo-shape {
+            position: absolute;
+            background-color: var(--primary-blue);
+            z-index: 1;
+        }
+
+        /* Top Right Shapes */
+        .shape-tr-1 {
+            top: -50px;
+            right: -50px;
+            width: 300px;
+            height: 200px;
+            rotate: -35deg;
+            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 50% 80%);
+            opacity: 0.95;
+        }
+        .shape-tr-2 {
+            top: -20px;
+            right: -80px;
+            width: 350px;
+            height: 250px;
+            rotate: -40deg;
+            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 30% 70%);
+            opacity: 0.85;
+            background-color: #1a3c6e;
+        }
+        .tr-gold-line {
+            position: absolute;
+            top: 110px;
+            right: -20px;
+            width: 400px;
+            height: 2px;
+            background: var(--gold);
+            rotate: -35deg;
+            z-index: 2;
+        }
+
+        /* Bottom Left Shapes */
+        .shape-bl-1 {
+            bottom: -50px;
+            left: -50px;
+            width: 350px;
+            height: 250px;
+            rotate: -35deg;
+            clip-path: polygon(50% 20%, 100% 0%, 100% 100%, 0% 100%);
+            opacity: 0.95;
+        }
+        .shape-bl-2 {
+            bottom: -30px;
+            left: -80px;
+            width: 400px;
+            height: 300px;
+            rotate: -40deg;
+            clip-path: polygon(30% 30%, 100% 0%, 100% 100%, 0% 100%);
+            opacity: 0.85;
+            background-color: #1a3c6e;
+        }
+        .bl-gold-line {
+            position: absolute;
+            bottom: 120px;
+            left: -30px;
+            width: 400px;
+            height: 2px;
+            background: var(--gold);
+            rotate: -35deg;
+            z-index: 2;
+        }
+
+        /* Floral Ornaments */
+        .floral-corner {
+            position: absolute;
+            width: 180px;
+            z-index: 5;
+        }
+        .floral-tl { top: 40px; left: 40px; }
+        .floral-br { bottom: 40px; right: 40px; transform: rotate(180deg); }
+
+        /* Logos */
+        .cert-header {
+            padding-top: 70px; /* Increased to ensure clear area below blue graphics */
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header-text-container {
+            display: inline-block;
+        }
+
+        /* Typography */
+        .cert-content {
+            text-align: center;
+            z-index: 10;
+            position: relative;
+            padding: 0 100px;
+        }
+
+        .univ-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 26px;
+            color: var(--primary-blue);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        .univ-location {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            color: var(--primary-blue);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 25px;
+            font-weight: 700;
+        }
+
+        .cert-title-container {
+            margin-bottom: 20px;
+        }
+        .main-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 48px;
+            color: var(--primary-blue);
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            margin-bottom: 0;
+        }
+        .sub-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            color: var(--primary-blue);
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .ornament {
+            margin: 15px 0;
+            font-size: 24px;
+            color: var(--gold);
+        }
+
+        .cert-intro {
+            font-size: 18px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #333;
+            margin-bottom: 25px;
+        }
+
+        .student-name {
+            font-family: 'Great Vibes', cursive;
+            font-size: 84px;
+            color: #1a1a1a;
+            margin: 20px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            display: inline-block;
+            min-width: 600px;
+        }
+
+        .details-line {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #444;
+        }
+        .details-label {
+            font-style: italic;
+        }
+        .details-value {
+            font-weight: 600;
+            border-bottom: 1px solid #999;
+            padding: 0 10px;
+            color: var(--primary-blue);
+        }
+
+        .achievement-text {
+            font-size: 17px;
+            line-height: 1.8;
+            max-width: 850px;
+            margin: 0 auto 40px;
+            color: #444;
+        }
+
+        .cert-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 100px;
+            margin-top: 40px;
+        }
+
+        .signature-box {
+            text-align: center;
+            width: 280px;
+        }
+        .sig-image {
+            height: 60px;
+            margin-bottom: -10px;
+            opacity: 0.8;
+        }
+        .sig-line {
+            border-top: 1px solid var(--gold);
+            margin-bottom: 10px;
+        }
+        .sig-name {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--primary-blue);
+        }
+        .sig-title {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .footer-icon {
+            height: 80px;
+            opacity: 0.6;
+        }
+
+        .btn-generate {
+            background-color: var(--primary-blue);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .btn-generate:hover {
+            background-color: #1a4c8e;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 1200px) {
+            .generator-container {
+                flex-direction: column;
+            }
+            #certificate-preview {
+                transform: scale(0.6);
+                transform-origin: top center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">JNTU-GV E-Certificate System</span>
+            <a href="index.html" class="btn btn-outline-light btn-sm">Back to Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="generator-container">
+        <!-- Form Panel -->
+        <div class="form-panel">
+            <h4 class="mb-4">Certificate Details</h4>
+            <div class="mb-3">
+                <label class="form-label">Full Name</label>
+                <input type="text" id="input-name" class="form-control" placeholder="Patnana Prasanna Rani" value="Patnana Prasanna Rani">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">College Name</label>
+                <input type="text" id="input-college" class="form-control" placeholder="JNTU-GV, College of Engineering Vizianagaram" value="JNTU-GV, College of Engineering Vizianagaram">
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Course</label>
+                    <input type="text" id="input-course" class="form-control" placeholder="II MCA" value="II MCA">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Event Name</label>
+                    <input type="text" id="input-event" class="form-control" placeholder="GenAIHackathon" value="GenAIHackathon">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Achievement Description</label>
+                <textarea id="input-desc" class="form-control" rows="3">for participating in the two day Hackathon GenAIHackathon at the theme organized by JAWAHARLAL NEHRU TECHNOLOGICAL UNIVERSITY GURAJADA VIZIANAGARAM in collaboration with AI Experts on 13th and 14th December 2025.</textarea>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Left Signature Title</label>
+                    <input type="text" id="input-sig1" class="form-control" value="Chief Academic Officer">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Right Signature Title</label>
+                    <input type="text" id="input-sig2" class="form-control" value="Registrar">
+                </div>
+            </div>
+
+            <button id="downloadBtn" class="btn btn-generate">
+                📥 Download Professional PDF
+            </button>
+            <p class="text-muted small mt-3 text-center">High-quality A4 Landscape Print Layout</p>
+        </div>
+
+        <!-- Preview Panel -->
+        <div class="preview-panel">
+            <div id="certificate-preview">
+                <!-- Borders -->
+                <div class="cert-border-outer"></div>
+                <div class="cert-border-inner"></div>
+
+                <!-- Geometric Shapes TR -->
+                <div class="geo-shape shape-tr-2"></div>
+                <div class="geo-shape shape-tr-1"></div>
+                <div class="tr-gold-line"></div>
+
+                <!-- Geometric Shapes BL -->
+                <div class="geo-shape shape-bl-2"></div>
+                <div class="geo-shape shape-bl-1"></div>
+                <div class="bl-gold-line"></div>
+
+                <!-- Floral Corners -->
+                <img src="images/floral_corner.png" class="floral-corner floral-tl" alt="">
+                <img src="images/floral_corner.png" class="floral-corner floral-br" alt="">
+
+                <!-- University Header -->
+                <div class="cert-header">
+                    <div class="header-text-container">
+                        <div class="univ-name">Jawaharlal Nehru Technological University</div>
+                        <div class="univ-location">Gurajada Vizianagaram</div>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="cert-content">
+                    <div class="cert-title-container">
+                        <h2 class="main-title">Certificate</h2>
+                        <h4 class="sub-title">Of Participation</h4>
+                    </div>
+
+                    <div class="ornament">❧ ━━━━━━ ❦ ━━━━━━ ☙</div>
+
+                    <div class="cert-intro">This is to certify</div>
+
+                    <div class="student-name" id="display-name">Patnana Prasanna Rani</div>
+
+                    <div class="details-line">
+                        <span class="details-label">of</span>
+                        <span class="details-value" id="display-college">JNTU-GV, College of Engineering Vizianagaram</span>
+                        <span class="details-label">studying</span>
+                        <span class="details-value" id="display-course">II MCA</span>
+                    </div>
+
+                    <p class="achievement-text" id="display-desc">
+                        for participating in the two day Hackathon <strong id="display-event">GenAIHackathon</strong> at the theme organized by JAWAHARLAL NEHRU TECHNOLOGICAL UNIVERSITY GURAJADA VIZIANAGARAM in collaboration with AI Experts on 13th and 14th December 2025.
+                    </p>
+
+                    <div class="cert-footer">
+                        <div class="signature-box" style="visibility: hidden;">
+                            <div class="sig-line"></div>
+                            <div class="sig-name">-</div>
+                        </div>
+                        
+                        <img src="https://www.freeiconspng.com/uploads/blue-seal-png-15.png" class="footer-icon" alt="">
+
+                        <div class="signature-box">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/0/08/Signature_of_Zulfiqar_Ali_Bhutto.png" class="sig-image" alt="">
+                            <div class="sig-line"></div>
+                            <div class="sig-name" id="display-sig2-name">Registrar</div>
+                            <div class="sig-title">JNTU-GV</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Update Preview dynamically
+        const inputs = {
+            name: document.getElementById('input-name'),
+            college: document.getElementById('input-college'),
+            course: document.getElementById('input-course'),
+            event: document.getElementById('input-event'),
+            desc: document.getElementById('input-desc'),
+            sig1: document.getElementById('input-sig1'),
+            sig2: document.getElementById('input-sig2')
+        };
+
+        const displays = {
+            name: document.getElementById('display-name'),
+            college: document.getElementById('display-college'),
+            course: document.getElementById('display-course'),
+            event: document.getElementById('display-event'),
+            desc: document.getElementById('display-desc'),
+            sig1: document.getElementById('display-sig1-name'),
+            sig2: document.getElementById('display-sig2-name')
+        };
+
+        function updatePreview() {
+            displays.name.innerText = inputs.name.value || 'Student Name';
+            displays.college.innerText = inputs.college.value || 'College Name';
+            displays.course.innerText = inputs.course.value || 'Course Name';
+            displays.event.innerText = inputs.event.value || 'Event Name';
+            displays.desc.innerText = inputs.desc.value || 'Description text...';
+            displays.sig1.innerText = inputs.sig1.value || 'CAO';
+            displays.sig2.innerText = inputs.sig2.value || 'Registrar';
+        }
+
+        Object.keys(inputs).forEach(key => {
+            inputs[key].addEventListener('input', updatePreview);
+        });
+
+        // Download PDF
+        document.getElementById('downloadBtn').onclick = async () => {
+            const { jsPDF } = window.jspdf;
+            const element = document.getElementById('certificate-preview');
+            
+            // Higher resolution capture with fixed dimensions
+            const canvas = await html2canvas(element, {
+                scale: 2, // User requested scale 2
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#FDFBF4',
+                width: 1123,
+                height: 794
+            });
+            
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF({
+                orientation: 'landscape',
+                unit: 'px',
+                format: [1123, 794]
+            });
+            
+            // Ensure image fits perfectly on the single page
+            pdf.addImage(imgData, 'PNG', 0, 0, 1123, 794, undefined, 'FAST');
+            
+            const fileName = `Certificate_${inputs.name.value.replace(/\s+/g, '_')}.pdf`;
+            pdf.save(fileName);
+        };
+    </script>
+</body>
+</html>

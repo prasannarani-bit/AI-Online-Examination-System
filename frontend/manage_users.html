@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Users - Agentic Exam System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">Agentic Exam System</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0" id="user-nav"></ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2><i class="bi bi-people me-2"></i>Manage Users</h2>
+        <div id="alertMsg"></div>
+
+        <!-- Add User Form -->
+        <div class="card mb-4 shadow-sm border-0">
+            <div class="card-header fw-bold bg-primary text-white">
+                <i class="bi bi-person-plus me-2"></i>Add New User
+            </div>
+            <div class="card-body">
+                <form id="addUserForm">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <input type="text" id="new_full_name" class="form-control" placeholder="Full Name" required>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="email" id="new_email" class="form-control" placeholder="Email (login ID)" required>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="password" id="new_password" class="form-control" placeholder="Password" required>
+                        </div>
+                        <div class="col-md-2">
+                            <select id="new_role" class="form-select" required>
+                                <option value="faculty">Faculty</option>
+                                <option value="student">Student</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100 shadow-sm">Add User</button>
+                        </div>
+                    </div>
+                    <!-- Role-specific extra fields -->
+                    <div id="admin_studentFields" class="row g-3 mt-1 d-none">
+                        <div class="col-md-3">
+                            <input type="text" id="new_branch" class="form-control" placeholder="Branch (e.g. CSE, ECE)">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" id="new_course_name" class="form-control" placeholder="Course (e.g. B.Tech, MCA)">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" id="new_year_of_study" class="form-control" placeholder="Year (e.g. 1st Year)">
+                        </div>
+                        <div class="col-md-3 g-3">
+                           <div class="row">
+                                <div class="col-6"><input type="text" id="new_class_name" class="form-control" placeholder="Section"></div>
+                                <div class="col-6"><input type="text" id="new_roll_number" class="form-control" placeholder="Roll No"></div>
+                           </div>
+                        </div>
+                    </div>
+                    <div id="admin_facultyFields" class="row g-3 mt-1">
+                        <div class="col-md-4">
+                            <input type="text" id="new_department" class="form-control" placeholder="Department (optional)">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Toolbar: Search & Filters -->
+        <div class="row mb-3 g-3">
+            <div class="col-md-6">
+                <div class="input-group shadow-sm">
+                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" id="userSearch" class="form-control border-start-0" placeholder="Search by name or email...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select id="branchFilter" class="form-select shadow-sm d-none">
+                    <option value="">All Branches</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Role Tabs -->
+        <ul class="nav nav-pills mb-3 border-bottom pb-2" id="roleTabs">
+            <li class="nav-item">
+                <button class="nav-link active" data-role="all">All Users</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-role="faculty">Faculty</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-role="student">Students</button>
+            </li>
+        </ul>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-header fw-bold bg-dark text-white d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-table me-2"></i>User Records</span>
+                <span id="userCount" class="badge bg-secondary">0 users</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Full Name</th>
+                                <th>Email (Login)</th>
+                                <th>Role</th>
+                                <th>Academic Info / Dept</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2"></i>Edit User Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editUserForm">
+                        <input type="hidden" id="edit_user_id">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small">Full Name</label>
+                                <input type="text" id="edit_full_name" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small">Email (Login ID)</label>
+                                <input type="email" id="edit_email" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small">New Password (leave blank to keep current)</label>
+                                <input type="password" id="edit_password" class="form-control" placeholder="Optional reset">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small">Account Status</label>
+                                <select id="edit_is_active" class="form-select">
+                                    <option value="1">Active</option>
+                                    <option value="0">Deactivated</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div id="edit_studentFields" class="p-3 bg-light rounded mb-3 d-none">
+                            <p class="text-muted small fw-bold mb-2">ACADEMIC DETAILS</p>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <input type="text" id="edit_branch" class="form-control form-control-sm" placeholder="Branch">
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="text" id="edit_course_name" class="form-control form-control-sm" placeholder="Course">
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="text" id="edit_year_of_study" class="form-control form-control-sm" placeholder="Year">
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="text" id="edit_class_name" class="form-control form-control-sm" placeholder="Section">
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="text" id="edit_roll_number" class="form-control form-control-sm" placeholder="Roll No">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="edit_facultyFields" class="p-3 bg-light rounded mb-3 d-none">
+                            <p class="text-muted small fw-bold mb-2">FACULTY DETAILS</p>
+                            <input type="text" id="edit_department" class="form-control form-control-sm" placeholder="Department">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary fw-bold" onclick="updateUser()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="js/api.js"></script>
+    <script>
+        ApiClient.checkAuth(['admin']);
+        ApiClient.setupNav();
+
+        let allUsers = [];
+        let currentRoleFilter = 'all';
+
+        // Toggle role-specific extra fields
+        document.getElementById('new_role').addEventListener('change', function () {
+            const isStudent = this.value === 'student';
+            document.getElementById('admin_studentFields').classList.toggle('d-none', !isStudent);
+            document.getElementById('admin_facultyFields').classList.toggle('d-none', isStudent);
+        });
+
+        // Search and Filter Listeners
+        document.getElementById('userSearch').addEventListener('input', applyFilters);
+        document.getElementById('branchFilter').addEventListener('change', applyFilters);
+        
+        document.getElementById('roleTabs').addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                document.querySelectorAll('#roleTabs .nav-link').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                currentRoleFilter = e.target.getAttribute('data-role');
+                applyFilters();
+            }
+        });
+
+        async function loadUsers() {
+            const res = await ApiClient.get('/admin/users');
+            if (res.ok) {
+                allUsers = res.data;
+                populateBranchFilter();
+                applyFilters();
+            }
+        }
+
+        function populateBranchFilter() {
+            const branches = [...new Set(allUsers.map(u => u.branch).filter(Boolean))].sort();
+            const filterEl = document.getElementById('branchFilter');
+            const currentVal = filterEl.value;
+            filterEl.innerHTML = '<option value="">All Branches</option>' + 
+                                branches.map(b => `<option value="${b}">${b}</option>`).join('');
+            filterEl.value = currentVal; // preserve selection if possible
+        }
+
+        function applyFilters() {
+            const searchQuery = document.getElementById('userSearch').value.toLowerCase();
+            const branchFilter = document.getElementById('branchFilter').value;
+            
+            const filtered = allUsers.filter(u => {
+                const matchesRole = currentRoleFilter === 'all' || u.role === currentRoleFilter;
+                const matchesSearch = (u.full_name || '').toLowerCase().includes(searchQuery) || 
+                                     u.username.toLowerCase().includes(searchQuery);
+                const matchesBranch = !branchFilter || u.branch === branchFilter;
+                
+                return matchesRole && matchesSearch && matchesBranch;
+            });
+
+            renderUsers(filtered);
+            updateUIState();
+        }
+
+        function updateUIState() {
+            const branchFilterEl = document.getElementById('branchFilter');
+            // Show branch filter only if there's no faculty filter active
+            if (currentRoleFilter !== 'faculty') {
+                branchFilterEl.classList.remove('d-none');
+            } else {
+                branchFilterEl.classList.add('d-none');
+            }
+        }
+
+        function renderUsers(users) {
+            const tbody = document.getElementById('usersTableBody');
+            document.getElementById('userCount').textContent = `${users.length} users`;
+            
+            tbody.innerHTML = users.map(u => {
+                let extra = '';
+                if (u.role === 'student') {
+                    const courseInfo = [u.course_category, u.course_name].filter(Boolean).join(' ');
+                    const branchInfo = u.branch ? ` (${u.branch})` : '';
+                    extra = `<div><strong>Course:</strong> ${courseInfo || '—'}${branchInfo}</div>
+                             <div class="text-nowrap"><strong>Year:</strong> ${u.year_of_study || '—'} ${u.class_name ? `(${u.class_name})` : ''}</div>
+                             <div><strong>Roll:</strong> ${u.roll_number || '—'}</div>`;
+                } else if (u.role === 'faculty') {
+                    extra = `<strong>Dept:</strong> ${u.department || '—'}`;
+                } else {
+                    extra = '—';
+                }
+                const badgeColor = u.role === 'admin' ? 'danger' : u.role === 'faculty' ? 'primary' : 'success';
+                const statusBadge = u.is_active ? '' : '<span class="badge bg-secondary ms-1">Deactivated</span>';
+                
+                return `
+                    <tr class="${u.is_active ? '' : 'table-secondary'}">
+                        <td>${u.id}</td>
+                        <td>${u.full_name || '<span class="text-muted">—</span>'}</td>
+                        <td><code>${u.username}</code></td>
+                        <td><span class="badge bg-${badgeColor}">${u.role}</span>${statusBadge}</td>
+                        <td class="text-muted small">${extra}</td>
+                        <td class="text-nowrap">
+                            <button onclick='editUser(${JSON.stringify(u)})' class="btn btn-sm btn-primary shadow-sm me-1">
+                                <i class="bi bi-pencil-square"></i> Edit
+                            </button>
+                            ${(u.role !== 'admin' && u.is_active) ? `
+                                <button onclick="deleteUser(${u.id}, '${u.username}')" class="btn btn-sm btn-outline-danger shadow-sm">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            ` : ''}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+        let editingUserRole = '';
+
+        window.editUser = function(user) {
+            editingUserRole = user.role;
+            document.getElementById('edit_user_id').value = user.id;
+            document.getElementById('edit_full_name').value = user.full_name || '';
+            document.getElementById('edit_email').value = user.username;
+            document.getElementById('edit_password').value = ''; // Always clear on open
+            document.getElementById('edit_is_active').value = user.is_active ? '1' : '0';
+
+            // Academic fields
+            document.getElementById('edit_branch').value = user.branch || '';
+            document.getElementById('edit_course_name').value = user.course_name || '';
+            document.getElementById('edit_year_of_study').value = user.year_of_study || '';
+            document.getElementById('edit_class_name').value = user.class_name || '';
+            document.getElementById('edit_roll_number').value = user.roll_number || '';
+            document.getElementById('edit_department').value = user.department || '';
+
+            // Toggle sections
+            document.getElementById('edit_studentFields').classList.toggle('d-none', user.role !== 'student');
+            document.getElementById('edit_facultyFields').classList.toggle('d-none', user.role !== 'faculty');
+
+            editModal.show();
+        };
+
+        window.updateUser = async function() {
+            const userId = document.getElementById('edit_user_id').value;
+            const payload = {
+                id:        userId,
+                full_name: document.getElementById('edit_full_name').value.trim(),
+                username:  document.getElementById('edit_email').value.trim().toLowerCase(),
+                password:  document.getElementById('edit_password').value, // optional
+                is_active: parseInt(document.getElementById('edit_is_active').value),
+                role:      editingUserRole,
+                // Academic details
+                branch:          document.getElementById('edit_branch').value.trim(),
+                course_name:     document.getElementById('edit_course_name').value.trim(),
+                year_of_study:   document.getElementById('edit_year_of_study').value.trim(),
+                class_name:      document.getElementById('edit_class_name').value.trim(),
+                roll_number:     document.getElementById('edit_roll_number').value.trim(),
+                department:      document.getElementById('edit_department').value.trim()
+            };
+
+            const res = await ApiClient.request(`/admin/users/${userId}`, {
+                method: 'PUT',
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                editModal.hide();
+                loadUsers();
+            } else {
+                alert('Error: ' + res.data.message);
+            }
+        };
+
+        async function deleteUser(id, username) {
+            if (!confirm(`Are you sure you want to deactivate user ${username}? They will no longer be able to log in.`)) return;
+            
+            const res = await ApiClient.delete(`/admin/users/${id}`);
+            if (res.ok) {
+                loadUsers();
+            } else {
+                alert('Error: ' + res.data.message);
+            }
+        }
+
+        document.getElementById('addUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const role = document.getElementById('new_role').value;
+            const payload = {
+                email:       document.getElementById('new_email').value.trim().toLowerCase(),
+                password:    document.getElementById('new_password').value,
+                role:        role,
+                full_name:   document.getElementById('new_full_name').value.trim(),
+                class_name:  role === 'student' ? document.getElementById('new_class_name').value.trim() : '',
+                roll_number: role === 'student' ? document.getElementById('new_roll_number').value.trim() : '',
+                branch:      role === 'student' ? document.getElementById('new_branch').value.trim() : '',
+                course_name: role === 'student' ? document.getElementById('new_course_name').value.trim() : '',
+                year_of_study: role === 'student' ? document.getElementById('new_year_of_study').value.trim() : '',
+                department:  role === 'faculty' ? document.getElementById('new_department').value.trim() : ''
+            };
+
+            const res = await ApiClient.post('/admin/users', payload);
+            const alertEl = document.getElementById('alertMsg');
+            if (res.ok) {
+                alertEl.innerHTML = `<div class="alert alert-success">${res.data.message}</div>`;
+                document.getElementById('addUserForm').reset();
+                // Reset role-specific fields visibility
+                document.getElementById('admin_studentFields').classList.add('d-none');
+                document.getElementById('admin_facultyFields').classList.remove('d-none');
+                loadUsers();
+            } else {
+                alertEl.innerHTML = `<div class="alert alert-danger">${res.data.message}</div>`;
+            }
+        });
+
+        loadUsers();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Register a new account on the Agentic AI Exam System">
+    <title>Register - Agentic Exam System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .role-fields { transition: all 0.3s ease; }
+        .field-icon { min-width: 38px; }
+    </style>
+</head>
+
+<body class="bg-light">
+    <div class="container mt-4 mb-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div id="alertMsg" class="alert d-none"></div>
+                <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                    <div class="card-header bg-success text-white text-center py-4">
+                        <i class="bi bi-person-plus fs-2 d-block mb-1"></i>
+                        <h4 class="mb-0 fw-bold">Create New Account</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <form id="registerForm" novalidate>
+
+                            <!-- Role Selection (first so fields adapt) -->
+                            <div class="mb-3">
+                                <label for="role" class="form-label fw-bold">I am a</label>
+                                <select id="role" class="form-select form-select-lg" required>
+                                    <option value="" disabled selected>Select your role…</option>
+                                    <option value="student">Student</option>
+                                    <option value="faculty">Faculty / Teacher</option>
+                                </select>
+                            </div>
+
+                            <!-- Common Fields -->
+                            <div class="mb-3">
+                                <label for="full_name" class="form-label fw-bold">Full Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text field-icon"><i class="bi bi-person"></i></span>
+                                    <input type="text" id="full_name" class="form-control form-control-lg"
+                                        placeholder="Enter your full name" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label fw-bold">Email Address</label>
+                                <div class="input-group">
+                                    <span class="input-group-text field-icon"><i class="bi bi-envelope"></i></span>
+                                    <input type="email" id="email" class="form-control form-control-lg"
+                                        placeholder="you@example.com" required autocomplete="email">
+                                    <button class="btn btn-outline-primary" type="button" id="sendCodeBtn">Send Code</button>
+                                </div>
+                                <div class="form-text">Verification code will be sent to this email.</div>
+                            </div>
+
+                            <div class="mb-3 d-none" id="verificationSection">
+                                <label for="verification_code" class="form-label fw-bold">Verification Code</label>
+                                <div class="input-group">
+                                    <span class="input-group-text field-icon"><i class="bi bi-shield-check"></i></span>
+                                    <input type="text" id="verification_code" class="form-control form-control-lg"
+                                        placeholder="Enter 6-digit code">
+                                </div>
+                                <div class="form-text text-success">Check your inbox for the 6-digit code.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label fw-bold">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text field-icon"><i class="bi bi-lock"></i></span>
+                                    <input type="password" id="password" class="form-control form-control-lg"
+                                        placeholder="Create a strong password" required autocomplete="new-password">
+                                </div>
+                            </div>
+
+                            <!-- Student-specific fields -->
+                            <div id="studentFields" class="role-fields d-none">
+                                <hr class="my-3">
+                                <p class="text-muted small fw-bold mb-3"><i class="bi bi-mortarboard me-1"></i>STUDENT DETAILS</p>
+                                
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label for="course_category" class="form-label fw-bold">Course Category</label>
+                                        <select id="course_category" class="form-select">
+                                            <option value="" selected disabled>Select Category</option>
+                                            <option value="UG">Undergraduate (UG)</option>
+                                            <option value="PG">Postgraduate (PG)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="course_name" class="form-label fw-bold">Course</label>
+                                        <select id="course_name" class="form-select" disabled>
+                                            <option value="" selected disabled>Select Category First</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label for="year_of_study" class="form-label fw-bold">Year of Study</label>
+                                        <select id="year_of_study" class="form-select">
+                                            <option value="" selected disabled>Select Year</option>
+                                            <option value="1st Year">1st Year</option>
+                                            <option value="2nd Year">2nd Year</option>
+                                            <option value="3rd Year">3rd Year</option>
+                                            <option value="4th Year">4th Year</option>
+                                            <option value="5th Year">5th Year</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="roll_number" class="form-label fw-bold">Roll Number</label>
+                                        <input type="text" id="roll_number" class="form-control" placeholder="e.g. 2024CSE101">
+                                    </div>
+                                </div>
+
+                                <div class="mb-3 d-none" id="branchContainer">
+                                    <label for="branch" class="form-label fw-bold">Branch / Specialization</label>
+                                    <select id="branch" class="form-select">
+                                        <option value="" selected disabled>Select Branch</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="class_name" class="form-label fw-bold">Section / Batch (Optional)</label>
+                                    <input type="text" id="class_name" class="form-control" placeholder="e.g. Section A, Batch 2024">
+                                </div>
+                            </div>
+
+                            <!-- Faculty-specific fields -->
+                            <div id="facultyFields" class="role-fields d-none">
+                                <hr class="my-3">
+                                <p class="text-muted small fw-bold mb-3"><i class="bi bi-building me-1"></i>FACULTY DETAILS</p>
+                                <div class="mb-3">
+                                    <label for="department" class="form-label fw-bold">Department</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text field-icon"><i class="bi bi-diagram-3"></i></span>
+                                        <select id="department" class="form-select">
+                                            <option value="" selected disabled>Select Department</option>
+                                            <option value="CSE">Computer Science (CSE)</option>
+                                            <option value="ECE">Electronics (ECE)</option>
+                                            <option value="EEE">Electrical (EEE)</option>
+                                            <option value="IT">Information Technology (IT)</option>
+                                            <option value="Mechanical">Mechanical</option>
+                                            <option value="Civil">Civil</option>
+                                            <option value="AI & ML">AI & ML</option>
+                                            <option value="Data Science">Data Science</option>
+                                            <option value="Mathematics">Mathematics</option>
+                                            <option value="Physics">Physics</option>
+                                            <option value="Chemistry">Chemistry</option>
+                                            <option value="Biology">Biology</option>
+                                            <option value="Finance">Finance</option>
+                                            <option value="HR">HR</option>
+                                            <option value="Marketing">Marketing</option>
+                                            <option value="Operations">Operations</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" id="registerBtn" class="btn btn-success btn-lg w-100 fw-bold">
+                                    <i class="bi bi-person-check me-2"></i>Create Account
+                                </button>
+                            </div>
+                        </form>
+                        <hr class="mt-4 mb-3">
+                        <div class="text-center">
+                            <p class="mb-0">Already have an account? <a href="login.html" class="text-decoration-none fw-bold">Login here</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        const courseOptions = {
+            'UG': ['B.Tech', 'B.E.', 'BCA', 'B.Sc', 'B.Com', 'B.A.', 'BBA'],
+            'PG': ['M.Tech', 'M.E.', 'MCA', 'M.Sc', 'M.Com', 'M.A.', 'MBA']
+        };
+
+        const branchOptions = {
+            'B.Tech': ['CSE', 'ECE', 'EEE', 'Mechanical', 'Civil', 'IT', 'AI & ML', 'Data Science'],
+            'B.Sc': ['Computer Science', 'Mathematics', 'Physics', 'Chemistry', 'Biology', 'Electronics'],
+            'M.Tech': ['CSE', 'ECE', 'Power Systems', 'Structural', 'Thermal', 'VLSI'],
+            'M.Sc': ['Computer Science', 'Mathematics', 'Physics', 'Chemistry'],
+            'MBA': ['Finance', 'HR', 'Marketing', 'Operations', 'IT']
+        };
+
+        // Handle category change for dynamic course list
+        document.getElementById('course_category').addEventListener('change', function() {
+            const cat = this.value;
+            const courseSelect = document.getElementById('course_name');
+            courseSelect.innerHTML = '<option value="" selected disabled>Select Course</option>';
+            document.getElementById('branchContainer').classList.add('d-none');
+            
+            if (courseOptions[cat]) {
+                courseSelect.disabled = false;
+                courseOptions[cat].forEach(course => {
+                    const opt = document.createElement('option');
+                    opt.value = course;
+                    opt.textContent = course;
+                    courseSelect.appendChild(opt);
+                });
+            } else {
+                courseSelect.disabled = true;
+            }
+        });
+
+        // Handle course change for dynamic branch list
+        document.getElementById('course_name').addEventListener('change', function() {
+            const course = this.value;
+            const branchContainer = document.getElementById('branchContainer');
+            const branchSelect = document.getElementById('branch');
+            branchSelect.innerHTML = '<option value="" selected disabled>Select Branch</option>';
+            
+            if (branchOptions[course]) {
+                branchContainer.classList.remove('d-none');
+                branchOptions[course].forEach(branch => {
+                    const opt = document.createElement('option');
+                    opt.value = branch;
+                    opt.textContent = branch;
+                    branchSelect.appendChild(opt);
+                });
+            } else {
+                branchContainer.classList.add('d-none');
+            }
+        });
+
+        // Show/hide role-specific fields when role changes
+        document.getElementById('role').addEventListener('change', function () {
+            const role = this.value;
+            document.getElementById('studentFields').classList.toggle('d-none', role !== 'student');
+            document.getElementById('facultyFields').classList.toggle('d-none', role !== 'faculty');
+        });
+
+        // Send Verification Code
+        document.getElementById('sendCodeBtn').addEventListener('click', async function() {
+            const email = document.getElementById('email').value.trim();
+            const alertEl = document.getElementById('alertMsg');
+            if (!email || !email.includes('@')) {
+                alertEl.textContent = 'Please enter a valid email address first.';
+                alertEl.className = 'alert alert-danger';
+                return;
+            }
+
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            
+            const res = await ApiClient.post('/auth/send-code', { email, purpose: 'register' });
+            
+            if (res.ok) {
+                alertEl.textContent = 'Verification code sent! Please check your email.';
+                alertEl.className = 'alert alert-success';
+                document.getElementById('verificationSection').classList.remove('d-none');
+                this.innerHTML = 'Resend Code';
+            } else {
+                alertEl.textContent = res.data.message || 'Failed to send code.';
+                alertEl.className = 'alert alert-danger';
+                this.innerHTML = 'Send Code';
+            }
+            this.disabled = false;
+        });
+
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const alertEl = document.getElementById('alertMsg');
+            alertEl.className = 'alert d-none';
+
+            const role = document.getElementById('role').value;
+            if (!role) {
+                alertEl.textContent = 'Please select your role.';
+                alertEl.className = 'alert alert-danger';
+                return;
+            }
+
+            const verificationCode = document.getElementById('verification_code').value.trim();
+            if (!verificationCode) {
+                alertEl.textContent = 'Please enter the verification code sent to your email.';
+                alertEl.className = 'alert alert-danger';
+                return;
+            }
+
+            const btn = document.getElementById('registerBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating Account...';
+
+            const payload = {
+                email:             document.getElementById('email').value.trim().toLowerCase(),
+                password:          document.getElementById('password').value,
+                verification_code: verificationCode,
+                role:              role,
+                full_name:         document.getElementById('full_name').value.trim(),
+                // Student specific
+                class_name:      role === 'student' ? document.getElementById('class_name').value.trim() : '',
+                roll_number:     role === 'student' ? document.getElementById('roll_number').value.trim() : '',
+                course_category: role === 'student' ? document.getElementById('course_category').value : '',
+                course_name:     role === 'student' ? document.getElementById('course_name').value : '',
+                year_of_study:   role === 'student' ? document.getElementById('year_of_study').value : '',
+                branch:          role === 'student' ? document.getElementById('branch').value : '',
+                // Faculty specific
+                department:      role === 'faculty' ? document.getElementById('department').value.trim() : ''
+            };
+
+            const res = await ApiClient.post('/register', payload);
+
+            if (res.ok) {
+                alertEl.textContent = res.data.message + ' Redirecting to login…';
+                alertEl.className = 'alert alert-success';
+                setTimeout(() => { window.location.href = 'login.html'; }, 1800);
+            } else {
+                alertEl.textContent = res.data.message || 'Registration failed. Please try again.';
+                alertEl.className = 'alert alert-danger';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-person-check me-2"></i>Create Account';
+            }
+        });
+    </script>
+</body>
+
+</html>

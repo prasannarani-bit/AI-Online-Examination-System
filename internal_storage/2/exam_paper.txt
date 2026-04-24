@@ -1,0 +1,38 @@
+UNIVERSITY EXAMINATION PAPER
+
+Subject: Computer Science
+Time: 3 Hours
+Maximum Marks: 100
+
+SECTION A (10 x 2 = 20 Marks)
+Answer all questions.
+
+1. Define database.
+2. What is an operating system?
+3. What is a primary key?
+4. Define algorithm.
+5. What is a compiler?
+6. What is normalization?
+7. Define cloud computing.
+8. What is a network?
+9. Define data structure.
+10. What is artificial intelligence?
+
+SECTION B (5 x 10 = 50 Marks)
+Answer any five questions.
+
+11. Explain DBMS architecture.
+12. Describe types of operating systems.
+13. Explain normalization with examples.
+14. Discuss advantages of cloud computing.
+15. Explain different data structures.
+16. Describe network topologies.
+17. Explain AI applications.
+
+SECTION C (3 x 10 = 30 Marks)
+Answer any three questions.
+
+18. Write a program in C to find prime numbers.
+19. Explain time-sharing operating system.
+20. Discuss blockchain technology.
+21. Explain machine learning basics.

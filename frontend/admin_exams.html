@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>All Exams - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">Agentic Exam System</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0" id="user-nav"></ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>All System Exams</h2>
+            <a href="admin_dashboard.html" class="btn btn-outline-secondary">Back to Dashboard</a>
+        </div>
+        
+        <div class="card bg-white shadow-sm border-0">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Title</th>
+                                <th>Faculty</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="examsTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center">Loading exams...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        ApiClient.checkAuth(['admin']);
+        ApiClient.setupNav();
+
+        async function loadAllExams() {
+            const res = await ApiClient.get('/admin/exams');
+            const tbody = document.getElementById('examsTableBody');
+            if (res.ok) {
+                if (res.data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center">No exams found.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = res.data.map(exam => `
+                    <tr>
+                        <td>${exam.id}</td>
+                        <td><strong>${exam.title}</strong></td>
+                        <td>${exam.faculty_name}</td>
+                        <td>${exam.duration_minutes} mins</td>
+                        <td>
+                            <span class="badge ${exam.is_published ? 'bg-success' : 'bg-secondary'}">
+                                ${exam.is_published ? 'Published' : 'Draft'}
+                            </span>
+                        </td>
+                        <td>${new Date(exam.created_at).toLocaleDateString()}</td>
+                        <td>
+                            <a href="edit_exam.html?id=${exam.id}" class="btn btn-sm btn-outline-primary">View/Edit</a>
+                            <button onclick="deleteExam(${exam.id})" class="btn btn-sm btn-outline-danger">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Error: ${res.data.message}</td></tr>`;
+            }
+        }
+
+        async function deleteExam(id) {
+            if (!confirm('Are you sure you want to delete this exam and ALL associated data (questions, attempts, logs)?')) return;
+            const res = await ApiClient.delete(`/faculty/exams/${id}`);
+            if (res.ok) {
+                loadAllExams();
+            } else {
+                alert('Delete failed: ' + res.data.message);
+            }
+        }
+
+        loadAllExams();
+    </script>
+</body>
+
+</html>

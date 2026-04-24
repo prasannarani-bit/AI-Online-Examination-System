@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Create Exam</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">Agentic Exam System</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0" id="user-nav"></ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <h2>Create Exam</h2>
+        <div id="alertMsg"></div>
+        <div class="card bg-white shadow-sm border-0 mb-4 p-3">
+            <div class="card-body">
+                <form id="createExamForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Exam Title</label>
+                        <input type="text" id="title" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Description</label>
+                        <textarea id="description" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Duration (Minutes)</label>
+                            <input type="number" id="duration" class="form-control" min="1" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Passing Score (%)</label>
+                            <input type="number" id="passing_score" class="form-control" min="0" max="100" required>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <div class="bg-light p-3 rounded mb-3">
+                        <h5 class="mb-3">AI Question Generation (Optional)</h5>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Syllabus Paper (PDF, Word, or Text)</label>
+                            <input type="file" id="syllabusFile" class="form-control" accept=".pdf,.docx,.txt">
+                            <div class="form-text">Upload a syllabus to automatically generate questions.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Number of Questions to Generate</label>
+                            <input type="number" id="num_questions" class="form-control" value="5" min="1" max="20">
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="btn btn-success mt-2">Create Exam</button>
+                    <a href="faculty_dashboard.html" class="btn btn-outline-secondary mt-2 ms-2">Back to Dashboard</a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        ApiClient.checkAuth(['faculty']);
+        ApiClient.setupNav();
+
+        document.getElementById('createExamForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            const alert = document.getElementById('alertMsg');
+            const originalBtnText = submitBtn.innerText;
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+            alert.innerHTML = '';
+
+            const formData = new FormData();
+            formData.append('title', document.getElementById('title').value);
+            formData.append('description', document.getElementById('description').value);
+            formData.append('duration', document.getElementById('duration').value);
+            formData.append('passing_score', document.getElementById('passing_score').value);
+            
+            const fileInput = document.getElementById('syllabusFile');
+            if (fileInput.files.length > 0) {
+                formData.append('file', fileInput.files[0]);
+                formData.append('num_questions', document.getElementById('num_questions').value);
+            }
+
+            // Using fetch directly because ApiClient.post might be hardcoded for JSON
+            const res = await fetch('/api/faculty/exams', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: formData
+            });
+            
+            const data = await res.json();
+            
+            if (res.ok) {
+                alert.innerHTML = `<div class="alert alert-success">${data.message} Redirecting...</div>`;
+                setTimeout(() => window.location.href = `edit_exam.html?id=${data.exam_id}`, 1500);
+            } else {
+                submitBtn.disabled = false;
+                submitBtn.innerText = originalBtnText;
+                alert.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+            }
+        });
+    </script>
+
+</body>
+
+</html>

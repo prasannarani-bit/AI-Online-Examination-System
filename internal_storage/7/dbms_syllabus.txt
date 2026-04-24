@@ -1,0 +1,55 @@
+DATABASE MANAGEMENT SYSTEMS (DBMS) - SYLLABUS
+
+UNIT I: Introduction to DBMS
+- Definition of DBMS
+- File System vs DBMS
+- Advantages of DBMS
+- Data abstraction and data independence
+- DBMS architecture (3-tier architecture)
+- Types of database users
+
+UNIT II: Data Models and ER Model
+- Data models: Hierarchical, Network, Relational
+- Entity-Relationship (ER) Model
+- Entities, Attributes, Relationships
+- ER Diagram and its components
+- Cardinality and participation constraints
+
+UNIT III: Relational Model
+- Relational model concepts
+- Keys (Primary, Foreign, Candidate)
+- Relational algebra operations
+- Relational calculus (basic idea)
+
+UNIT IV: SQL (Structured Query Language)
+- DDL (CREATE, ALTER, DROP)
+- DML (INSERT, UPDATE, DELETE)
+- DQL (SELECT)
+- Joins (Inner, Outer)
+- Aggregate functions
+- Constraints (NOT NULL, UNIQUE, PRIMARY KEY, FOREIGN KEY)
+
+UNIT V: Normalization
+- Functional dependency
+- Types of normal forms (1NF, 2NF, 3NF, BCNF)
+- Decomposition
+- Anomalies (Insertion, Deletion, Update)
+
+UNIT VI: Transactions and Concurrency Control
+- Transaction concepts
+- ACID properties
+- Transaction states
+- Concurrency control techniques
+- Locking protocols
+- Deadlock and recovery
+
+UNIT VII: Storage and Indexing
+- File organization
+- Indexing techniques (Primary, Secondary, B+ Tree)
+- Hashing
+
+UNIT VIII: Advanced Topics
+- Distributed databases
+- Data warehousing and data mining (basic concepts)
+- Introduction to NoSQL databases
+

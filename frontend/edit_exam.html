@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Exam</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">Agentic Exam System</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0" id="user-nav"></ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 id="examTitle">Edit Exam</h2>
+            <div id="publishContainer">
+                <button id="publishBtn" class="btn btn-success fw-bold d-none">Publish Exam</button>
+                <span id="publishedBadge" class="badge bg-success fs-5 d-none">Published</span>
+            </div>
+        </div>
+        <div id="alertMsg"></div>
+        <div class="row">
+            <div class="col-md-5">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-primary text-white">Add MCQ Question</div>
+                    <div class="card-body">
+                        <form id="addQuestionForm">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Question Text</label>
+                                <textarea id="q_text" class="form-control form-element" rows="2" required></textarea>
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6"><input type="text" id="opt_a" class="form-control form-element"
+                                        placeholder="Option A" required></div>
+                                <div class="col-6"><input type="text" id="opt_b" class="form-control form-element"
+                                        placeholder="Option B" required></div>
+                                <div class="col-6"><input type="text" id="opt_c" class="form-control form-element"
+                                        placeholder="Option C" required></div>
+                                <div class="col-6"><input type="text" id="opt_d" class="form-control form-element"
+                                        placeholder="Option D" required></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Correct Option</label>
+                                <select id="correct_opt" class="form-select form-element" required>
+                                    <option value="A">A</option>
+                                    <option value="B">B</option>
+                                    <option value="C">C</option>
+                                    <option value="D">D</option>
+                                </select>
+                            </div>
+                            <button type="submit" id="addQBtn" class="btn btn-primary w-100 fw-bold form-element">Add
+                                Question</button>
+                        </form>
+                        <a href="faculty_dashboard.html" class="btn btn-outline-secondary w-100 mt-2 form-element">Back to Dashboard</a>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-success text-white">Direct Upload (CSV)</div>
+                    <div class="card-body">
+                        <form id="uploadCsvForm">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Select CSV File</label>
+                                <input class="form-control form-element" type="file" id="csvFile" accept=".csv" required>
+                                <small class="text-muted">Format: question, a, b, c, d, correct_opt(A/B/C/D) (first row is header)</small>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100 fw-bold form-element">Upload CSV</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-info text-dark fw-bold">AI Generate from Syllabus</div>
+                    <div class="card-body">
+                        <form id="generateAiForm">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Select Syllabus (.txt, .pdf, .docx)</label>
+                                <input class="form-control form-element" type="file" id="txtFile" accept=".txt,.pdf,.docx" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Number of questions to generate</label>
+                                <input class="form-control form-element" type="number" id="num_ai_q" value="5" min="1" max="50">
+                            </div>
+                            <button type="submit" id="generateAiBtn" class="btn btn-info w-100 fw-bold form-element">Generate MCQs via AI</button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="col-md-7">
+                <h4 class="mb-3" id="qCountText">Current Questions</h4>
+                <div id="questionsContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        console.log("DEBUG: Page script started");
+        ApiClient.checkAuth(['faculty']);
+        console.log("DEBUG: Auth check passed");
+        ApiClient.setupNav();
+        console.log("DEBUG: Nav setup called");
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const examId = urlParams.get('id');
+        console.log("DEBUG: examId from URL:", examId);
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;',
+                "`": '&#96;'
+            };
+            return text.toString().replace(/[&<>"'`]/g, function(m) { return map[m]; });
+        }
+
+        async function loadExamDetails() {
+            console.log("DEBUG: loadExamDetails called for ID:", examId);
+            try {
+                const res = await ApiClient.get(`/faculty/exams/${examId}`);
+                console.log("DEBUG: Fetch result:", res.ok, res.status);
+                if (res.ok) {
+                    const exam = res.data.exam;
+                    const questions = res.data.questions;
+                    console.log("DEBUG: Loaded questions count:", questions.length);
+
+                    document.getElementById('examTitle').textContent = `Edit Exam: ${exam.title}`;
+                    document.getElementById('qCountText').textContent = `Current Questions (${questions.length})`;
+
+                if (exam.is_published) {
+                    document.getElementById('publishedBadge').classList.remove('d-none');
+                    document.querySelectorAll('.form-element').forEach(el => el.disabled = true);
+                } else {
+                    const pb = document.getElementById('publishBtn');
+                    pb.classList.remove('d-none');
+                    pb.onclick = async () => {
+                        const pres = await ApiClient.post(`/faculty/exams/${examId}/publish`);
+                        if (pres.ok) window.location.reload();
+                    };
+                }
+
+                const qc = document.getElementById('questionsContainer');
+                if (questions.length === 0) {
+                    qc.innerHTML = `<div class="alert alert-info">No questions added yet.</div>`;
+                } else {
+                    try {
+                        qc.innerHTML = questions.map((q, i) => `
+                            <div class="card mb-3 shadow-sm border-0">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <h6 class="card-title fw-bold">${i + 1}. ${escapeHtml(q.question_text)}</h6>
+                                        ${!exam.is_published ? `<button onclick="deleteQuestion(${q.id})" class="btn btn-sm btn-outline-danger border-0" title="Delete Question">Delete</button>` : ''}
+                                    </div>
+                                    <ul class="list-unstyled ms-3 mt-2">
+                                        <li class="${q.correct_option === 'A' ? 'text-success fw-bold' : ''}">A: ${escapeHtml(q.option_a)}</li>
+                                        <li class="${q.correct_option === 'B' ? 'text-success fw-bold' : ''}">B: ${escapeHtml(q.option_b)}</li>
+                                        <li class="${q.correct_option === 'C' ? 'text-success fw-bold' : ''}">C: ${escapeHtml(q.option_c)}</li>
+                                        <li class="${q.correct_option === 'D' ? 'text-success fw-bold' : ''}">D: ${escapeHtml(q.option_d)}</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        `).join('');
+                    } catch (err) {
+                        console.error('Rendering error:', err);
+                        qc.innerHTML = `<div class="alert alert-danger">Error rendering question list. Some questions may contain invalid characters.</div>`;
+                    }
+                }
+            } else {
+                window.location.href = 'faculty_dashboard.html';
+            }
+        } catch (err) {
+            console.error('Fetch error:', err);
+        }
+    }
+
+        document.getElementById('addQuestionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const res = await ApiClient.post(`/faculty/exams/${examId}/questions`, {
+                question_text: document.getElementById('q_text').value,
+                option_a: document.getElementById('opt_a').value,
+                option_b: document.getElementById('opt_b').value,
+                option_c: document.getElementById('opt_c').value,
+                option_d: document.getElementById('opt_d').value,
+                correct_option: document.getElementById('correct_opt').value
+            });
+            const alertDiv = document.getElementById('alertMsg');
+            if (res.ok) {
+                alertDiv.innerHTML = `<div class="alert alert-success">${res.data.message}</div>`;
+                document.getElementById('addQuestionForm').reset();
+                loadExamDetails();
+            } else {
+                alertDiv.innerHTML = `<div class="alert alert-danger">${res.data.message}</div>`;
+            }
+        });
+
+        document.getElementById('uploadCsvForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('csvFile');
+            if (fileInput.files.length === 0) return;
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            const alertDiv = document.getElementById('alertMsg');
+            alertDiv.innerHTML = `<div class="alert alert-info">Uploading and processing CSV...</div>`;
+            
+            const res = await ApiClient.postFormData(`/faculty/exams/${examId}/upload_csv`, formData);
+            if (res.ok) {
+                alertDiv.innerHTML = `<div class="alert alert-success">${res.data.message}</div>`;
+                document.getElementById('uploadCsvForm').reset();
+                loadExamDetails();
+            } else {
+                alertDiv.innerHTML = `<div class="alert alert-danger">${res.data.message || 'Error uploading file'}</div>`;
+            }
+        });
+
+        document.getElementById('generateAiForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('txtFile');
+            const alertDiv = document.getElementById('alertMsg');
+            if (fileInput.files.length === 0) {
+                alertDiv.innerHTML = `<div class="alert alert-warning">Please select a syllabus file first.</div>`;
+                return;
+            }
+            
+            const btn = document.getElementById('generateAiBtn');
+            btn.disabled = true;
+            btn.textContent = 'Generating... (Takes ~10s)';
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('num_questions', document.getElementById('num_ai_q').value);
+            
+            alertDiv.innerHTML = `<div class="alert alert-info">Extracting content and interacting with AI...</div>`;
+            
+            const res = await ApiClient.postFormData(`/faculty/exams/${examId}/generate_ai`, formData);
+            if (res.ok) {
+                alertDiv.innerHTML = `<div class="alert alert-success">${res.data.message}</div>`;
+                document.getElementById('generateAiForm').reset();
+                loadExamDetails();
+            } else if (res.status === 429) {
+                alertDiv.innerHTML = `<div class="alert alert-warning fw-bold">⚠️ ${res.data.message}</div>`;
+            } else {
+                alertDiv.innerHTML = `<div class="alert alert-danger">${res.data.message || 'AI Generation Failed'}</div>`;
+            }
+            btn.disabled = false;
+            btn.textContent = 'Generate MCQs via AI';
+        });
+
+        async function deleteQuestion(qId) {
+            if (!confirm('Are you sure you want to remove this question?')) return;
+            const res = await ApiClient.request(`/faculty/exams/${examId}/questions/${qId}`, { method: 'DELETE' });
+            if (res.ok) {
+                loadExamDetails();
+            } else {
+                alert(res.data.message || 'Error deleting question');
+            }
+        }
+
+        if (examId) loadExamDetails();
+        else window.location.href = 'faculty_dashboard.html';
+    </script>
+</body>
+
+</html>

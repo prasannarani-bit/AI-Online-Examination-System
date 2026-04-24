@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Faculty Files - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">Agentic Exam System</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0" id="user-nav"></ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>All Uploaded Faculty Files</h2>
+            <a href="admin_dashboard.html" class="btn btn-outline-secondary">Back to Dashboard</a>
+        </div>
+        
+        <div class="card bg-white shadow-sm border-0">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Filename</th>
+                                <th>Faculty</th>
+                                <th>Uploaded At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="filesTableBody">
+                            <tr>
+                                <td colspan="5" class="text-center">Loading files...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        ApiClient.checkAuth(['admin']);
+        ApiClient.setupNav();
+
+        async function loadAllFiles() {
+            const res = await ApiClient.get('/admin/files');
+            const tbody = document.getElementById('filesTableBody');
+            if (res.ok) {
+                if (res.data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center">No stored files found.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = res.data.map(file => `
+                    <tr>
+                        <td>${file.id}</td>
+                        <td><strong>${file.filename}</strong></td>
+                        <td>${file.faculty_name}</td>
+                        <td>${new Date(file.uploaded_at).toLocaleString()}</td>
+                        <td>
+                            <button onclick="deleteFile(${file.id})" class="btn btn-sm btn-outline-danger">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error: ${res.data.message}</td></tr>`;
+            }
+        }
+
+        async function deleteFile(id) {
+            if (!confirm('Are you sure you want to delete this file from storage?')) return;
+            const res = await ApiClient.delete(`/faculty/storage/files/${id}`);
+            if (res.ok) {
+                loadAllFiles();
+            } else {
+                alert('Delete failed: ' + res.data.message);
+            }
+        }
+
+        loadAllFiles();
+    </script>
+</body>
+
+</html>
