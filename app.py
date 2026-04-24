@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import jwt
 import datetime
@@ -17,11 +17,18 @@ from agents.analytics_agent import AnalyticsAgent
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
-app = Flask(__name__, static_folder='frontend', static_url_path='/')
+app = Flask(__name__)
 CORS(app) # Enable CORS for all routes
 app.config['SECRET_KEY'] = 'super_secret_agentic_key'
 
+port = int(os.environ.get("PORT", 5000))
+app.run(host="0.0.0.0", port=port)
+
 proctor_agent = ProctorAgent()
+
+@app.route("/")
+def home():
+    return render_template("index.html")
 
 if not os.path.exists('database.db'):
     init_db()
