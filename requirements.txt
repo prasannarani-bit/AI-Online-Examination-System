@@ -1,0 +1,10 @@
+Flask
+Werkzeug
+opencv-python
+matplotlib
+numpy
+Flask-Cors
+PyJWT
+google-genai
+PyPDF2
+python-docx
