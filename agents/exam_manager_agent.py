@@ -5,8 +5,10 @@ from google import genai
 import json
 import re
 import time
+import os
 
-client = genai.Client(api_key="AIzaSyB7EDZN0rCy891KkgFtzcJFQZMZhhxB9oE")
+API_KEY = os.environ.get("API_KEY")
+client = genai.Client(api_key=API_KEY)
 
 class ExamManagerAgent:
     @staticmethod
