@@ -1,7 +1,8 @@
 from google import genai
 import os
 
-client = genai.Client(api_key="AIzaSyB7EDZN0rCy891KkgFtzcJFQZMZhhxB9oE")
+API_KEY = os.environ.get("API_KEY")
+client = genai.Client(api_key=API_KEY)
 
 try:
     for model in client.models.list():
