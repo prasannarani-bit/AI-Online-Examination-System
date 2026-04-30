@@ -1024,7 +1024,7 @@ print("FIXED FILE PATH:", file_path)
 if not os.path.exists(file_path):
     conn.close()
     return jsonify({'message': f'File not found on server: {file_path}'}), 400
-print("FIXED FILE PATH:", file_path)
+    print("FIXED FILE PATH:", file_path)
     try:
         if filename.endswith('.csv'):
             with open(file_path, 'r', encoding='utf8') as f:
