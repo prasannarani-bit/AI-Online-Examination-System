@@ -1004,17 +1004,23 @@ def storage_generate_exam(current_user):
         return jsonify({'message': 'Missing parameters for exam generation'}), 400
         
     conn = get_db_connection()
-    file_record = conn.execute("SELECT file_path, filename FROM faculty_files WHERE id = ? AND faculty_id = ?", 
-                               (file_id, current_user['id'])).fetchone()
-    
-    if not file_record:
-        conn.close()
-        return jsonify({'message': 'File not found'}), 404
-        
-    filename = file_record['filename']
+    file_record = conn.execute(
+    "SELECT file_path, filename FROM faculty_files WHERE id = ? AND faculty_id = ?", 
+    (file_id, current_user['id'])
+).fetchone()
 
-# Build correct path for Render (Linux-safe)
+if not file_record:
+    conn.close()
+    return jsonify({'message': 'File not found'}), 404
+
+filename = file_record['filename']
+
+# ✅ FIXED PATH
 file_path = os.path.join("internal_storage", str(current_user['id']), filename)
+
+print("FIXED FILE PATH:", file_path)
+
+# ✅ CHECK FILE EXISTS
 if not os.path.exists(file_path):
     conn.close()
     return jsonify({'message': f'File not found on server: {file_path}'}), 400
