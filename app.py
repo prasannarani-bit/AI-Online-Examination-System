@@ -1011,9 +1011,14 @@ def storage_generate_exam(current_user):
         conn.close()
         return jsonify({'message': 'File not found'}), 404
         
-    file_path = file_record['file_path']
     filename = file_record['filename']
-    
+
+# Build correct path for Render (Linux-safe)
+file_path = os.path.join("internal_storage", str(current_user['id']), filename)
+if not os.path.exists(file_path):
+    conn.close()
+    return jsonify({'message': f'File not found on server: {file_path}'}), 400
+print("FIXED FILE PATH:", file_path)
     try:
         if filename.endswith('.csv'):
             with open(file_path, 'r', encoding='utf8') as f:
