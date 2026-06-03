@@ -74,9 +74,9 @@ class ExamManagerAgent:
     @staticmethod
     def _call_groq(prompt):
         MODELS_TO_TRY = [
-            "llama3-8b-8192",       # fast, free, generous quota
-            "llama-3.1-8b-instant", # fallback
-            "mixtral-8x7b-32768",   # fallback
+            "llama-3.1-8b-instant",     # fast, free
+            "llama-3.3-70b-versatile",  # more powerful fallback
+            "gemma2-9b-it",             # Google's model on Groq, free
         ]
         output = "No output"
 
