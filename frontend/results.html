@@ -354,7 +354,14 @@
                 const user = res.data;
                 document.getElementById('cert-student-name').textContent = user.full_name || user.username;
                 document.getElementById('cert-exam-title').textContent = attempt.title;
-                document.getElementById('cert-date').textContent = new Date(attempt.end_time).toLocaleDateString(undefined, {
+                let cleanEndTime = attempt.end_time.trim();
+                if (cleanEndTime.indexOf('T') === -1) {
+                    cleanEndTime = cleanEndTime.replace(' ', 'T');
+                }
+                if (!cleanEndTime.endsWith('Z') && cleanEndTime.indexOf('+') === -1) {
+                    cleanEndTime += 'Z';
+                }
+                document.getElementById('cert-date').textContent = new Date(cleanEndTime).toLocaleDateString(undefined, {
                     day: 'numeric',
                     month: 'long',
                     year: 'numeric'
