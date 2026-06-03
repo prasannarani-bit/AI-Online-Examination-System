@@ -262,7 +262,7 @@
                                     '<span class="badge bg-danger rounded-pill px-3" title="Cheating suspected by AI Proctoring">Bad Review</span>' : 
                                     '<span class="badge bg-success rounded-pill px-3">Clean Result</span>'}
                             </td>
-                            <td>${new Date(r.end_time + 'Z').toLocaleString()}</td>
+                            <td>${ApiClient.formatDateTime(r.end_time)}</td>
                         </tr>
                     `).join('');
                 }
