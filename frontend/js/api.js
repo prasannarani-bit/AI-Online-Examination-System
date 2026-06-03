@@ -118,4 +118,29 @@ class ApiClient {
             `;
         }
     }
+    static formatDateTime(utcStr) {
+        if (!utcStr) return '—';
+        let cleanStr = utcStr.trim();
+        if (cleanStr.indexOf('T') === -1) {
+            cleanStr = cleanStr.replace(' ', 'T');
+        }
+        if (!cleanStr.endsWith('Z') && cleanStr.indexOf('+') === -1) {
+            cleanStr += 'Z';
+        }
+        const date = new Date(cleanStr);
+        return date.toLocaleString();
+    }
+
+    static formatDate(utcStr) {
+        if (!utcStr) return '—';
+        let cleanStr = utcStr.trim();
+        if (cleanStr.indexOf('T') === -1) {
+            cleanStr = cleanStr.replace(' ', 'T');
+        }
+        if (!cleanStr.endsWith('Z') && cleanStr.indexOf('+') === -1) {
+            cleanStr += 'Z';
+        }
+        const date = new Date(cleanStr);
+        return date.toLocaleDateString();
+    }
 }
