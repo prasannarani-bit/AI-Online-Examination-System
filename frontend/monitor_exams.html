@@ -50,7 +50,7 @@
                                     <p class="mb-1"><strong>Attempt ID:</strong> ${log.attempt_id}</p>
                                     <p class="mb-1"><strong>Student:</strong> ${log.username}</p>
                                     <p class="mb-1"><strong>Exam:</strong> ${log.exam_title}</p>
-                                    <p class="mb-2 text-muted small"><i class="bi bi-clock"></i> ${log.timestamp}</p>
+                                    <p class="mb-2 text-muted small"><i class="bi bi-clock"></i> ${ApiClient.formatDateTime(log.timestamp)}</p>
                                     ${log.image_blob ? `<img src="${log.image_blob}" class="img-fluid rounded border border-danger">` : ''}
                                     <div class="mt-3 text-end">
                                         <button onclick="deleteLog(${log.id})" class="btn btn-sm btn-link text-danger p-0"><i class="bi bi-trash"></i> Delete Log</button>
