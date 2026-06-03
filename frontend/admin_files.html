@@ -64,7 +64,7 @@
                         <td>${file.id}</td>
                         <td><strong>${file.filename}</strong></td>
                         <td>${file.faculty_name}</td>
-                        <td>${ApiClient.formatDate(exam.created_at)}</td>
+                        <td>${ApiClient.formatDateTime(file.uploaded_at)}</td>
                         <td>
                             <button onclick="deleteFile(${file.id})" class="btn btn-sm btn-outline-danger">Delete</button>
                         </td>
