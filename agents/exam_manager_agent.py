@@ -13,10 +13,10 @@ if not API_KEY:
     raise ValueError("API_KEY is not set in environment variables")
 
 client = genai.Client(api_key=API_KEY)
+
 class ExamManagerAgent:
     @staticmethod
     def validate_exam_creation(faculty_id, title, duration, passing_score):
-        """Validates if an exam can be created."""
         if duration <= 0:
             return False, "Duration must be positive."
         if passing_score < 0 or passing_score > 100:
@@ -27,7 +27,6 @@ class ExamManagerAgent:
 
     @staticmethod
     def is_student_eligible(conn, attempt_id):
-        # Additional checks can go here
         return True
 
     @staticmethod
@@ -75,15 +74,13 @@ class ExamManagerAgent:
 
     @staticmethod
     def _call_gemini(prompt):
-        # List of models to try in order, from lightest to heaviest
+        # ✅ FIX 1: Removed deprecated gemini-1.5 models (they return 404 in new SDK)
         MODELS_TO_TRY = [
-             "gemini-1.5-flash",
-             "gemini-1.5-pro", 
-             "gemini-2.0-flash-lite",
-             "gemini-2.0-flash"
+            "gemini-2.0-flash-lite",
+            "gemini-2.0-flash",
         ]
-        MAX_RETRIES = 3
-        RETRY_DELAY = 12  # seconds to wait between retries
+        MAX_RETRIES = 1        # ✅ FIX 2: Reduced from 3 — fail fast, no long waits
+        RETRY_DELAY = 0        # ✅ FIX 3: Removed sleep — time.sleep() kills gunicorn worker
 
         prompt += "\n\nCRITICAL: Return ONLY a raw JSON array. No markdown, no triple backticks, no preamble."
         output = "No output"
@@ -115,22 +112,16 @@ class ExamManagerAgent:
                 except Exception as e:
                     err_str = str(e)
                     if '429' in err_str or 'RESOURCE_EXHAUSTED' in err_str:
-                        print(f"DEBUG: Quota exhausted on model '{model}', attempt {attempt + 1}. Waiting {RETRY_DELAY}s...")
-                        if attempt < MAX_RETRIES - 1:
-                            time.sleep(RETRY_DELAY)
-                        else:
-                            print(f"DEBUG: All retries failed for model '{model}'. Trying next model...")
-                            break  # Try next model
+                        print(f"DEBUG: Quota exhausted on model '{model}', skipping immediately...")
+                        break  # ✅ FIX 4: No sleep, just skip to next model instantly
                     elif '404' in err_str or 'NOT_FOUND' in err_str:
                         print(f"DEBUG: Model '{model}' not found. Trying next model...")
-                        break  # Try next model immediately
+                        break
                     else:
                         print(f"DEBUG: AI Error on model '{model}': {err_str}")
-                        raw_hint = output[:100]
-                        return None, f"AI generation error: {err_str[:200]} (Raw start: {raw_hint})"
+                        return None, f"AI generation error: {err_str[:200]}"
 
         return None, (
-            "AI quota exhausted on all available models. "
-            "Please wait 1-2 minutes and try again. "
+            "AI quota exhausted. Please try again in a few minutes. "
             "This is a limitation of the free Gemini API tier."
         )
