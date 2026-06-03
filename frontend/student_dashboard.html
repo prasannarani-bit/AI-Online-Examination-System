@@ -82,7 +82,14 @@
                 } else {
                     const formatTime = (utcStr) => {
                         if (!utcStr) return '—';
-                        const date = new Date(utcStr + ' UTC');
+                        let cleanStr = utcStr.trim();
+                        if (cleanStr.indexOf('T') === -1) {
+                            cleanStr = cleanStr.replace(' ', 'T');
+                        }
+                        if (!cleanStr.endsWith('Z') && cleanStr.indexOf('+') === -1) {
+                            cleanStr += 'Z';
+                        }
+                        const date = new Date(cleanStr);
                         return date.toLocaleString(undefined, {
                             year: 'numeric', month: 'short', day: 'numeric',
                             hour: '2-digit', minute: '2-digit'
