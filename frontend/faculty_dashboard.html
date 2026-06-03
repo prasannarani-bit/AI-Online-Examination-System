@@ -156,7 +156,7 @@
                         <tr>
                             <td>${f.id}</td>
                             <td class="fw-bold">${f.filename}</td>
-                            <td>${new Date(f.uploaded_at).toLocaleString()}</td>
+                            <td>${ApiClient.formatDateTime(f.uploaded_at)}</td>
                             <td>
                                 <button onclick="triggerGenerateExam(${f.id}, '${f.filename}')" class="btn btn-sm btn-outline-success">Generate Exam</button>
                                 <button onclick="deleteStorageFile(${f.id})" class="btn btn-sm btn-outline-danger ms-1">Delete</button>
