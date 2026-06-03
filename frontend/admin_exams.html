@@ -72,7 +72,7 @@
                                 ${exam.is_published ? 'Published' : 'Draft'}
                             </span>
                         </td>
-                        <td>${new Date(exam.created_at).toLocaleDateString()}</td>
+                        <td>${ApiClient.formatDate(exam.created_at)}</td>
                         <td>
                             <a href="edit_exam.html?id=${exam.id}" class="btn btn-sm btn-outline-primary">View/Edit</a>
                             <button onclick="deleteExam(${exam.id})" class="btn btn-sm btn-outline-danger">Delete</button>
