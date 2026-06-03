@@ -1,18 +1,15 @@
 import PyPDF2
 import docx
-import io
-from google import genai
+from groq import Groq
 import json
 import re
-import time
 import os
 
-API_KEY = os.environ.get("API_KEY")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+if not GROQ_API_KEY:
+    raise ValueError("GROQ_API_KEY is not set in environment variables")
 
-if not API_KEY:
-    raise ValueError("API_KEY is not set in environment variables")
-
-client = genai.Client(api_key=API_KEY)
+client = Groq(api_key=GROQ_API_KEY)
 
 class ExamManagerAgent:
     @staticmethod
@@ -60,68 +57,64 @@ class ExamManagerAgent:
         prompt = f"""
         Generate {num_questions} multiple choice questions based on the following syllabus/content:
         {text}
-        
-        Strictly format the output as a valid JSON array of objects. Do not wrap it in markdown block quotes.
-        Each object MUST have the following keys exactly:
+
+        Strictly format the output as a valid JSON array of objects. Do not wrap it in markdown or code blocks.
+        Each object MUST have exactly these keys:
         "question_text"
         "option_a"
         "option_b"
         "option_c"
         "option_d"
         "correct_option" (only "A", "B", "C", or "D")
+
+        CRITICAL: Return ONLY a raw JSON array. No markdown, no triple backticks, no preamble.
         """
-        return ExamManagerAgent._call_gemini(prompt)
+        return ExamManagerAgent._call_groq(prompt)
 
     @staticmethod
-    def _call_gemini(prompt):
-        # ✅ FIX 1: Removed deprecated gemini-1.5 models (they return 404 in new SDK)
+    def _call_groq(prompt):
         MODELS_TO_TRY = [
-            "gemini-2.0-flash-lite",
-            "gemini-2.0-flash",
+            "llama3-8b-8192",       # fast, free, generous quota
+            "llama-3.1-8b-instant", # fallback
+            "mixtral-8x7b-32768",   # fallback
         ]
-        MAX_RETRIES = 1        # ✅ FIX 2: Reduced from 3 — fail fast, no long waits
-        RETRY_DELAY = 0        # ✅ FIX 3: Removed sleep — time.sleep() kills gunicorn worker
-
-        prompt += "\n\nCRITICAL: Return ONLY a raw JSON array. No markdown, no triple backticks, no preamble."
         output = "No output"
 
         for model in MODELS_TO_TRY:
-            for attempt in range(MAX_RETRIES):
-                try:
-                    print(f"DEBUG: Trying model '{model}', attempt {attempt + 1}")
-                    response = client.models.generate_content(
-                        model=model,
-                        contents=prompt
-                    )
-                    output = response.text
-                    print(f"DEBUG: Gemini raw output length: {len(output)}")
+            try:
+                print(f"DEBUG: Trying Groq model '{model}'")
+                response = client.chat.completions.create(
+                    model=model,
+                    messages=[{"role": "user", "content": prompt}],
+                    max_tokens=2000,
+                    temperature=0.7
+                )
+                output = response.choices[0].message.content
+                print(f"DEBUG: Groq raw output length: {len(output)}")
 
-                    output = output.strip()
-                    if output.startswith("```"):
-                        output = re.sub(r'^```(?:json)?\n?|\n?```$', '', output, flags=re.MULTILINE)
+                output = output.strip()
+                if output.startswith("```"):
+                    output = re.sub(r'^```(?:json)?\n?|\n?```$', '', output, flags=re.MULTILINE)
 
-                    output = output.strip()
-                    json_match = re.search(r'\[.*\]', output, re.DOTALL)
-                    if json_match:
-                        output = json_match.group(0)
+                output = output.strip()
+                json_match = re.search(r'\[.*\]', output, re.DOTALL)
+                if json_match:
+                    output = json_match.group(0)
 
-                    questions = json.loads(output)
-                    print(f"DEBUG: Successfully parsed {len(questions)} questions using model '{model}'")
-                    return questions, None
+                questions = json.loads(output)
+                print(f"DEBUG: Successfully parsed {len(questions)} questions using '{model}'")
+                return questions, None
 
-                except Exception as e:
-                    err_str = str(e)
-                    if '429' in err_str or 'RESOURCE_EXHAUSTED' in err_str:
-                        print(f"DEBUG: Quota exhausted on model '{model}', skipping immediately...")
-                        break  # ✅ FIX 4: No sleep, just skip to next model instantly
-                    elif '404' in err_str or 'NOT_FOUND' in err_str:
-                        print(f"DEBUG: Model '{model}' not found. Trying next model...")
-                        break
-                    else:
-                        print(f"DEBUG: AI Error on model '{model}': {err_str}")
-                        return None, f"AI generation error: {err_str[:200]}"
+            except Exception as e:
+                err_str = str(e)
+                print(f"DEBUG: Error on model '{model}': {err_str}")
+                if '429' in err_str or 'rate_limit' in err_str.lower():
+                    print(f"DEBUG: Rate limit on '{model}', trying next...")
+                    continue
+                elif 'model_not_found' in err_str.lower() or '404' in err_str:
+                    print(f"DEBUG: Model '{model}' not found, trying next...")
+                    continue
+                else:
+                    return None, f"AI generation error: {err_str[:200]}"
 
-        return None, (
-            "AI quota exhausted. Please try again in a few minutes. "
-            "This is a limitation of the free Gemini API tier."
-        )
+        return None, "All Groq models failed. Please try again in a moment."
