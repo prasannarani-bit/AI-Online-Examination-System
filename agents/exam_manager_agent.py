@@ -77,9 +77,10 @@ class ExamManagerAgent:
     def _call_gemini(prompt):
         # List of models to try in order, from lightest to heaviest
         MODELS_TO_TRY = [
-            'gemini-2.0-flash-lite',
-            'gemini-2.0-flash',
-            'gemini-2.5-flash',
+             "gemini-1.5-flash",
+             "gemini-1.5-pro", 
+             "gemini-2.0-flash-lite",
+             "gemini-2.0-flash"
         ]
         MAX_RETRIES = 3
         RETRY_DELAY = 12  # seconds to wait between retries
