@@ -777,13 +777,13 @@ def student_dashboard(current_user):
     
     # Filter exams based on student's branch matching faculty's department
     available_exams = conn.execute("""
-        SELECT e.id, e.title, e.description, e.duration_minutes, e.passing_score 
+        SELECT e.id, e.title, e.description, e.duration_minutes, e.passing_score,
+               (SELECT COUNT(*) FROM exam_attempts WHERE student_id = ? AND exam_id = e.id AND status IN ('submitted', 'evaluated')) as attempt_count 
         FROM exams e
         JOIN users f ON e.faculty_id = f.id
         WHERE e.is_published = 1 AND f.department = ?
-        AND e.id NOT IN (SELECT exam_id FROM exam_attempts WHERE student_id = ?)
         ORDER BY e.id DESC
-    """, (current_user['branch'], current_user['id'])).fetchall()
+     """, (current_user['id'], current_user['branch'])).fetchall()
     
     past_attempts = conn.execute("""
         SELECT a.id, e.title, a.start_time, a.status, a.score, e.passing_score
@@ -799,6 +799,11 @@ def start_exam(current_user, exam_id):
     if current_user['role'] != 'student':
         return jsonify({'message': 'Unauthorized'}), 403
     conn = get_db_connection()
+    completed_attempt = conn.execute("SELECT id FROM exam_attempts WHERE student_id = ? AND exam_id = ? AND status IN ('submitted', 'evaluated')", 
+                                     (current_user['id'], exam_id)).fetchone()
+    if completed_attempt:
+        conn.close()
+        return jsonify({'message': 'Response is submitted'}), 400
     cur_attempt = conn.execute("SELECT id FROM exam_attempts WHERE student_id = ? AND exam_id = ? AND status = 'in_progress'", 
                                (current_user['id'], exam_id)).fetchone()
     if cur_attempt:
@@ -884,6 +889,27 @@ def get_result(current_user, attempt_id):
     if not attempt:
         return jsonify({'message': 'Result not found'}), 404
     return jsonify({'attempt': dict(attempt)})
+@app.route('/api/student/exams/<int:exam_id>/question-paper', methods=['GET'])
+@token_required
+def student_question_paper(current_user, exam_id):
+    if current_user['role'] != 'student':
+        return jsonify({'message': 'Unauthorized'}), 403
+        
+    conn = get_db_connection()
+    attempt = conn.execute("SELECT id FROM exam_attempts WHERE student_id = ? AND exam_id = ? AND status IN ('submitted', 'evaluated')", 
+                           (current_user['id'], exam_id)).fetchone()
+    if not attempt:
+        conn.close()
+        return jsonify({'message': 'You must attempt the exam before viewing the question paper.'}), 403
+        
+    exam = conn.execute("SELECT * FROM exams WHERE id = ?", (exam_id,)).fetchone()
+    questions = conn.execute("SELECT id, question_text, option_a, option_b, option_c, option_d FROM questions WHERE exam_id = ?", (exam_id,)).fetchall()
+    conn.close()
+    
+    return jsonify({
+        'exam': dict(exam),
+        'questions': [dict(q) for q in questions]
+    })
 
 @app.route('/api/student/proctor_log', methods=['POST'])
 @token_required
