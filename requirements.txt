@@ -1,6 +1,6 @@
 Flask
 Werkzeug
-opencv-python
+opencv-python-headless
 matplotlib
 numpy
 Flask-Cors
@@ -8,9 +8,7 @@ PyJWT
 google-genai
 PyPDF2
 python-docx
-flask
 gunicorn
 fpdf2
 groq
-brevo
-
+flask
