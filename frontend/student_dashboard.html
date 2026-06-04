@@ -60,9 +60,9 @@
                 if (res.data.available_exams.length === 0) {
                     ac.innerHTML = `<div class="col-12"><div class="alert alert-info">No exams are currently published and available to take.</div></div>`;
                 } else {
-                     ac.innerHTML = res.data.available_exams.map(e => {
+                    ac.innerHTML = res.data.available_exams.map(e => {
                         const hasAttempted = e.attempt_count > 0;
-                        return ` `
+                        return `
                         <div class="col-md-4">
                             <div class="card bg-white shadow-sm border-0 mb-4 h-100">
                                 <div class="card-body d-flex flex-column">
@@ -72,7 +72,7 @@
                                         <li><strong>Duration:</strong> ${e.duration_minutes} mins</li>
                                         <li><strong>Passing Score:</strong> ${e.passing_score}%</li>
                                     </ul>
-                                        ${hasAttempted ? `
+                                    ${hasAttempted ? `
                                         <div class="mt-auto">
                                             <div class="text-success mb-2 text-center fw-semibold">
                                                 <i class="bi bi-check-circle-fill me-1"></i>Response is submitted
