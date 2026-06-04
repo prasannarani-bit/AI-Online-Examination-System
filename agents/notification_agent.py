@@ -1,16 +1,9 @@
-import smtplib
-import ssl
 import os
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.base import MIMEBase
-from email import encoders
+import requests
 from fpdf import FPDF
 from datetime import datetime
 
 class NotificationAgent:
-    SMTP_SERVER = "smtp-relay.brevo.com"
-    SMTP_PORT = 465
     BG_PATH = os.path.join("internal_storage", "assets", "certificate_bg.png")
 
     @staticmethod
@@ -91,61 +84,59 @@ class NotificationAgent:
     @staticmethod
     def _send_email(to_email, subject, body_text, html_body=None,
                     attachment_path=None, attachment_name=None):
-        """Send email via Brevo SMTP SSL on port 465."""
-        smtp_user = os.environ.get("BREVO_SMTP_USER", "")
-        smtp_pass = os.environ.get("BREVO_SMTP_PASS", "")
+        """Send email via Brevo HTTP API — works on Render free tier."""
+        api_key = os.environ.get("BREVO_API_KEY", "")
         from_email = os.environ.get("MAIL_EMAIL", "jntugv.assessment@gmail.com")
 
-        if not smtp_user or not smtp_pass:
-            print("DEBUG: BREVO_SMTP_USER or BREVO_SMTP_PASS not set")
+        if not api_key:
+            print("DEBUG: BREVO_API_KEY not set in Render Environment")
             return False
 
-        msg = MIMEMultipart('alternative')
-        msg['From'] = f"Agentic Exam System <{from_email}>"
-        msg['To'] = to_email
-        msg['Subject'] = subject
+        payload = {
+            "sender": {
+                "name": "Agentic Exam System",
+                "email": from_email
+            },
+            "to": [{"email": to_email}],
+            "subject": subject,
+            "textContent": body_text,
+            "htmlContent": html_body if html_body else body_text
+        }
 
-        msg.attach(MIMEText(body_text, 'plain'))
-        if html_body:
-            msg.attach(MIMEText(html_body, 'html'))
-
+        # Attach certificate if provided
         if attachment_path and os.path.exists(attachment_path):
             try:
+                import base64
                 with open(attachment_path, "rb") as f:
-                    part = MIMEBase("application", "octet-stream")
-                    part.set_payload(f.read())
-                encoders.encode_base64(part)
-                part.add_header(
-                    "Content-Disposition",
-                    f"attachment; filename={attachment_name or os.path.basename(attachment_path)}"
-                )
-                msg.attach(part)
+                    encoded = base64.b64encode(f.read()).decode()
+                payload["attachment"] = [{
+                    "content": encoded,
+                    "name": attachment_name or os.path.basename(attachment_path)
+                }]
             except Exception as e:
                 print(f"DEBUG: Attachment error: {str(e)}")
 
+        headers = {
+            "accept": "application/json",
+            "content-type": "application/json",
+            "api-key": api_key
+        }
+
         try:
-            print("DEBUG: Connecting to Brevo on port 465 (SSL)...")
-            context = ssl.create_default_context()
-            with smtplib.SMTP_SSL(
-                NotificationAgent.SMTP_SERVER,
-                NotificationAgent.SMTP_PORT,
-                context=context,
+            response = requests.post(
+                "https://api.brevo.com/v3/smtp/email",
+                json=payload,
+                headers=headers,
                 timeout=15
-            ) as server:
-                server.login(smtp_user, smtp_pass)
-                server.sendmail(from_email, to_email, msg.as_string())
-
-            print(f"DEBUG: Email sent successfully to {to_email}")
-            return True
-
-        except smtplib.SMTPAuthenticationError:
-            print("DEBUG: Authentication failed — check BREVO_SMTP_USER and BREVO_SMTP_PASS in Render")
-            return False
-        except TimeoutError:
-            print("DEBUG: Port 465 also timed out — Render is blocking all SMTP ports")
-            return False
+            )
+            if response.status_code == 201:
+                print(f"DEBUG: Email sent successfully to {to_email}")
+                return True
+            else:
+                print(f"DEBUG: Brevo API error {response.status_code}: {response.text}")
+                return False
         except Exception as e:
-            print(f"DEBUG: Email failed: {str(e)}")
+            print(f"DEBUG: Brevo API request failed: {str(e)}")
             return False
 
     @staticmethod
