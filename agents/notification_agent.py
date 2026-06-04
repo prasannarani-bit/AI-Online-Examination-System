@@ -10,7 +10,7 @@ from datetime import datetime
 
 class NotificationAgent:
     SMTP_SERVER = "smtp-relay.brevo.com"
-    SMTP_PORT = 587
+    SMTP_PORT = 465
     BG_PATH = os.path.join("internal_storage", "assets", "certificate_bg.png")
 
     @staticmethod
@@ -91,13 +91,13 @@ class NotificationAgent:
     @staticmethod
     def _send_email(to_email, subject, body_text, html_body=None,
                     attachment_path=None, attachment_name=None):
-        """Send email via Brevo SMTP."""
+        """Send email via Brevo SMTP SSL on port 465."""
         smtp_user = os.environ.get("BREVO_SMTP_USER", "")
         smtp_pass = os.environ.get("BREVO_SMTP_PASS", "")
         from_email = os.environ.get("MAIL_EMAIL", "jntugv.assessment@gmail.com")
 
         if not smtp_user or not smtp_pass:
-            print("DEBUG: BREVO_SMTP_USER or BREVO_SMTP_PASS not set in Render Environment")
+            print("DEBUG: BREVO_SMTP_USER or BREVO_SMTP_PASS not set")
             return False
 
         msg = MIMEMultipart('alternative')
@@ -124,12 +124,14 @@ class NotificationAgent:
                 print(f"DEBUG: Attachment error: {str(e)}")
 
         try:
-            with smtplib.SMTP(NotificationAgent.SMTP_SERVER,
-                              NotificationAgent.SMTP_PORT,
-                              timeout=15) as server:
-                server.ehlo()
-                server.starttls()
-                server.ehlo()
+            print("DEBUG: Connecting to Brevo on port 465 (SSL)...")
+            context = ssl.create_default_context()
+            with smtplib.SMTP_SSL(
+                NotificationAgent.SMTP_SERVER,
+                NotificationAgent.SMTP_PORT,
+                context=context,
+                timeout=15
+            ) as server:
                 server.login(smtp_user, smtp_pass)
                 server.sendmail(from_email, to_email, msg.as_string())
 
@@ -137,13 +139,13 @@ class NotificationAgent:
             return True
 
         except smtplib.SMTPAuthenticationError:
-            print("DEBUG: Brevo authentication failed — check BREVO_SMTP_USER and BREVO_SMTP_PASS")
+            print("DEBUG: Authentication failed — check BREVO_SMTP_USER and BREVO_SMTP_PASS in Render")
             return False
         except TimeoutError:
-            print("DEBUG: SMTP connection timed out")
+            print("DEBUG: Port 465 also timed out — Render is blocking all SMTP ports")
             return False
         except Exception as e:
-            print(f"DEBUG: Email sending failed: {str(e)}")
+            print(f"DEBUG: Email failed: {str(e)}")
             return False
 
     @staticmethod
