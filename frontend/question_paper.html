@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Question Paper - Agentic Exam System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .question-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .question-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05) !important;
+        }
+        .form-check-input:disabled {
+            opacity: 0.7;
+            border-color: #ced4da;
+        }
+        .form-check-label {
+            color: #495057;
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">Agentic Exam System</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0" id="user-nav"></ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4 mb-5">
+        <div id="loading" class="text-center mt-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <div id="content" class="d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+                <div>
+                    <span class="badge bg-primary mb-2">Question Paper</span>
+                    <h2 class="m-0 fw-bold text-dark" id="examTitle">Exam Title</h2>
+                    <p class="text-muted mt-1 mb-0" id="examDescription"></p>
+                </div>
+                <a href="student_dashboard.html" class="btn btn-outline-secondary fw-semibold">
+                    <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            </div>
+
+            <!-- Banner Message -->
+            <div class="alert alert-info shadow-sm mb-4 border-0 bg-white border-start border-4 border-info">
+                <div class="d-flex align-items-center py-1">
+                    <i class="bi bi-info-circle-fill fs-3 me-3 text-info"></i>
+                    <div>
+                        <h6 class="mb-1 fw-bold text-dark">Response Already Submitted</h6>
+                        <p class="mb-0 text-muted small">You have successfully completed this exam. Displaying the question paper in read-only mode for your reference.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-9">
+                    <div id="questionsContainer"></div>
+                </div>
+                
+                <!-- Sidebar info -->
+                <div class="col-lg-3">
+                    <div class="card shadow-sm border-0 mb-4 bg-white p-3">
+                        <h6 class="fw-bold text-secondary mb-3 border-bottom pb-2">Exam Info</h6>
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2">
+                                <small class="text-muted d-block">Duration</small>
+                                <strong id="infoDuration">-</strong> minutes
+                            </li>
+                            <li class="mb-2">
+                                <small class="text-muted d-block">Passing Score</small>
+                                <strong id="infoPassing">-</strong>%
+                            </li>
+                            <li>
+                                <small class="text-muted d-block">Status</small>
+                                <span class="badge bg-success">Response Submitted</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        ApiClient.checkAuth(['student']);
+        ApiClient.setupNav();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const examId = urlParams.get('id');
+
+        async function initQuestionPaper() {
+            const res = await ApiClient.get(`/student/exams/${examId}/question-paper`);
+            if (res.ok) {
+                document.getElementById('loading').classList.add('d-none');
+                document.getElementById('content').classList.remove('d-none');
+
+                const exam = res.data.exam;
+                const questions = res.data.questions;
+
+                document.getElementById('examTitle').textContent = exam.title;
+                document.getElementById('examDescription').textContent = exam.description || 'No description assigned.';
+                document.getElementById('infoDuration').textContent = exam.duration_minutes;
+                document.getElementById('infoPassing').textContent = exam.passing_score;
+
+                const qc = document.getElementById('questionsContainer');
+                
+                if (questions.length === 0) {
+                    qc.innerHTML = `<div class="alert alert-warning">No questions found in this exam.</div>`;
+                    return;
+                }
+
+                qc.innerHTML = questions.map((q, i) => `
+                    <div class="card shadow-sm border-0 mb-4 p-3 question-card bg-white rounded">
+                        <div class="card-body">
+                            <h5 class="fw-bold mb-3 text-dark">
+                                <span class="text-primary me-2">Q${i + 1}.</span>${q.question_text}
+                            </h5>
+                            <div class="form-check mb-2 py-1">
+                                <input class="form-check-input" type="radio" name="${q.id}" id="q${q.id}_A" value="A" disabled>
+                                <label class="form-check-label ps-2" for="q${q.id}_A">${q.option_a}</label>
+                            </div>
+                            <div class="form-check mb-2 py-1">
+                                <input class="form-check-input" type="radio" name="${q.id}" id="q${q.id}_B" value="B" disabled>
+                                <label class="form-check-label ps-2" for="q${q.id}_B">${q.option_b}</label>
+                            </div>
+                            <div class="form-check mb-2 py-1">
+                                <input class="form-check-input" type="radio" name="${q.id}" id="q${q.id}_C" value="C" disabled>
+                                <label class="form-check-label ps-2" for="q${q.id}_C">${q.option_c}</label>
+                            </div>
+                            <div class="form-check mb-0 py-1">
+                                <input class="form-check-input" type="radio" name="${q.id}" id="q${q.id}_D" value="D" disabled>
+                                <label class="form-check-label ps-2" for="q${q.id}_D">${q.option_d}</label>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                window.location.href = 'student_dashboard.html';
+            }
+        }
+
+        if (!examId) window.location.href = 'student_dashboard.html';
+        else initQuestionPaper();
+    </script>
+</body>
+
+</html>
