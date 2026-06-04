@@ -12,4 +12,5 @@ flask
 gunicorn
 fpdf2
 groq
+brevo
 
