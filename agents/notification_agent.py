@@ -1,4 +1,5 @@
 import smtplib
+import ssl
 import os
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -8,22 +9,19 @@ from fpdf import FPDF
 from datetime import datetime
 
 class NotificationAgent:
-    SMTP_SERVER = "smtp.gmail.com"
+    SMTP_SERVER = "smtp-relay.brevo.com"
     SMTP_PORT = 587
-    EMAIL_USER = os.environ.get("MAIL_EMAIL", "")
-    EMAIL_PASS = os.environ.get("MAIL_PASSWORD", "")
-    
     BG_PATH = os.path.join("internal_storage", "assets", "certificate_bg.png")
 
     @staticmethod
     def generate_certificate(student_name, exam_title, score, date_str=None):
         if not date_str:
             date_str = datetime.now().strftime("%B %d, %Y")
-            
+
         pdf = FPDF(orientation='L', unit='mm', format='A4')
         pdf.add_page()
         pdf.set_auto_page_break(False)
-        
+
         PRIMARY_BLUE = (16, 44, 87)
         GOLD = (197, 160, 89)
         TEXT_DARK = (26, 26, 26)
@@ -32,16 +30,12 @@ class NotificationAgent:
 
         pdf.set_fill_color(*CREAM)
         pdf.rect(0, 0, 297, 210, 'F')
-
         pdf.set_fill_color(*LIGHT_BLUE)
         pdf.polygon([(297+20, -20), (297-80, -20), (297-30, 80), (297+20, 130)], 'F')
-        
         pdf.set_fill_color(*PRIMARY_BLUE)
         pdf.polygon([(297+10, -10), (297-70, -10), (297-20, 70), (297+10, 120)], 'F')
-        
         pdf.set_fill_color(*LIGHT_BLUE)
         pdf.polygon([(-20, 210+20), (100, 210+20), (50, 210-90), (-20, 210-40)], 'F')
-        
         pdf.set_fill_color(*PRIMARY_BLUE)
         pdf.polygon([(-10, 210+10), (90, 210+10), (40, 210-80), (-10, 210-30)], 'F')
 
@@ -49,8 +43,6 @@ class NotificationAgent:
         pdf.set_line_width(0.8)
         pdf.line(230, 0, 297, 60)
         pdf.line(0, 150, 70, 210)
-
-        pdf.set_draw_color(*GOLD)
         pdf.set_line_width(0.5)
         pdf.rect(5, 5, 287, 200)
         pdf.set_line_width(1.0)
@@ -58,12 +50,11 @@ class NotificationAgent:
 
         images_dir = os.path.join("frontend", "images")
         floral_path = os.path.join(images_dir, "floral_corner.png")
-        
         if os.path.exists(floral_path):
             pdf.image(floral_path, x=12, y=12, w=40)
             pdf.image(floral_path, x=245, y=158, w=40)
 
-        def centered_text(text, font_family, font_style, size, y_pos, color=(0, 0, 0)):
+        def centered_text(text, font_family, font_style, size, y_pos, color=(0,0,0)):
             pdf.set_font(font_family, font_style, size)
             pdf.set_text_color(*color)
             pdf.set_xy(0, y_pos)
@@ -75,7 +66,7 @@ class NotificationAgent:
         centered_text("OF ACHIEVEMENT", "Helvetica", "B", 18, 70, color=PRIMARY_BLUE)
         centered_text("- oooo -", "Times", "", 20, 80, color=GOLD)
         centered_text("This is to certify that", "Helvetica", "", 16, 95, color=TEXT_DARK)
-        centered_text(student_name, "Times", "BI", 42, 110, color=TEXT_DARK) 
+        centered_text(student_name, "Times", "BI", 42, 110, color=TEXT_DARK)
         centered_text("has successfully completed the examination for", "Helvetica", "", 16, 140, color=TEXT_DARK)
         centered_text(exam_title, "Helvetica", "B", 24, 152, color=PRIMARY_BLUE)
         centered_text(f"with an outstanding score of {score}%", "Helvetica", "I", 14, 165, color=TEXT_DARK)
@@ -89,89 +80,71 @@ class NotificationAgent:
         pdf.set_xy(187, 198)
         pdf.set_font("Helvetica", "", 11)
         pdf.cell(70, 5, "JNTU-GV", border=0, ln=0, align='C')
-
         centered_text(f"Issue Date: {date_str}", "Helvetica", "I", 9, 202, color=(120, 120, 120))
-        
+
         temp_dir = os.path.join("internal_storage", "temp")
         os.makedirs(temp_dir, exist_ok=True)
-            
         file_path = os.path.join(temp_dir, f"certificate_{student_name.replace(' ', '_')}.pdf")
         pdf.output(file_path)
         return file_path
 
     @staticmethod
-    def _send_email(msg):
-        """Central email sending method with proper error handling."""
-        email_user = os.environ.get("MAIL_EMAIL", "")
-        email_pass = os.environ.get("MAIL_PASSWORD", "")
+    def _send_email(to_email, subject, body_text, html_body=None,
+                    attachment_path=None, attachment_name=None):
+        """Send email via Brevo SMTP."""
+        smtp_user = os.environ.get("BREVO_SMTP_USER", "")
+        smtp_pass = os.environ.get("BREVO_SMTP_PASS", "")
+        from_email = os.environ.get("MAIL_EMAIL", "jntugv.assessment@gmail.com")
 
-        if not email_user or not email_pass:
-            print("DEBUG: MAIL_EMAIL or MAIL_PASSWORD environment variable not set")
-            return False
-
-        try:
-            server = smtplib.SMTP(NotificationAgent.SMTP_SERVER, NotificationAgent.SMTP_PORT)
-            server.starttls()
-            server.login(email_user, email_pass)
-            server.send_message(msg)
-            server.quit()
-            print(f"DEBUG: Email sent successfully to {msg['To']}")
-            return True
-        except smtplib.SMTPAuthenticationError:
-            print("DEBUG: Gmail authentication failed — check MAIL_EMAIL and MAIL_PASSWORD in Render Environment")
-            return False
-        except smtplib.SMTPException as e:
-            print(f"DEBUG: SMTP error: {str(e)}")
-            return False
-        except Exception as e:
-            print(f"DEBUG: Failed to send email: {str(e)}")
+        if not smtp_user or not smtp_pass:
+            print("DEBUG: BREVO_SMTP_USER or BREVO_SMTP_PASS not set in Render Environment")
             return False
 
-    @staticmethod
-    def send_exam_result(to_email, student_name, exam_title, score, passing_score, certificate_path=None):
-        passed = score >= passing_score
-        subject = f"Exam Result: {exam_title}"
-        
-        email_user = os.environ.get("MAIL_EMAIL", "")
-        msg = MIMEMultipart()
-        msg['From'] = f"Agentic Exam System <{email_user}>"
+        msg = MIMEMultipart('alternative')
+        msg['From'] = f"Agentic Exam System <{from_email}>"
         msg['To'] = to_email
         msg['Subject'] = subject
-        
-        status_text = "CONGRATULATIONS! You have PASSED." if passed else "Unfortunately, you did not meet the passing score this time."
-        
-        body = f"""
-        Dear {student_name},
 
-        You have completed the exam: {exam_title}.
+        msg.attach(MIMEText(body_text, 'plain'))
+        if html_body:
+            msg.attach(MIMEText(html_body, 'html'))
 
-        Results:
-        - Score: {score}%
-        - Passing Score: {passing_score}%
-        - Status: {'PASSED' if passed else 'FAILED'}
-
-        {status_text}
-
-        Best regards,
-        Agentic Exam System Team
-        """
-        msg.attach(MIMEText(body, 'plain'))
-        
-        if passed and certificate_path and os.path.exists(certificate_path):
+        if attachment_path and os.path.exists(attachment_path):
             try:
-                with open(certificate_path, "rb") as attachment:
+                with open(attachment_path, "rb") as f:
                     part = MIMEBase("application", "octet-stream")
-                    part.set_payload(attachment.read())
+                    part.set_payload(f.read())
                 encoders.encode_base64(part)
                 part.add_header(
                     "Content-Disposition",
-                    f"attachment; filename=Certificate_{exam_title.replace(' ', '_')}.pdf",
+                    f"attachment; filename={attachment_name or os.path.basename(attachment_path)}"
                 )
                 msg.attach(part)
             except Exception as e:
-                print(f"DEBUG: Error attaching certificate: {str(e)}")
-                
-        return NotificationAgent._send_email(msg)
+                print(f"DEBUG: Attachment error: {str(e)}")
+
+        try:
+            with smtplib.SMTP(NotificationAgent.SMTP_SERVER,
+                              NotificationAgent.SMTP_PORT,
+                              timeout=15) as server:
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+                server.login(smtp_user, smtp_pass)
+                server.sendmail(from_email, to_email, msg.as_string())
+
+            print(f"DEBUG: Email sent successfully to {to_email}")
+            return True
+
+        except smtplib.SMTPAuthenticationError:
+            print("DEBUG: Brevo authentication failed — check BREVO_SMTP_USER and BREVO_SMTP_PASS")
+            return False
+        except TimeoutError:
+            print("DEBUG: SMTP connection timed out")
+            return False
+        except Exception as e:
+            print(f"DEBUG: Email sending failed: {str(e)}")
+            return False
 
     @staticmethod
     def send_verification_code(to_email, code, purpose):
@@ -179,46 +152,49 @@ class NotificationAgent:
         if purpose == 'reset':
             subject = "Password Reset Code - Agentic Exam System"
 
-        email_user = os.environ.get("MAIL_EMAIL", "")
-        msg = MIMEMultipart()
-        msg['From'] = f"Agentic Exam System <{email_user}>"
-        msg['To'] = to_email
-        msg['Subject'] = subject
-        
-        purpose_text = "verify your email address for registration" if purpose == 'register' else "reset your password"
-        
-        body = f"""
-        Dear User,
+        purpose_text = (
+            "verify your email for registration"
+            if purpose == 'register'
+            else "reset your password"
+        )
 
-        You have requested to {purpose_text}.
+        body_text = f"""
+Dear User,
 
-        Your verification code is:
+You requested to {purpose_text}.
+Your verification code is: {code}
 
-        -------------------------
-        {code}
-        -------------------------
+This code expires in 10 minutes.
+If you did not request this, ignore this email.
 
-        This code will expire in 10 minutes. If you did not request this, please ignore this email.
-
-        Best regards,
-        Agentic Exam System Team
+Best regards,
+Agentic Exam System Team
         """
-        msg.attach(MIMEText(body, 'plain'))
-        
+
         html_body = f"""
         <html>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-            <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-                <h2 style="color: #1a3c6e; text-align: center;">Agentic Exam System</h2>
-                <hr style="border: 0; border-top: 1px solid #eee;">
+        <body style="font-family:Arial,sans-serif; line-height:1.6; color:#333;">
+            <div style="max-width:600px; margin:0 auto; padding:20px;
+                        border:1px solid #ddd; border-radius:10px;">
+                <h2 style="color:#1a3c6e; text-align:center;">
+                    Agentic Exam System
+                </h2>
+                <hr style="border:0; border-top:1px solid #eee;">
                 <p>Dear User,</p>
-                <p>You have requested to <strong>{purpose_text}</strong>.</p>
-                <div style="background-color: #f4f4f4; padding: 20px; text-align: center; border-radius: 5px; margin: 20px 0;">
-                    <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1a3c6e;">{code}</span>
+                <p>You requested to <strong>{purpose_text}</strong>.</p>
+                <div style="background:#f4f4f4; padding:20px; text-align:center;
+                            border-radius:5px; margin:20px 0;">
+                    <span style="font-size:36px; font-weight:bold;
+                                 letter-spacing:8px; color:#1a3c6e;">
+                        {code}
+                    </span>
                 </div>
-                <p style="color: #666; font-size: 14px;">This code will expire in <strong>10 minutes</strong>. If you did not request this, please ignore this email.</p>
-                <hr style="border: 0; border-top: 1px solid #eee;">
-                <p style="font-size: 12px; color: #888; text-align: center;">
+                <p style="color:#666; font-size:14px;">
+                    Expires in <strong>10 minutes</strong>.
+                    If you did not request this, ignore this email.
+                </p>
+                <hr style="border:0; border-top:1px solid #eee;">
+                <p style="font-size:12px; color:#888; text-align:center;">
                     Best regards,<br>
                     <strong>Agentic Exam System Team</strong>
                 </p>
@@ -226,6 +202,82 @@ class NotificationAgent:
         </body>
         </html>
         """
-        msg.attach(MIMEText(html_body, 'html'))
-        
-        return NotificationAgent._send_email(msg)
+        return NotificationAgent._send_email(
+            to_email, subject, body_text, html_body
+        )
+
+    @staticmethod
+    def send_exam_result(to_email, student_name, exam_title, score,
+                         passing_score, certificate_path=None):
+        passed = score >= passing_score
+        subject = f"Exam Result: {exam_title}"
+        status_text = (
+            "CONGRATULATIONS! You have PASSED."
+            if passed
+            else "Unfortunately, you did not meet the passing score."
+        )
+
+        body_text = f"""
+Dear {student_name},
+
+Exam: {exam_title}
+Score: {score}%
+Passing Score: {passing_score}%
+Status: {'PASSED' if passed else 'FAILED'}
+
+{status_text}
+
+Best regards,
+Agentic Exam System Team
+        """
+
+        html_body = f"""
+        <html>
+        <body style="font-family:Arial,sans-serif; color:#333;">
+            <div style="max-width:600px; margin:0 auto; padding:20px;
+                        border:1px solid #ddd; border-radius:10px;">
+                <h2 style="color:#1a3c6e; text-align:center;">
+                    Agentic Exam System
+                </h2>
+                <hr>
+                <p>Dear <strong>{student_name}</strong>,</p>
+                <p>Exam: <strong>{exam_title}</strong></p>
+                <table style="width:100%; background:#f4f4f4;
+                              padding:15px; border-radius:5px;">
+                    <tr>
+                        <td><strong>Score:</strong></td>
+                        <td>{score}%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Passing Score:</strong></td>
+                        <td>{passing_score}%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Status:</strong></td>
+                        <td style="color:{'green' if passed else 'red'};
+                                   font-weight:bold;">
+                            {'PASSED ✓' if passed else 'FAILED ✗'}
+                        </td>
+                    </tr>
+                </table>
+                <p style="margin-top:20px;">{status_text}</p>
+                <hr>
+                <p style="font-size:12px; color:#888; text-align:center;">
+                    Best regards,<br>
+                    <strong>Agentic Exam System Team</strong>
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+
+        attach_path = certificate_path if passed and certificate_path else None
+        attach_name = (
+            f"Certificate_{exam_title.replace(' ', '_')}.pdf"
+            if passed else None
+        )
+
+        return NotificationAgent._send_email(
+            to_email, subject, body_text,
+            html_body, attach_path, attach_name
+        )
