@@ -11,6 +11,15 @@
     <style>
         .role-fields { transition: all 0.3s ease; }
         .field-icon { min-width: 38px; }
+
+         @keyframes btn-pulse {
+            0%   { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.7); }
+            70%  { box-shadow: 0 0 0 10px rgba(25, 135, 84, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0); }
+        }
+        .btn-pulse {
+            animation: btn-pulse 0.6s ease 2;
+        }
     </style>
 </head>
 
@@ -63,9 +72,15 @@
                                 <div class="input-group">
                                     <span class="input-group-text field-icon"><i class="bi bi-shield-check"></i></span>
                                     <input type="text" id="verification_code" class="form-control form-control-lg"
-                                        placeholder="Enter 6-digit code">
+                                        placeholder="Enter 6-digit code" maxlength="6">
+                                    <button class="btn btn-outline-success fw-bold" type="button" id="verifyCodeBtn">
+                                        <i class="bi bi-patch-check me-1"></i>Verify Email
+                                    </button>
                                 </div>
-                                <div class="form-text text-success">Check your inbox for the 6-digit code.</div>
+                                <div class="form-text text-muted" id="verifyHint">Check your inbox for the 6-digit code, then click <strong>Verify Email</strong>.</div>
+                                <div class="d-none mt-2" id="verifiedBadge">
+                                    <span class="badge bg-success fs-6 px-3 py-2"><i class="bi bi-check-circle-fill me-1"></i>Email Verified!</span>
+                                </div>
                             </div>
 
                             <div class="mb-3">
@@ -239,6 +254,9 @@
             document.getElementById('facultyFields').classList.toggle('d-none', role !== 'faculty');
         });
 
+        // Track whether the code has been verified
+        let emailVerified = false;
+        
         // Send Verification Code
         document.getElementById('sendCodeBtn').addEventListener('click', async function() {
             const email = document.getElementById('email').value.trim();
@@ -248,6 +266,11 @@
                 alertEl.className = 'alert alert-danger';
                 return;
             }
+            // Reset verification state when a new code is sent
+            emailVerified = false;
+            document.getElementById('verifiedBadge').classList.add('d-none');
+            document.getElementById('verification_code').value = '';
+            document.getElementById('verification_code').classList.remove('is-valid', 'is-invalid');
 
             this.disabled = true;
             this.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
@@ -265,6 +288,56 @@
                 this.innerHTML = 'Send Code';
             }
             this.disabled = false;
+        });
+
+        // Verify Email Button
+        document.getElementById('verifyCodeBtn').addEventListener('click', async function() {
+            const email = document.getElementById('email').value.trim();
+            const code = document.getElementById('verification_code').value.trim();
+            const alertEl = document.getElementById('alertMsg');
+            const codeInput = document.getElementById('verification_code');
+            if (!code || code.length < 6) {
+                alertEl.textContent = 'Please enter the 6-digit verification code.';
+                alertEl.className = 'alert alert-danger';
+                codeInput.classList.add('is-invalid');
+                return;
+            }
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Verifying...';
+            const res = await ApiClient.post('/auth/verify-code', { email, code, purpose: 'register' });
+            if (res.ok && res.data.verified) {
+                emailVerified = true;
+                codeInput.classList.remove('is-invalid');
+                codeInput.classList.add('is-valid');
+                document.getElementById('verifiedBadge').classList.remove('d-none');
+                document.getElementById('verifyHint').classList.add('d-none');
+                alertEl.textContent = '✅ Email verified! You can now complete your registration.';
+                alertEl.className = 'alert alert-success';
+                this.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Verified';
+                this.classList.replace('btn-outline-success', 'btn-success');
+                this.disabled = true;
+            } else {
+                emailVerified = false;
+                codeInput.classList.add('is-invalid');
+                codeInput.classList.remove('is-valid');
+                alertEl.textContent = res.data?.message || 'Invalid or expired code. Please try again.';
+                alertEl.className = 'alert alert-danger';
+                this.innerHTML = '<i class="bi bi-patch-check me-1"></i>Verify Email';
+                this.disabled = false;
+            }
+        });
+        // Also reset verified state if the code input is manually changed after verification
+        document.getElementById('verification_code').addEventListener('input', function() {
+            if (emailVerified) {
+                emailVerified = false;
+                this.classList.remove('is-valid', 'is-invalid');
+                document.getElementById('verifiedBadge').classList.add('d-none');
+                document.getElementById('verifyHint').classList.remove('d-none');
+                const btn = document.getElementById('verifyCodeBtn');
+                btn.innerHTML = '<i class="bi bi-patch-check me-1"></i>Verify Email';
+                btn.classList.replace('btn-success', 'btn-outline-success');
+                btn.disabled = false;
+            }
         });
 
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
@@ -285,7 +358,14 @@
                 alertEl.className = 'alert alert-danger';
                 return;
             }
-
+            
+            if (!emailVerified) {
+                alertEl.textContent = 'Please verify your email first by clicking the "Verify Email" button.';
+                alertEl.className = 'alert alert-warning';
+                document.getElementById('verifyCodeBtn').classList.add('btn-pulse');
+                setTimeout(() => document.getElementById('verifyCodeBtn').classList.remove('btn-pulse'), 1500);
+                return;
+            }
             const btn = document.getElementById('registerBtn');
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating Account...';
