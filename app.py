@@ -194,7 +194,27 @@ def send_verification_code():
         return jsonify({'message': 'Verification code sent to your email'})
     else:
         return jsonify({'message': 'Failed to send email. Please try again later.'}), 500
-
+        
+@app.route('/api/auth/verify-code', methods=['POST'])
+def check_verification_code():
+    """Validate a verification code without consuming it (used by the frontend Verify button)."""
+    data = request.json
+    email = data.get('email')
+    code = data.get('code')
+    purpose = data.get('purpose', 'register')
+    if not email or not code:
+        return jsonify({'message': 'Email and code are required'}), 400
+    conn = get_db_connection()
+    code_record = conn.execute(
+        "SELECT * FROM verification_codes WHERE email = ? AND code = ? AND purpose = ? AND created_at > datetime('now', '-10 minutes') ORDER BY id DESC LIMIT 1",
+        (email, code, purpose)
+    ).fetchone()
+    conn.close()
+    if code_record:
+        return jsonify({'message': 'Email verified successfully!', 'verified': True})
+    else:
+        return jsonify({'message': 'Invalid or expired verification code', 'verified': False}), 400
+        
 @app.route('/api/auth/reset-password', methods=['POST'])
 def reset_password():
     data = request.json
