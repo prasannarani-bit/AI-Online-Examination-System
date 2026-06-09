@@ -12,3 +12,4 @@ gunicorn
 fpdf2
 groq
 flask
+psycopg2-binary
