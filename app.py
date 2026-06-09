@@ -24,10 +24,8 @@ app.config['SECRET_KEY'] = 'super_secret_agentic_key'
 
 proctor_agent = ProctorAgent()
 
-if not os.path.exists('database.db'):
-    init_db()
-else:
-    migrate_db()  # ensure new profile columns exist on existing databases
+init_db()
+migrate_db()  # ensure new profile columns exist on existing databases
 
 STORAGE_DIR = 'internal_storage'
 if not os.path.exists(STORAGE_DIR):
