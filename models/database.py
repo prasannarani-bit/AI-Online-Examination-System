@@ -6,10 +6,12 @@ from werkzeug.security import generate_password_hash
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
 def get_db_connection():
-    """Returns a PostgreSQL connection with dict-like row access."""
-    conn = psycopg2.connect(DATABASE_URL)
-    conn.autocommit = False
-    return conn
+    """Returns a DictConnection wrapping a psycopg2 connection."""
+    conn = psycopg2.connect(
+        DATABASE_URL,
+        sslmode='require'  # ✅ Required for Supabase
+    )
+    return DictConnection(conn)
 
 def dict_fetchall(cursor):
     """Return all rows as list of dicts."""
