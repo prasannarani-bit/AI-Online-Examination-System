@@ -835,7 +835,10 @@ def get_attempt(current_user, attempt_id):
     # don't return correct option to student!
     questions = conn.execute("SELECT id, question_text, option_a, option_b, option_c, option_d FROM questions WHERE exam_id = ?", (exam['id'],)).fetchall()
     
-    start_time = datetime.datetime.strptime(attempt['start_time'], '%Y-%m-%d %H:%M:%S').replace(tzinfo=datetime.timezone.utc)
+    start_time = attempt['start_time']
+    if isinstance(start_time, str):
+        start_time = datetime.datetime.strptime(start_time[:19], '%Y-%m-%d %H:%M:%S')
+    start_time = start_time.replace(tzinfo=datetime.timezone.utc)
     time_elapsed = (datetime.datetime.now(datetime.timezone.utc) - start_time).total_seconds()
     time_left_seconds = max(0, int(exam['duration_minutes'] * 60 - time_elapsed))
     
