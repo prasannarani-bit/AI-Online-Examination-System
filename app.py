@@ -796,15 +796,44 @@ def student_dashboard(current_user):
         return jsonify({'message': 'Unauthorized'}), 403
     conn = get_db_connection()
     
-    # Filter exams based on student's branch matching faculty's department
-    available_exams = conn.execute("""
-        SELECT e.id, e.title, e.description, e.duration_minutes, e.passing_score,
-               (SELECT COUNT(*) FROM exam_attempts WHERE student_id = ? AND exam_id = e.id AND status IN ('submitted', 'evaluated')) as attempt_count 
-        FROM exams e
-        JOIN users f ON e.faculty_id = f.id
-        WHERE e.is_published = 1 AND f.department = ?
-        ORDER BY e.id DESC
-     """, (current_user['id'], current_user['branch'])).fetchall()
+    # Filter exams based on student's branch matching faculty's department.
+    # Additional rule: MCA students (course_name = 'MCA') also see IT department exams.
+    student_branch = current_user['branch'] or ''
+    student_course = current_user['course_name'] or ''
+    if student_course.upper() == 'MCA':
+        # MCA students always see IT department exams.
+        # If they also have a branch set (and it differs from IT), include that too.
+        if student_branch and student_branch.upper() != 'IT':
+            available_exams = conn.execute("""
+                SELECT e.id, e.title, e.description, e.duration_minutes, e.passing_score,
+                       (SELECT COUNT(*) FROM exam_attempts WHERE student_id = ? AND exam_id = e.id AND status IN ('submitted', 'evaluated')) as attempt_count
+                FROM exams e
+                JOIN users f ON e.faculty_id = f.id
+                WHERE e.is_published = 1
+                  AND (f.department = ? OR f.department = 'IT')
+                ORDER BY e.id DESC
+            """, (current_user['id'], student_branch)).fetchall()
+        else:
+            # No branch or branch is already IT — just show IT department exams
+            available_exams = conn.execute("""
+                SELECT e.id, e.title, e.description, e.duration_minutes, e.passing_score,
+                       (SELECT COUNT(*) FROM exam_attempts WHERE student_id = ? AND exam_id = e.id AND status IN ('submitted', 'evaluated')) as attempt_count
+                FROM exams e
+                JOIN users f ON e.faculty_id = f.id
+                WHERE e.is_published = 1
+                  AND f.department = 'IT'
+                ORDER BY e.id DESC
+            """, (current_user['id'],)).fetchall()
+    else:
+        # Existing logic: match student branch with faculty department
+        available_exams = conn.execute("""
+            SELECT e.id, e.title, e.description, e.duration_minutes, e.passing_score,
+                   (SELECT COUNT(*) FROM exam_attempts WHERE student_id = ? AND exam_id = e.id AND status IN ('submitted', 'evaluated')) as attempt_count
+            FROM exams e
+            JOIN users f ON e.faculty_id = f.id
+            WHERE e.is_published = 1 AND f.department = ?
+            ORDER BY e.id DESC
+        """, (current_user['id'], student_branch)).fetchall()
     
     past_attempts = conn.execute("""
         SELECT a.id, e.title, a.start_time, a.status, a.score, e.passing_score
