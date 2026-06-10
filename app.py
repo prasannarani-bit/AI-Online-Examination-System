@@ -1124,38 +1124,55 @@ def get_storage_files(current_user):
 def upload_storage_file(current_user):
     if current_user['role'] != 'faculty':
         return jsonify({'message': 'Unauthorized'}), 403
+
     if 'file' not in request.files:
         return jsonify({'message': 'No file part'}), 400
+
     file = request.files['file']
+
     if file.filename == '':
         return jsonify({'message': 'No selected file'}), 400
 
     filename = secure_filename(file.filename)
+
     faculty_dir = os.path.join(STORAGE_DIR, str(current_user['id']))
     os.makedirs(faculty_dir, exist_ok=True)
+
     file_path = os.path.join(faculty_dir, filename)
+
+    # Read content first
     content = file.read().decode('utf-8')
 
-    conn.execute(
-       """
-       INSERT INTO faculty_files
-       (faculty_id, filename, file_path, file_content)
-       VALUES (%s,%s,%s,%s)
-       """,
-       (current_user['id'], filename, file_path, content)
-    )
+    # Reset pointer
+    file.seek(0)
+
+    # Save physical file
+    file.save(file_path)
+
     print("UPLOADED FILE:", file_path)
     print("EXISTS AFTER SAVE:", os.path.exists(file_path))
 
     conn = get_db_connection()
+
     conn.execute(
-        "INSERT INTO faculty_files (faculty_id, filename, file_path) VALUES (%s, %s, %s)",
-        (current_user['id'], filename, file_path)
+        """
+        INSERT INTO faculty_files
+        (faculty_id, filename, file_path, file_content)
+        VALUES (%s, %s, %s, %s)
+        """,
+        (
+            current_user['id'],
+            filename,
+            file_path,
+            content
+        )
     )
+
     conn.commit()
     conn.close()
-    return jsonify({'message': 'File uploaded to Internal Storage!'})
 
+    return jsonify({'message': 'File uploaded successfully'})
+    
 @app.route('/api/faculty/storage/files/<int:file_id>', methods=['DELETE'])
 @token_required
 def delete_storage_file(current_user, file_id):
