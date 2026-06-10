@@ -34,6 +34,18 @@ STORAGE_DIR = 'internal_storage'
 if not os.path.exists(STORAGE_DIR):
     os.makedirs(STORAGE_DIR)
 
+def serialize_row(row):
+    """Convert a dict row, formatting any datetime objects as strings."""
+    if row is None:
+        return None
+    result = {}
+    for k, v in dict(row).items():
+        if hasattr(v, 'strftime'):
+            result[k] = v.strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            result[k] = v
+    return result
+
 # --- JWT Authentication Decorator ---
 def token_required(f):
     @wraps(f)
@@ -285,7 +297,8 @@ def manage_users(current_user):
         try:
             conn.execute(
                 """INSERT INTO users (username, password, role, full_name, class_name,
-                   roll_number, department, course_category, course_name, year_of_study, branch)
+                   roll_number, department, course_category, course_name,
+                   year_of_study, branch)
                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                 (
                     email,
@@ -312,7 +325,7 @@ def manage_users(current_user):
         "SELECT id, username, role, full_name, class_name, roll_number, department, is_active, course_category, course_name, year_of_study, branch FROM users ORDER BY id DESC"
     ).fetchall()
     conn.close()
-    return jsonify([dict(u) for u in users])
+    return jsonify([serialize_row(u) for u in users])
 
 @app.route('/api/admin/users/<int:user_id>', methods=['DELETE', 'PUT'])
 @token_required
@@ -389,7 +402,7 @@ def admin_all_exams(current_user):
         ORDER BY e.id DESC
     """).fetchall()
     conn.close()
-    return jsonify([dict(e) for e in exams])
+    return jsonify([serialize_row(e) for e in exams])
 
 @app.route('/api/admin/attempts', methods=['GET'])
 @token_required
@@ -407,7 +420,7 @@ def admin_all_attempts(current_user):
         ORDER BY a.id DESC
     """).fetchall()
     conn.close()
-    return jsonify([dict(a) for a in attempts])
+    return jsonify([serialize_row(a) for a in attempts])
 
 @app.route('/api/admin/files', methods=['GET'])
 @token_required
@@ -421,7 +434,7 @@ def admin_all_files(current_user):
         ORDER BY f.id DESC
     """).fetchall()
     conn.close()
-    return jsonify([dict(f) for f in files])
+    return jsonify([serialize_row(f) for f in files])
 
 @app.route('/api/admin/proctor_logs', methods=['GET'])
 @token_required
@@ -439,7 +452,7 @@ def monitor_exams(current_user):
         ORDER BY p.timestamp DESC LIMIT 50
     """).fetchall()
     conn.close()
-    return jsonify([dict(l) for l in logs])
+    return jsonify([serialize_row(l) for l in logs])
 
 @app.route('/api/admin/proctor_logs/<int:log_id>', methods=['DELETE'])
 @token_required
@@ -503,9 +516,10 @@ def faculty_exams(current_user):
                                     INSERT INTO questions (exam_id, question_text, option_a,
                                     option_b, option_c, option_d, correct_option)
                                     VALUES (%s, %s, %s, %s, %s, %s, %s)
-                                """, (exam_id, q.get('question_text', ''), q.get('option_a', ''),
-                                      q.get('option_b', ''), q.get('option_c', ''),
-                                      q.get('option_d', ''), q.get('correct_option', 'A')))
+                                """, (exam_id, q.get('question_text', ''),
+                                      q.get('option_a', ''), q.get('option_b', ''),
+                                      q.get('option_c', ''), q.get('option_d', ''),
+                                      q.get('correct_option', 'A')))
                             conn.commit()
                             msg = f"Exam created and {len(questions)} AI questions generated!"
                         elif error:
@@ -521,10 +535,11 @@ def faculty_exams(current_user):
         return jsonify({'message': msg, 'exam_id': exam_id})
 
     exams = conn.execute(
-        "SELECT * FROM exams WHERE faculty_id = %s ORDER BY id DESC", (current_user['id'],)
+        "SELECT * FROM exams WHERE faculty_id = %s ORDER BY id DESC",
+        (current_user['id'],)
     ).fetchall()
     conn.close()
-    return jsonify([dict(e) for e in exams])
+    return jsonify([serialize_row(e) for e in exams])
 
 @app.route('/api/faculty/exams/<int:exam_id>', methods=['GET'])
 @token_required
@@ -543,7 +558,10 @@ def get_exam_details(current_user, exam_id):
         "SELECT * FROM questions WHERE exam_id = %s", (exam_id,)
     ).fetchall()
     conn.close()
-    return jsonify({'exam': dict(exam), 'questions': [dict(q) for q in questions]})
+    return jsonify({
+        'exam': serialize_row(exam),
+        'questions': [serialize_row(q) for q in questions]
+    })
 
 @app.route('/api/faculty/exams/<int:exam_id>/publish', methods=['POST'])
 @token_required
@@ -801,7 +819,7 @@ def faculty_results(current_user):
         ORDER BY a.end_time DESC
     """, (current_user['id'],)).fetchall()
     conn.close()
-    return jsonify([dict(r) for r in results])
+    return jsonify([serialize_row(r) for r in results])
 
 @app.route('/api/faculty/analytics', methods=['GET'])
 @token_required
@@ -871,8 +889,8 @@ def student_dashboard(current_user):
     """, (current_user['id'],)).fetchall()
     conn.close()
     return jsonify({
-        'available_exams': [dict(e) for e in available_exams],
-        'past_attempts': [dict(a) for a in past_attempts]
+        'available_exams': [serialize_row(e) for e in available_exams],
+        'past_attempts': [serialize_row(a) for a in past_attempts]
     })
 
 @app.route('/api/student/exams/<int:exam_id>/start', methods=['POST'])
@@ -948,9 +966,9 @@ def get_attempt(current_user, attempt_id):
 
     conn.close()
     return jsonify({
-        'attempt': dict(attempt),
-        'exam': dict(exam),
-        'questions': [dict(q) for q in questions],
+        'attempt': serialize_row(attempt),
+        'exam': serialize_row(exam),
+        'questions': [serialize_row(q) for q in questions],
         'time_left_seconds': time_left_seconds
     })
 
@@ -997,7 +1015,7 @@ def get_result(current_user, attempt_id):
     conn.close()
     if not attempt:
         return jsonify({'message': 'Result not found'}), 404
-    return jsonify({'attempt': dict(attempt)})
+    return jsonify({'attempt': serialize_row(attempt)})
 
 @app.route('/api/student/exams/<int:exam_id>/question-paper', methods=['GET'])
 @token_required
@@ -1020,7 +1038,10 @@ def student_question_paper(current_user, exam_id):
         (exam_id,)
     ).fetchall()
     conn.close()
-    return jsonify({'exam': dict(exam), 'questions': [dict(q) for q in questions]})
+    return jsonify({
+        'exam': serialize_row(exam),
+        'questions': [serialize_row(q) for q in questions]
+    })
 
 @app.route('/api/student/proctor_log', methods=['POST'])
 @token_required
@@ -1077,7 +1098,7 @@ def get_storage_files(current_user):
         (current_user['id'],)
     ).fetchall()
     conn.close()
-    return jsonify([dict(f) for f in files])
+    return jsonify([serialize_row(f) for f in files])
 
 @app.route('/api/faculty/storage/upload', methods=['POST'])
 @token_required
@@ -1175,7 +1196,8 @@ def storage_generate_exam(current_user):
             cursor = conn.cursor()
             cursor.execute(
                 "INSERT INTO exams (title, description, faculty_id, duration_minutes, passing_score) VALUES (%s, %s, %s, %s, %s)",
-                (title, f"Generated from {filename}", current_user['id'], float(duration), float(passing_score))
+                (title, f"Generated from {filename}", current_user['id'],
+                 float(duration), float(passing_score))
             )
             exam_id = cursor.lastrowid
 
@@ -1203,7 +1225,8 @@ def storage_generate_exam(current_user):
             cursor = conn.cursor()
             cursor.execute(
                 "INSERT INTO exams (title, description, faculty_id, duration_minutes, passing_score) VALUES (%s, %s, %s, %s, %s)",
-                (title, f"Generated from {filename} via AI", current_user['id'], float(duration), float(passing_score))
+                (title, f"Generated from {filename} via AI", current_user['id'],
+                 float(duration), float(passing_score))
             )
             exam_id = cursor.lastrowid
 
