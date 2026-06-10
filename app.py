@@ -1216,11 +1216,10 @@ def storage_generate_exam(current_user):
         return jsonify({'message': 'Missing parameters for exam generation'}), 400
 
     conn = get_db_connection()
+
     file_record = conn.execute(
         """
-        SELECT file_path,
-               filename,
-               file_content
+        SELECT file_path, filename, file_content
         FROM faculty_files
         WHERE id = %s AND faculty_id = %s
         """,
@@ -1237,67 +1236,145 @@ def storage_generate_exam(current_user):
     print("DB FILE PATH:", file_path)
     print("FILE EXISTS:", os.path.exists(file_path))
 
-    if not os.path.exists(file_path):
-        conn.close()
-        return jsonify({'message': f'File not found on server: {file_path}'}), 400
-
     try:
+
+        # ---------- CSV FILE ----------
         if filename.endswith('.csv'):
+
             with open(file_path, 'r', encoding='utf8') as f:
                 csv_input = csv.reader(f)
                 next(csv_input, None)
                 questions_data = [row for row in csv_input if len(row) >= 6]
 
             cursor = conn.cursor()
-            cursor.execute(
-                "INSERT INTO exams (title, description, faculty_id, duration_minutes, passing_score) VALUES (%s, %s, %s, %s, %s)",
-                (title, f"Generated from {filename}", current_user['id'],
-                 float(duration), float(passing_score))
-            )
-            exam_id = cursor.lastrowid
+
+            cursor.execute("""
+                INSERT INTO exams
+                (
+                    title,
+                    description,
+                    faculty_id,
+                    duration_minutes,
+                    passing_score
+                )
+                VALUES (%s, %s, %s, %s, %s)
+                RETURNING id
+            """, (
+                title,
+                f"Generated from {filename}",
+                current_user['id'],
+                float(duration),
+                float(passing_score)
+            ))
+
+            exam_row = cursor.fetchone()
+
+            if isinstance(exam_row, dict):
+                exam_id = exam_row['id']
+            else:
+                exam_id = exam_row[0]
 
             for row in questions_data:
                 cursor.execute("""
-                    INSERT INTO questions (exam_id, question_text, option_a, option_b,
-                    option_c, option_d, correct_option)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
-                """, (exam_id, row[0], row[1], row[2], row[3], row[4], row[5]))
+                    INSERT INTO questions
+                    (
+                        exam_id,
+                        question_text,
+                        option_a,
+                        option_b,
+                        option_c,
+                        option_d,
+                        correct_option
+                    )
+                    VALUES (%s,%s,%s,%s,%s,%s,%s)
+                """, (
+                    exam_id,
+                    row[0],
+                    row[1],
+                    row[2],
+                    row[3],
+                    row[4],
+                    row[5]
+                ))
 
             conn.commit()
+
             msg = f"Exam {exam_id} created with {len(questions_data)} CSV questions!"
 
+        # ---------- AI GENERATED ----------
         else:
+
             text_content = file_record.get('file_content')
 
             if not text_content:
+                conn.close()
                 return jsonify({
-                     'message': 'No syllabus content stored. Please upload the file again.'
+                    'message': 'No syllabus content stored. Please upload the file again.'
                 }), 400
+
             questions, error = ExamManagerAgent.generate_questions_from_text(
-                text_content, num_questions=num_questions
+                text_content,
+                num_questions=num_questions
             )
+
             if error:
                 conn.close()
                 return jsonify({'message': error}), 500
 
             cursor = conn.cursor()
-            cursor.execute(
-                "INSERT INTO exams (title, description, faculty_id, duration_minutes, passing_score) VALUES (%s, %s, %s, %s, %s)",
-                (title, f"Generated from {filename} via AI", current_user['id'],
-                 float(duration), float(passing_score))
-            )
-            exam_id = cursor.lastrowid
+
+            cursor.execute("""
+                INSERT INTO exams
+                (
+                    title,
+                    description,
+                    faculty_id,
+                    duration_minutes,
+                    passing_score
+                )
+                VALUES (%s, %s, %s, %s, %s)
+                RETURNING id
+            """, (
+                title,
+                f"Generated from {filename} via AI",
+                current_user['id'],
+                float(duration),
+                float(passing_score)
+            ))
+
+            exam_row = cursor.fetchone()
+
+            if isinstance(exam_row, dict):
+                exam_id = exam_row['id']
+            else:
+                exam_id = exam_row[0]
 
             for q in questions:
+
                 cursor.execute("""
-                    INSERT INTO questions (exam_id, question_text, option_a, option_b,
-                    option_c, option_d, correct_option)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
-                """, (exam_id, q.get('question_text', ''), q.get('option_a', ''),
-                      q.get('option_b', ''), q.get('option_c', ''),
-                      q.get('option_d', ''), q.get('correct_option', 'A')))
+                    INSERT INTO questions
+                    (
+                        exam_id,
+                        question_text,
+                        option_a,
+                        option_b,
+                        option_c,
+                        option_d,
+                        correct_option
+                    )
+                    VALUES (%s,%s,%s,%s,%s,%s,%s)
+                """, (
+                    exam_id,
+                    q.get('question_text', ''),
+                    q.get('option_a', ''),
+                    q.get('option_b', ''),
+                    q.get('option_c', ''),
+                    q.get('option_d', ''),
+                    q.get('correct_option', 'A')
+                ))
 
             conn.commit()
+
             msg = f"Exam created with {len(questions)} AI questions!"
 
     except Exception as e:
@@ -1306,8 +1383,13 @@ def storage_generate_exam(current_user):
 
         conn.close()
         return jsonify({'message': f'Error: {str(e)}'}), 500
+
     conn.close()
-    return jsonify({'message': msg, 'exam_id': exam_id})
+
+    return jsonify({
+        'message': msg,
+        'exam_id': exam_id
+    })
 
 @app.route('/')
 def index():
