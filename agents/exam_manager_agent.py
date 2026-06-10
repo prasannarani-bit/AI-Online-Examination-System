@@ -6,20 +6,26 @@ import re
 import os
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+
 if not GROQ_API_KEY:
     raise ValueError("GROQ_API_KEY is not set in environment variables")
 
 client = Groq(api_key=GROQ_API_KEY)
 
+
 class ExamManagerAgent:
+
     @staticmethod
     def validate_exam_creation(faculty_id, title, duration, passing_score):
         if duration <= 0:
             return False, "Duration must be positive."
+
         if passing_score < 0 or passing_score > 100:
             return False, "Passing score must be between 0 and 100."
+
         if not title.strip():
             return False, "Title is required."
+
         return True, "Valid"
 
     @staticmethod
@@ -30,11 +36,18 @@ class ExamManagerAgent:
     def extract_text_from_pdf(file_stream):
         try:
             reader = PyPDF2.PdfReader(file_stream)
+
             text = ""
+
             for page in reader.pages:
-                text += page.extract_text() + "\n"
+                extracted = page.extract_text()
+                if extracted:
+                    text += extracted + "\n"
+
             print(f"DEBUG: Extracted {len(text)} chars from PDF")
+
             return text
+
         except Exception as e:
             print(f"DEBUG: PDF Extraction Error: {str(e)}")
             return None
@@ -43,78 +56,205 @@ class ExamManagerAgent:
     def extract_text_from_docx(file_stream):
         try:
             doc = docx.Document(file_stream)
+
             text = ""
+
             for para in doc.paragraphs:
                 text += para.text + "\n"
+
             print(f"DEBUG: Extracted {len(text)} chars from DOCX")
+
             return text
+
         except Exception as e:
             print(f"DEBUG: DOCX Extraction Error: {str(e)}")
             return None
 
     @staticmethod
     def generate_questions_from_text(text, num_questions=5):
+
         prompt = f"""
-        Generate {num_questions} multiple choice questions based on the following syllabus/content:
-        {text}
+Generate EXACTLY {num_questions} multiple-choice questions from the syllabus/content below.
 
-        Strictly format the output as a valid JSON array of objects. Do not wrap it in markdown or code blocks.
-        Each object MUST have exactly these keys:
-        "question_text"
-        "option_a"
-        "option_b"
-        "option_c"
-        "option_d"
-        "correct_option" (only "A", "B", "C", or "D")
+SYLLABUS:
+{text}
 
-        CRITICAL: Return ONLY a raw JSON array. No markdown, no triple backticks, no preamble.
-        """
-        return ExamManagerAgent._call_groq(prompt)
+STRICT RULES:
+
+1. Return EXACTLY {num_questions} questions.
+2. Do NOT return more than {num_questions}.
+3. Do NOT return fewer than {num_questions}.
+4. Return ONLY valid JSON.
+5. Do NOT include markdown.
+6. Do NOT include explanations.
+7. Do NOT include triple backticks.
+8. Each question must have EXACTLY these keys:
+
+"question_text"
+"option_a"
+"option_b"
+"option_c"
+"option_d"
+"correct_option"
+
+9. "correct_option" must be only:
+"A"
+"B"
+"C"
+or
+"D"
+
+Return ONLY a JSON array.
+
+Example:
+
+[
+  {{
+    "question_text": "What is DBMS?",
+    "option_a": "Database",
+    "option_b": "Operating System",
+    "option_c": "Compiler",
+    "option_d": "Network",
+    "correct_option": "A"
+  }}
+]
+
+The JSON array MUST contain EXACTLY {num_questions} objects.
+"""
+
+        return ExamManagerAgent._call_groq(prompt, num_questions)
 
     @staticmethod
-    def _call_groq(prompt):
+    def _call_groq(prompt, num_questions):
+
         MODELS_TO_TRY = [
-            "llama-3.1-8b-instant",     # fast, free
-            "llama-3.3-70b-versatile",  # more powerful fallback
-            "gemma2-9b-it",             # Google's model on Groq, free
+            "llama-3.1-8b-instant",
+            "llama-3.3-70b-versatile",
+            "gemma2-9b-it"
         ]
+
         output = "No output"
 
         for model in MODELS_TO_TRY:
+
             try:
+
                 print(f"DEBUG: Trying Groq model '{model}'")
+
                 response = client.chat.completions.create(
                     model=model,
-                    messages=[{"role": "user", "content": prompt}],
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ],
                     max_tokens=2000,
-                    temperature=0.7
+                    temperature=0.3
                 )
+
                 output = response.choices[0].message.content
-                print(f"DEBUG: Groq raw output length: {len(output)}")
+
+                print(
+                    f"DEBUG: Groq raw output length: {len(output)}"
+                )
 
                 output = output.strip()
+
                 if output.startswith("```"):
-                    output = re.sub(r'^```(?:json)?\n?|\n?```$', '', output, flags=re.MULTILINE)
+                    output = re.sub(
+                        r'^```(?:json)?\n?|\n?```$',
+                        '',
+                        output,
+                        flags=re.MULTILINE
+                    )
 
                 output = output.strip()
-                json_match = re.search(r'\[.*\]', output, re.DOTALL)
+
+                json_match = re.search(
+                    r'\[.*\]',
+                    output,
+                    re.DOTALL
+                )
+
                 if json_match:
                     output = json_match.group(0)
 
                 questions = json.loads(output)
-                print(f"DEBUG: Successfully parsed {len(questions)} questions using '{model}'")
+
+                if not isinstance(questions, list):
+                    raise ValueError(
+                        "AI response is not a JSON array"
+                    )
+
+                # Force exact count
+                if len(questions) > num_questions:
+
+                    print(
+                        f"DEBUG: AI returned {len(questions)} "
+                        f"questions, trimming to {num_questions}"
+                    )
+
+                    questions = questions[:num_questions]
+
+                if len(questions) < num_questions:
+
+                    return (
+                        None,
+                        f"AI generated only "
+                        f"{len(questions)} questions "
+                        f"instead of {num_questions}"
+                    )
+
+                print(
+                    f"DEBUG: Successfully parsed "
+                    f"{len(questions)} questions "
+                    f"using '{model}'"
+                )
+
                 return questions, None
 
             except Exception as e:
-                err_str = str(e)
-                print(f"DEBUG: Error on model '{model}': {err_str}")
-                if '429' in err_str or 'rate_limit' in err_str.lower():
-                    print(f"DEBUG: Rate limit on '{model}', trying next...")
-                    continue
-                elif 'model_not_found' in err_str.lower() or '404' in err_str:
-                    print(f"DEBUG: Model '{model}' not found, trying next...")
-                    continue
-                else:
-                    return None, f"AI generation error: {err_str[:200]}"
 
-        return None, "All Groq models failed. Please try again in a moment."
+                err_str = str(e)
+
+                print(
+                    f"DEBUG: Error on model '{model}': "
+                    f"{err_str}"
+                )
+
+                if (
+                    '429' in err_str
+                    or 'rate_limit' in err_str.lower()
+                ):
+
+                    print(
+                        f"DEBUG: Rate limit on '{model}', "
+                        f"trying next..."
+                    )
+
+                    continue
+
+                elif (
+                    'model_not_found' in err_str.lower()
+                    or '404' in err_str
+                ):
+
+                    print(
+                        f"DEBUG: Model '{model}' not found, "
+                        f"trying next..."
+                    )
+
+                    continue
+
+                else:
+
+                    return (
+                        None,
+                        f"AI generation error: {err_str[:200]}"
+                    )
+
+        return None, (
+            "All Groq models failed. "
+            "Please try again in a moment."
+        )
