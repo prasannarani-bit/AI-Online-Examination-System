@@ -1217,7 +1217,13 @@ def storage_generate_exam(current_user):
 
     conn = get_db_connection()
     file_record = conn.execute(
-        "SELECT file_path, filename FROM faculty_files WHERE id = %s AND faculty_id = %s",
+        """
+        SELECT file_path,
+               filename,
+               file_content
+        FROM faculty_files
+        WHERE id = %s AND faculty_id = %s
+        """,
         (file_id, current_user['id'])
     ).fetchone()
 
@@ -1261,8 +1267,12 @@ def storage_generate_exam(current_user):
             msg = f"Exam {exam_id} created with {len(questions_data)} CSV questions!"
 
         else:
-            text_content = file_record['file_content']
+            text_content = file_record.get('file_content')
 
+            if not text_content:
+                return jsonify({
+                     'message': 'No syllabus content stored. Please upload the file again.'
+                }), 400
             questions, error = ExamManagerAgent.generate_questions_from_text(
                 text_content, num_questions=num_questions
             )
