@@ -1117,6 +1117,9 @@ def upload_storage_file(current_user):
     file_path = os.path.join(faculty_dir, filename)
     file.save(file_path)
 
+    print("UPLOADED FILE:", file_path)
+    print("EXISTS AFTER SAVE:", os.path.exists(file_path))
+
     conn = get_db_connection()
     conn.execute(
         "INSERT INTO faculty_files (faculty_id, filename, file_path) VALUES (%s, %s, %s)",
@@ -1179,8 +1182,10 @@ def storage_generate_exam(current_user):
         return jsonify({'message': 'File not found'}), 404
 
     filename = file_record['filename']
-    file_path = os.path.join("internal_storage", str(current_user['id']), filename)
-    print("FIXED FILE PATH:", file_path)
+    file_path = file_record['file_path']
+
+    print("DB FILE PATH:", file_path)
+    print("FILE EXISTS:", os.path.exists(file_path))
 
     if not os.path.exists(file_path):
         conn.close()
