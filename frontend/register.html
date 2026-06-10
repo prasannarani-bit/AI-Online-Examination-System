@@ -89,7 +89,22 @@
                                     <span class="input-group-text field-icon"><i class="bi bi-lock"></i></span>
                                     <input type="password" id="password" class="form-control form-control-lg"
                                         placeholder="Create a strong password" required autocomplete="new-password">
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePwdBtn" title="Show password" style="border-left:none;">
+                                        <i class="bi bi-eye" id="togglePwdIcon"></i>
+                                    </button>
                                 </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="confirm_password" class="form-label fw-bold">Confirm Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text field-icon"><i class="bi bi-lock-fill"></i></span>
+                                    <input type="password" id="confirm_password" class="form-control form-control-lg"
+                                        placeholder="Re-enter your password" required autocomplete="new-password">
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPwdBtn" title="Show password" style="border-left:none;">
+                                        <i class="bi bi-eye" id="toggleConfirmPwdIcon"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text d-none" id="pwdMatchMsg"></div>
                             </div>
 
                             <!-- Student-specific fields -->
@@ -340,10 +355,72 @@
             }
         });
 
+        // ── Show / Hide toggles for both password fields ──────────────────────
+        function makeToggle(btnId, iconId, inputId) {
+            document.getElementById(btnId).addEventListener('click', function () {
+                const inp  = document.getElementById(inputId);
+                const icon = document.getElementById(iconId);
+                if (inp.type === 'password') {
+                    inp.type = 'text';
+                    icon.classList.replace('bi-eye', 'bi-eye-slash');
+                    this.title = 'Hide password';
+                } else {
+                    inp.type = 'password';
+                    icon.classList.replace('bi-eye-slash', 'bi-eye');
+                    this.title = 'Show password';
+                }
+            });
+        }
+        makeToggle('togglePwdBtn',        'togglePwdIcon',        'password');
+        makeToggle('toggleConfirmPwdBtn', 'toggleConfirmPwdIcon', 'confirm_password');
+        // ── Live confirm-password match feedback ───────────────────────────────
+        function checkPasswordMatch() {
+            const pwd     = document.getElementById('password').value;
+            const confirm = document.getElementById('confirm_password').value;
+            const msgEl   = document.getElementById('pwdMatchMsg');
+            const confInp = document.getElementById('confirm_password');
+            if (!confirm) {
+                // Nothing typed yet — reset silently
+                msgEl.className = 'form-text d-none';
+                confInp.classList.remove('is-valid', 'is-invalid');
+                return;
+            }
+            if (pwd === confirm) {
+                msgEl.textContent = '✅ Passwords match!';
+                msgEl.className = 'form-text text-success fw-semibold';
+                confInp.classList.replace('is-invalid', 'is-valid');
+                confInp.classList.add('is-valid');
+            } else {
+                msgEl.textContent = '❌ Passwords do not match.';
+                msgEl.className = 'form-text text-danger fw-semibold';
+                confInp.classList.replace('is-valid', 'is-invalid');
+                confInp.classList.add('is-invalid');
+            }
+        }
+        document.getElementById('password').addEventListener('input', checkPasswordMatch);
+        document.getElementById('confirm_password').addEventListener('input', checkPasswordMatch);
+        
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const alertEl = document.getElementById('alertMsg');
             alertEl.className = 'alert d-none';
+
+            // ── Password match guard ───────────────────────────────────────────
+            const pwd     = document.getElementById('password').value;
+            const confirm = document.getElementById('confirm_password').value;
+            if (!confirm) {
+                alertEl.textContent = 'Please confirm your password.';
+                alertEl.className = 'alert alert-danger';
+                document.getElementById('confirm_password').focus();
+                return;
+            }
+            if (pwd !== confirm) {
+                alertEl.textContent = 'Passwords do not match. Please re-enter them.';
+                alertEl.className = 'alert alert-danger';
+                document.getElementById('confirm_password').classList.add('is-invalid');
+                document.getElementById('confirm_password').focus();
+                return;
+            }
 
             const role = document.getElementById('role').value;
             if (!role) {
