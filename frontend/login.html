@@ -36,6 +36,11 @@
                                     <span class="input-group-text"><i class="bi bi-lock"></i></span>
                                     <input type="password" id="password" class="form-control form-control-lg"
                                         placeholder="Enter your password" required autocomplete="current-password">
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePasswordBtn"
+                                        title="Show / Hide password"
+                                        style="border-left: none;">
+                                        <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                                    </button>
                                 </div>
                                 <div class="text-end">
                                     <a href="forgot_password.html" class="text-decoration-none small">Forgot Password?</a>
@@ -68,7 +73,20 @@
                 window.location.href = `pre_exam.html?id=${examId}`;
             }
         }
-
+        // Show / Hide password toggle
+        document.getElementById('togglePasswordBtn').addEventListener('click', function () {
+            const pwdInput = document.getElementById('password');
+            const icon = document.getElementById('togglePasswordIcon');
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                icon.classList.replace('bi-eye', 'bi-eye-slash');
+                this.title = 'Hide password';
+            } else {
+                pwdInput.type = 'password';
+                icon.classList.replace('bi-eye-slash', 'bi-eye');
+                this.title = 'Show password';
+            }
+        });
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('loginBtn');
