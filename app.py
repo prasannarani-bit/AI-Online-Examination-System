@@ -1134,8 +1134,16 @@ def upload_storage_file(current_user):
     faculty_dir = os.path.join(STORAGE_DIR, str(current_user['id']))
     os.makedirs(faculty_dir, exist_ok=True)
     file_path = os.path.join(faculty_dir, filename)
-    file.save(file_path)
+    content = file.read().decode('utf-8')
 
+    conn.execute(
+       """
+       INSERT INTO faculty_files
+       (faculty_id, filename, file_path, file_content)
+       VALUES (%s,%s,%s,%s)
+       """,
+       (current_user['id'], filename, file_path, content)
+    )
     print("UPLOADED FILE:", file_path)
     print("EXISTS AFTER SAVE:", os.path.exists(file_path))
 
@@ -1236,8 +1244,7 @@ def storage_generate_exam(current_user):
             msg = f"Exam {exam_id} created with {len(questions_data)} CSV questions!"
 
         else:
-            with open(file_path, 'r', encoding='utf8') as f:
-                text_content = f.read()
+            text_content = file_record['file_content']
 
             questions, error = ExamManagerAgent.generate_questions_from_text(
                 text_content, num_questions=num_questions
