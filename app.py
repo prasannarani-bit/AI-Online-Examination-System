@@ -1376,7 +1376,12 @@ def storage_generate_exam(current_user):
             conn.commit()
 
             msg = f"Exam created with {len(questions)} AI questions!"
+            questions, error = ExamManagerAgent.generate_questions_from_text(
+                  text_content,
+                  num_questions=num_questions
+             )
 
+             questions = questions[:num_questions]
     except Exception as e:
         print("FULL ERROR:")
         traceback.print_exc()
