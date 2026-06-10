@@ -119,7 +119,7 @@ def register():
     conn = get_db_connection()
     # Check if a valid code exists for this email
     code_record = conn.execute(
-        "SELECT * FROM verification_codes WHERE email = ? AND code = ? AND purpose = 'register' AND created_at > datetime('now', '-10 minutes') ORDER BY id DESC LIMIT 1",
+        "SELECT * FROM verification_codes WHERE email = %s AND code = %s AND purpose = 'register' AND created_at > NOW() - INTERVAL '10 minutes' ORDER BY id DESC LIMIT 1"
         (email, verification_code)
     ).fetchone()
     
