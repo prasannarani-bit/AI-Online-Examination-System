@@ -1206,6 +1206,7 @@ def storage_generate_exam(current_user):
         return jsonify({'message': 'Unauthorized'}), 403
 
     data = request.json
+
     file_id = data.get('file_id')
     title = data.get('title')
     duration = data.get('duration')
@@ -1238,13 +1239,18 @@ def storage_generate_exam(current_user):
 
     try:
 
-        # ---------- CSV FILE ----------
-        if filename.endswith('.csv'):
+        # =====================================================
+        # CSV FILE
+        # =====================================================
+        if filename.lower().endswith('.csv'):
 
-            with open(file_path, 'r', encoding='utf8') as f:
+            with open(file_path, 'r', encoding='utf-8') as f:
                 csv_input = csv.reader(f)
                 next(csv_input, None)
-                questions_data = [row for row in csv_input if len(row) >= 6]
+                questions_data = [
+                    row for row in csv_input
+                    if len(row) >= 6
+                ]
 
             cursor = conn.cursor()
 
@@ -1275,6 +1281,7 @@ def storage_generate_exam(current_user):
                 exam_id = exam_row[0]
 
             for row in questions_data:
+
                 cursor.execute("""
                     INSERT INTO questions
                     (
@@ -1299,9 +1306,14 @@ def storage_generate_exam(current_user):
 
             conn.commit()
 
-            msg = f"Exam {exam_id} created with {len(questions_data)} CSV questions!"
+            msg = (
+                f"Exam {exam_id} created with "
+                f"{len(questions_data)} CSV questions!"
+            )
 
-        # ---------- AI GENERATED ----------
+        # =====================================================
+        # AI GENERATED QUESTIONS
+        # =====================================================
         else:
 
             text_content = file_record.get('file_content')
@@ -1309,17 +1321,25 @@ def storage_generate_exam(current_user):
             if not text_content:
                 conn.close()
                 return jsonify({
-                    'message': 'No syllabus content stored. Please upload the file again.'
+                    'message': (
+                        'No syllabus content stored. '
+                        'Please upload the file again.'
+                    )
                 }), 400
 
-            questions, error = ExamManagerAgent.generate_questions_from_text(
-                text_content,
-                num_questions=num_questions
+            questions, error = (
+                ExamManagerAgent.generate_questions_from_text(
+                    text_content,
+                    num_questions=num_questions
+                )
             )
 
             if error:
                 conn.close()
                 return jsonify({'message': error}), 500
+
+            # Force exact count
+            questions = questions[:num_questions]
 
             cursor = conn.cursor()
 
@@ -1375,19 +1395,21 @@ def storage_generate_exam(current_user):
 
             conn.commit()
 
-            msg = f"Exam created with {len(questions)} AI questions!"
-            questions, error = ExamManagerAgent.generate_questions_from_text(
-                  text_content,
-                  num_questions=num_questions
-             )
+            msg = (
+                f"Exam created with "
+                f"{len(questions)} AI questions!"
+            )
 
-             questions = questions[:num_questions]
     except Exception as e:
+
         print("FULL ERROR:")
         traceback.print_exc()
 
         conn.close()
-        return jsonify({'message': f'Error: {str(e)}'}), 500
+
+        return jsonify({
+            'message': f'Error: {str(e)}'
+        }), 500
 
     conn.close()
 
@@ -1395,7 +1417,6 @@ def storage_generate_exam(current_user):
         'message': msg,
         'exam_id': exam_id
     })
-
 @app.route('/')
 def index():
     return app.send_static_file('index.html')
