@@ -6,122 +6,102 @@ from werkzeug.security import generate_password_hash
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
 def get_db_connection():
-    """Returns a DictConnection wrapping a psycopg2 connection."""
-    conn = psycopg2.connect(
-        DATABASE_URL,
-        sslmode='require'  # ✅ Required for Supabase
-    )
-    return DictConnection(conn)
+    """Returns a psycopg2 connection that behaves like sqlite3."""
+    conn = psycopg2.connect(DATABASE_URL, sslmode='require', connect_timeout=10)
+    conn.autocommit = False
+    return PGConnection(conn)
 
-def dict_fetchall(cursor):
-    """Return all rows as list of dicts."""
-    columns = [col[0] for col in cursor.description]
-    return [dict(zip(columns, row)) for row in cursor.fetchall()]
-
-def dict_fetchone(cursor):
-    """Return one row as dict."""
-    if cursor.description is None:
-        return None
-    columns = [col[0] for col in cursor.description]
-    row = cursor.fetchone()
-    return dict(zip(columns, row)) if row else None
-
-class DictConnection:
-    """
-    Wrapper around psycopg2 connection to mimic sqlite3's
-    dict row_factory and execute/commit/close interface.
-    """
+class PGConnection:
     def __init__(self, conn):
         self._conn = conn
-        self._cursor = conn.cursor()
 
     def execute(self, sql, params=None):
-        # Convert SQLite ? placeholders to PostgreSQL %s
-        sql = sql.replace('?', '%s')
+        sql = self._fix_sql(sql)
+        cur = self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         if params:
-            self._cursor.execute(sql, params)
+            cur.execute(sql, params)
         else:
-            self._cursor.execute(sql)
-        return DictCursor(self._cursor)
+            cur.execute(sql)
+        return PGCursor(cur, self._conn)
 
     def cursor(self):
-        return DictCursor(self._conn.cursor())
+        cur = self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        return PGCursor(cur, self._conn)
 
     def commit(self):
         self._conn.commit()
 
     def close(self):
-        self._cursor.close()
         self._conn.close()
 
     def executescript(self, sql):
-        """Execute multiple SQL statements."""
-        self._conn.autocommit = True
-        cursor = self._conn.cursor()
-        for statement in sql.split(';'):
-            statement = statement.strip()
-            if statement:
+        cur = self._conn.cursor()
+        for stmt in sql.split(';'):
+            stmt = stmt.strip()
+            if stmt:
                 try:
-                    cursor.execute(statement)
+                    cur.execute(stmt)
+                    self._conn.commit()
                 except Exception as e:
-                    print(f"Script statement error (ignored): {e}")
-        self._conn.autocommit = False
+                    self._conn.rollback()
+                    print(f"Script error (ignored): {e}")
 
-class DictCursor:
-    """Wrapper around psycopg2 cursor to return dict rows."""
-    def __init__(self, cursor):
-        self._cursor = cursor
+    def _fix_sql(self, sql):
+        """Convert SQLite ? to PostgreSQL %s and fix SQLite-specific syntax."""
+        sql = sql.replace('?', '%s')
+        sql = sql.replace('INTEGER PRIMARY KEY AUTOINCREMENT', 'SERIAL PRIMARY KEY')
+        sql = sql.replace('datetime(\'now\', \'-10 minutes\')',
+                         'NOW() - INTERVAL \'10 minutes\'')
+        return sql
+
+class PGCursor:
+    def __init__(self, cur, conn):
+        self._cur = cur
+        self._conn = conn
 
     def execute(self, sql, params=None):
-        sql = sql.replace('?', '%s')
+        sql = self._fix_sql(sql)
         if params:
-            self._cursor.execute(sql, params)
+            self._cur.execute(sql, params)
         else:
-            self._cursor.execute(sql)
+            self._cur.execute(sql)
         return self
 
     def fetchone(self):
-        if self._cursor.description is None:
-            return None
-        columns = [col[0] for col in self._cursor.description]
-        row = self._cursor.fetchone()
+        row = self._cur.fetchone()
         if row is None:
             return None
-        return DictRow(dict(zip(columns, row)))
+        return DictRow(dict(row))
 
     def fetchall(self):
-        if self._cursor.description is None:
-            return []
-        columns = [col[0] for col in self._cursor.description]
-        return [DictRow(dict(zip(columns, row))) for row in self._cursor.fetchall()]
+        rows = self._cur.fetchall()
+        return [DictRow(dict(r)) for r in rows]
 
     @property
     def lastrowid(self):
-        self._cursor.execute("SELECT lastval()")
-        return self._cursor.fetchone()[0]
+        self._cur.execute("SELECT lastval()")
+        return self._cur.fetchone()[0]
 
     def close(self):
-        self._cursor.close()
+        self._cur.close()
+
+    def _fix_sql(self, sql):
+        sql = sql.replace('?', '%s')
+        sql = sql.replace('INTEGER PRIMARY KEY AUTOINCREMENT', 'SERIAL PRIMARY KEY')
+        sql = sql.replace("datetime('now', '-10 minutes')",
+                         "NOW() - INTERVAL '10 minutes'")
+        return sql
 
 class DictRow(dict):
-    """Dict subclass that also supports index access like sqlite3.Row."""
+    """Dict that also supports index access like sqlite3.Row."""
     def __getitem__(self, key):
         if isinstance(key, int):
             return list(self.values())[key]
         return super().__getitem__(key)
 
-    def get(self, key, default=None):
-        return super().get(key, default)
-
-def get_db_connection():
-    """Returns a DictConnection wrapping a psycopg2 connection."""
-    conn = psycopg2.connect(DATABASE_URL)
-    return DictConnection(conn)
-
 def migrate_db():
     """Safely add new columns if they don't exist."""
     conn = get_db_connection()
-    
     new_cols = {
         'full_name':       'TEXT',
         'class_name':      'TEXT',
@@ -134,17 +114,13 @@ def migrate_db():
         'branch':          'TEXT',
         'is_verified':     'INTEGER DEFAULT 0'
     }
-
     for col, col_type in new_cols.items():
         try:
-            conn.execute(
-                f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {col_type}"
-            )
+            conn.execute(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {col_type}")
             conn.commit()
         except Exception as e:
-            print(f"Migration note for {col}: {e}")
+            print(f"Migration note {col}: {e}")
 
-    # Ensure verification_codes table exists
     try:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS verification_codes (
@@ -157,18 +133,14 @@ def migrate_db():
         """)
         conn.commit()
     except Exception as e:
-        print(f"verification_codes table note: {e}")
-
+        print(f"verification_codes note: {e}")
     conn.close()
 
 def init_db():
     """Initialize all tables in PostgreSQL."""
     conn = get_db_connection()
-
-    # Create all tables
-    statements = [
-        """
-        CREATE TABLE IF NOT EXISTS users (
+    tables = [
+        """CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
@@ -183,10 +155,8 @@ def init_db():
             year_of_study TEXT,
             branch TEXT,
             is_verified INTEGER DEFAULT 0
-        )
-        """,
-        """
-        CREATE TABLE IF NOT EXISTS exams (
+        )""",
+        """CREATE TABLE IF NOT EXISTS exams (
             id SERIAL PRIMARY KEY,
             title TEXT NOT NULL,
             description TEXT,
@@ -195,10 +165,8 @@ def init_db():
             passing_score REAL NOT NULL,
             is_published INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """,
-        """
-        CREATE TABLE IF NOT EXISTS questions (
+        )""",
+        """CREATE TABLE IF NOT EXISTS questions (
             id SERIAL PRIMARY KEY,
             exam_id INTEGER REFERENCES exams(id),
             question_text TEXT NOT NULL,
@@ -207,10 +175,8 @@ def init_db():
             option_c TEXT,
             option_d TEXT,
             correct_option TEXT
-        )
-        """,
-        """
-        CREATE TABLE IF NOT EXISTS exam_attempts (
+        )""",
+        """CREATE TABLE IF NOT EXISTS exam_attempts (
             id SERIAL PRIMARY KEY,
             exam_id INTEGER REFERENCES exams(id),
             student_id INTEGER REFERENCES users(id),
@@ -218,49 +184,41 @@ def init_db():
             end_time TIMESTAMP,
             score REAL,
             status TEXT DEFAULT 'in_progress'
-        )
-        """,
-        """
-        CREATE TABLE IF NOT EXISTS attempt_answers (
+        )""",
+        """CREATE TABLE IF NOT EXISTS attempt_answers (
             id SERIAL PRIMARY KEY,
             attempt_id INTEGER REFERENCES exam_attempts(id),
             question_id INTEGER REFERENCES questions(id),
             selected_option TEXT
-        )
-        """,
-        """
-        CREATE TABLE IF NOT EXISTS proctoring_logs (
+        )""",
+        """CREATE TABLE IF NOT EXISTS proctoring_logs (
             id SERIAL PRIMARY KEY,
             attempt_id INTEGER REFERENCES exam_attempts(id),
             log_type TEXT,
             image_blob TEXT,
             timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """,
-        """
-        CREATE TABLE IF NOT EXISTS faculty_files (
+        )""",
+        """CREATE TABLE IF NOT EXISTS faculty_files (
             id SERIAL PRIMARY KEY,
             faculty_id INTEGER REFERENCES users(id),
             filename TEXT NOT NULL,
             file_path TEXT NOT NULL,
             uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """,
-        """
-        CREATE TABLE IF NOT EXISTS verification_codes (
+        )""",
+        """CREATE TABLE IF NOT EXISTS verification_codes (
             id SERIAL PRIMARY KEY,
             email TEXT NOT NULL,
             code TEXT NOT NULL,
             purpose TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """
+        )"""
     ]
 
-    for statement in statements:
+    for table_sql in tables:
         try:
-            conn.execute(statement)
+            conn.execute(table_sql)
             conn.commit()
+            print(f"Table created/verified OK")
         except Exception as e:
             print(f"Table creation note: {e}")
 
@@ -270,14 +228,13 @@ def init_db():
             "SELECT id FROM users WHERE username = %s",
             ('admin@exam.com',)
         ).fetchone()
-
         if not existing:
             conn.execute(
                 "INSERT INTO users (username, password, role, full_name) VALUES (%s, %s, %s, %s)",
                 ('admin@exam.com', generate_password_hash('admin'), 'admin', 'Administrator')
             )
             conn.commit()
-            print("Default admin created: admin@exam.com / admin")
+            print("Default admin created!")
     except Exception as e:
         print(f"Admin creation note: {e}")
 
