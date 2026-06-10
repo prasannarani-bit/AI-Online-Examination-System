@@ -9,6 +9,7 @@ import os
 import random
 import string
 from fpdf import FPDF
+import traceback
 
 from models.database import init_db, get_db_connection, migrate_db
 from agents.exam_manager_agent import ExamManagerAgent
@@ -925,11 +926,29 @@ def start_exam(current_user, exam_id):
     questions = conn.execute(
         "SELECT id FROM questions WHERE exam_id = %s", (exam_id,)
     ).fetchall()
-    for q in questions:
-        cursor.execute(
-            "INSERT INTO attempt_answers (attempt_id, question_id) VALUES (%s, %s)",
-            (attempt_id, q['id'])
-        )
+    for q_raw in questions:
+        q = normalize_keys(q_raw)
+
+        cursor.execute("""
+           INSERT INTO questions (
+              exam_id,
+              question_text,
+              option_a,
+              option_b,
+              option_c,
+              option_d,
+              correct_option
+         )
+         VALUES (%s,%s,%s,%s,%s,%s,%s)
+    """, (
+        exam_id,
+        q.get('question_text', ''),
+        q.get('option_a', ''),
+        q.get('option_b', ''),
+        q.get('option_c', ''),
+        q.get('option_d', ''),
+        q.get('correct_option', 'A')
+    ))
 
     conn.commit()
     conn.close()
@@ -1248,9 +1267,11 @@ def storage_generate_exam(current_user):
             msg = f"Exam created with {len(questions)} AI questions!"
 
     except Exception as e:
+        print("FULL ERROR:")
+        traceback.print_exc()
+
         conn.close()
         return jsonify({'message': f'Error: {str(e)}'}), 500
-
     conn.close()
     return jsonify({'message': msg, 'exam_id': exam_id})
 
