@@ -4,6 +4,7 @@ from groq import Groq
 import json
 import re
 import os
+import math
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
@@ -69,68 +70,83 @@ class ExamManagerAgent:
         except Exception as e:
             print(f"DEBUG: DOCX Extraction Error: {str(e)}")
             return None
+            
+    @staticmethod
+    def split_text_into_chunks(text, chunk_size=6000):
 
+        chunks = []
+
+        for i in range(0, len(text), chunk_size):
+            chunks.append(text[i:i + chunk_size])
+
+        return chunks
+        
     @staticmethod
     def generate_questions_from_text(text, num_questions=5):
 
-        prompt = f"""
-Generate EXACTLY {num_questions} multiple-choice questions from the syllabus/content below.
+        chunks = ExamManagerAgent.split_text_into_chunks(text)
 
-SYLLABUS:
-{text}
+        all_questions = []
 
-STRICT RULES:
+        questions_per_chunk = max(
+            1,
+            math.ceil(num_questions / len(chunks))
+        )
 
-1. Return EXACTLY {num_questions} questions.
-2. Do NOT return more than {num_questions}.
-3. Do NOT return fewer than {num_questions}.
-4. Return ONLY valid JSON.
-5. Do NOT include markdown.
-6. Do NOT include explanations.
-7. Do NOT include triple backticks.
-8. Each question must have EXACTLY these keys:
+        print(f"DEBUG: Total chunks = {len(chunks)}")
 
-"question_text"
-"option_a"
-"option_b"
-"option_c"
-"option_d"
-"correct_option"
+        for chunk in chunks:
 
-9. "correct_option" must be only:
-"A"
-"B"
-"C"
-or
-"D"
+            prompt = f"""
+    Generate EXACTLY {questions_per_chunk} multiple-choice questions from the syllabus/content below.
 
-Return ONLY a JSON array.
+    SYLLABUS:
+    {chunk}
 
-Example:
+    STRICT RULES:
 
-[
-  {{
-    "question_text": "What is DBMS?",
-    "option_a": "Database",
-    "option_b": "Operating System",
-    "option_c": "Compiler",
-    "option_d": "Network",
-    "correct_option": "A"
-  }}
-]
+    1. Return ONLY valid JSON.
+    2. No markdown.
+    3. No explanations.
+    4. No code blocks.
 
-The JSON array MUST contain EXACTLY {num_questions} objects.
-"""
+    Each question must contain:
 
-        return ExamManagerAgent._call_groq(prompt, num_questions)
+    question_text
+    option_a
+    option_b
+    option_c
+    option_d
+    correct_option
+
+    correct_option must be A, B, C or D.
+
+    Return ONLY a JSON array.
+    """
+
+            questions, error = ExamManagerAgent._call_groq(
+                prompt,
+                questions_per_chunk
+            )
+
+            if questions:
+                all_questions.extend(questions)
+
+        all_questions = all_questions[:num_questions]
+
+        print(
+            f"DEBUG: Final question count = "
+            f"{len(all_questions)}"
+        )
+
+        return all_questions, None
 
     @staticmethod
     def _call_groq(prompt, num_questions):
 
         MODELS_TO_TRY = [
             "llama-3.1-8b-instant",
-            "llama-3.3-70b-versatile",
-            "gemma2-9b-it"
+            "llama-3.3-70b-versatile"
         ]
 
         output = "No output"
