@@ -678,18 +678,141 @@ def upload_csv(current_user, exam_id):
         return jsonify({'message': 'No selected file'}), 400
 
     try:
-        stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
-        csv_input = csv.reader(stream)
-        next(csv_input, None)
-        count = 0
-        for row in csv_input:
-            if len(row) >= 6:
+
+        filename = file.filename.lower()
+
+        if filename.endswith(".csv"):
+
+            stream = io.StringIO(
+                file.stream.read().decode("utf-8"),
+                newline=None
+            )
+
+            csv_input = csv.reader(stream)
+            next(csv_input, None)
+
+            count = 0
+
+            for row in csv_input:
+
+                if len(row) >= 6:
+
+                    conn.execute("""
+                        INSERT INTO questions
+                        (
+                            exam_id,
+                            question_text,
+                            option_a,
+                            option_b,
+                            option_c,
+                            option_d,
+                            correct_option
+                        )
+                        VALUES (%s,%s,%s,%s,%s,%s,%s)
+                    """, (
+                        exam_id,
+                        row[0],
+                        row[1],
+                        row[2],
+                        row[3],
+                        row[4],
+                        row[5]
+                    ))
+
+                    count += 1
+
+        elif filename.endswith(".pdf"):
+
+            text = ExamManagerAgent.extract_text_from_pdf(
+                file.stream
+            )
+
+            questions, error = (
+                ExamManagerAgent.generate_questions_from_text(
+                    text,
+                    num_questions=5
+                )
+            )
+
+            if error:
+                raise Exception(error)
+
+            count = 0
+
+            for q in questions:
+
                 conn.execute("""
-                    INSERT INTO questions (exam_id, question_text, option_a, option_b,
-                    option_c, option_d, correct_option)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
-                """, (exam_id, row[0], row[1], row[2], row[3], row[4], row[5]))
+                    INSERT INTO questions
+                    (
+                        exam_id,
+                        question_text,
+                        option_a,
+                        option_b,
+                        option_c,
+                        option_d,
+                        correct_option
+                    )
+                    VALUES (%s,%s,%s,%s,%s,%s,%s)
+                """, (
+                    exam_id,
+                    q["question_text"],
+                    q["option_a"],
+                    q["option_b"],
+                    q["option_c"],
+                    q["option_d"],
+                    q["correct_option"]
+                ))
+
                 count += 1
+
+        elif filename.endswith(".txt"):
+
+            text = file.read().decode("utf-8")
+
+            questions, error = (
+                ExamManagerAgent.generate_questions_from_text(
+                    text,
+                    num_questions=5
+                )
+            )
+
+            if error:
+                raise Exception(error)
+
+            count = 0
+
+            for q in questions:
+
+                conn.execute("""
+                    INSERT INTO questions
+                    (
+                        exam_id,
+                        question_text,
+                        option_a,
+                        option_b,
+                        option_c,
+                        option_d,
+                        correct_option
+                    )
+                    VALUES (%s,%s,%s,%s,%s,%s,%s)
+                """, (
+                    exam_id,
+                    q["question_text"],
+                    q["option_a"],
+                    q["option_b"],
+                    q["option_c"],
+                    q["option_d"],
+                    q["correct_option"]
+                ))
+
+                count += 1
+
+        else:
+
+             raise Exception(
+                "Supported formats: CSV, PDF, TXT"
+            )
+
         conn.commit()
     except Exception as e:
         conn.close()
