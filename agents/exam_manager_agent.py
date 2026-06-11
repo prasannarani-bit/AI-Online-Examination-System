@@ -72,7 +72,7 @@ class ExamManagerAgent:
             return None
             
     @staticmethod
-    def split_text_into_chunks(text, chunk_size=6000):
+    def split_text_into_chunks(text, chunk_size=12000):
 
         chunks = []
 
@@ -85,6 +85,10 @@ class ExamManagerAgent:
     def generate_questions_from_text(text, num_questions=5):
 
         chunks = ExamManagerAgent.split_text_into_chunks(text)
+        MAX_CHUNKS = 4
+
+        if len(chunks) > MAX_CHUNKS:
+            chunks = chunks[:MAX_CHUNKS]
 
         all_questions = []
 
@@ -145,8 +149,7 @@ class ExamManagerAgent:
     def _call_groq(prompt, num_questions):
 
         MODELS_TO_TRY = [
-            "llama-3.1-8b-instant",
-            "llama-3.3-70b-versatile"
+            "llama-3.1-8b-instant"
         ]
 
         output = "No output"
