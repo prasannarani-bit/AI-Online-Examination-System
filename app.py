@@ -1348,6 +1348,12 @@ def storage_generate_exam(current_user):
                     )
                 }), 400
 
+            print("===================================")
+            print("FILE NAME:", filename)
+            print("TEXT LENGTH:", len(text_content))
+            print("REQUESTED QUESTIONS:", num_questions)
+            print("===================================")
+
             questions, error = (
                 ExamManagerAgent.generate_questions_from_text(
                     text_content,
