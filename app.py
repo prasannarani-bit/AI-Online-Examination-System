@@ -1141,7 +1141,33 @@ def upload_storage_file(current_user):
     file_path = os.path.join(faculty_dir, filename)
 
     # Read content first
-    content = file.read().decode('utf-8')
+    filename = secure_filename(file.filename)
+
+    faculty_dir = os.path.join(STORAGE_DIR, str(current_user['id']))
+    os.makedirs(faculty_dir, exist_ok=True)
+
+    file_path = os.path.join(faculty_dir, filename)
+
+    content = ""
+
+    if filename.lower().endswith(".txt"):
+        content = file.read().decode("utf-8")
+
+    elif filename.lower().endswith(".pdf"):
+        content = ExamManagerAgent.extract_text_from_pdf(file)
+
+        if not content:
+            return jsonify({
+                "message": "Could not extract text from PDF"
+            }), 400
+
+    else:
+        return jsonify({
+            "message": "Only TXT and PDF files are supported"
+        }), 400
+
+    file.seek(0)
+    file.save(file_path)
 
     # Reset pointer
     file.seek(0)
