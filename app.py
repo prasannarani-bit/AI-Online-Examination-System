@@ -1122,6 +1122,7 @@ def get_storage_files(current_user):
 @app.route('/api/faculty/storage/upload', methods=['POST'])
 @token_required
 def upload_storage_file(current_user):
+
     if current_user['role'] != 'faculty':
         return jsonify({'message': 'Unauthorized'}), 403
 
@@ -1140,13 +1141,7 @@ def upload_storage_file(current_user):
 
     file_path = os.path.join(faculty_dir, filename)
 
-    # Read content first
-    filename = secure_filename(file.filename)
-
-    faculty_dir = os.path.join(STORAGE_DIR, str(current_user['id']))
-    os.makedirs(faculty_dir, exist_ok=True)
-
-    file_path = os.path.join(faculty_dir, filename)
+    # REPLACE YOUR OLD content = file.read().decode('utf-8') WITH THIS
 
     content = ""
 
@@ -1169,22 +1164,20 @@ def upload_storage_file(current_user):
     file.seek(0)
     file.save(file_path)
 
-    # Reset pointer
-    file.seek(0)
-
-    # Save physical file
-    file.save(file_path)
-
-    print("UPLOADED FILE:", file_path)
-    print("EXISTS AFTER SAVE:", os.path.exists(file_path))
+    # PUT THE DATABASE INSERT HERE
 
     conn = get_db_connection()
 
     conn.execute(
         """
         INSERT INTO faculty_files
-        (faculty_id, filename, file_path, file_content)
-        VALUES (%s, %s, %s, %s)
+        (
+            faculty_id,
+            filename,
+            file_path,
+            file_content
+        )
+        VALUES (%s,%s,%s,%s)
         """,
         (
             current_user['id'],
@@ -1197,7 +1190,9 @@ def upload_storage_file(current_user):
     conn.commit()
     conn.close()
 
-    return jsonify({'message': 'File uploaded successfully'})
+    return jsonify({
+        'message': 'File uploaded successfully'
+    })
     
 @app.route('/api/faculty/storage/files/<int:file_id>', methods=['DELETE'])
 @token_required
