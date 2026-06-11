@@ -1478,9 +1478,9 @@ def storage_generate_exam(current_user):
             print("===================================")
 
             questions, error = (
-                ExamManagerAgent.generate_questions_from_text(
+                ExamManagerAgent.generate_large_question_set(
                     text_content,
-                    num_questions=num_questions
+                    total_questions=num_questions
                 )
             )
 
