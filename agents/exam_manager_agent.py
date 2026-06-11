@@ -72,7 +72,7 @@ class ExamManagerAgent:
             return None
             
     @staticmethod
-    def split_text_into_chunks(text, chunk_size=12000):
+    def split_text_into_chunks(text, chunk_size=5000):
 
         chunks = []
 
@@ -87,7 +87,7 @@ class ExamManagerAgent:
 
         print("TEXT SENT TO AI:", len(text))
         chunks = ExamManagerAgent.split_text_into_chunks(text)
-        MAX_CHUNKS = 4
+        MAX_CHUNKS = 3
 
         if len(chunks) > MAX_CHUNKS:
             chunks = chunks[:MAX_CHUNKS]
