@@ -98,6 +98,7 @@ class ExamManagerAgent:
         )
 
         print(f"DEBUG: Total chunks = {len(chunks)}")
+        print("AI INPUT LENGTH:", len(text))
 
         for chunk in chunks:
 
