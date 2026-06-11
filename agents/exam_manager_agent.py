@@ -145,6 +145,37 @@ class ExamManagerAgent:
         )
 
         return all_questions, None
+    @staticmethod
+    def generate_large_question_set(text, total_questions=50):
+
+        all_questions = []
+
+        batch_size = 10
+
+        while len(all_questions) < total_questions:
+
+            remaining = total_questions - len(all_questions)
+
+            current_batch = min(batch_size, remaining)
+
+            questions, error = (
+                ExamManagerAgent.generate_questions_from_text(
+                    text,
+                    num_questions=current_batch
+                )
+            )
+
+            if error:
+                return None, error
+
+            all_questions.extend(questions)
+
+            print(
+                f"DEBUG: Generated {len(all_questions)} "
+                f"of {total_questions} questions"
+            )
+
+        return all_questions[:total_questions], None
 
     @staticmethod
     def _call_groq(prompt, num_questions):
@@ -169,7 +200,7 @@ class ExamManagerAgent:
                             "content": prompt
                         }
                     ],
-                    max_tokens=2000,
+                    max_tokens=4000,
                     temperature=0.3
                 )
 
