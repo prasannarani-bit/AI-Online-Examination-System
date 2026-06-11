@@ -83,7 +83,9 @@ class ExamManagerAgent:
         
     @staticmethod
     def generate_questions_from_text(text, num_questions=5):
+        text = text[:15000]
 
+        print("TEXT SENT TO AI:", len(text))
         chunks = ExamManagerAgent.split_text_into_chunks(text)
         MAX_CHUNKS = 4
 
