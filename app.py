@@ -1045,15 +1045,14 @@ def start_exam(current_user, exam_id):
     INSERT INTO exam_attempts
     (
         exam_id,
-        student_id,
+        student_id
     )
-    VALUES (%s,%s,NOW())
+    VALUES (%s,%s)
     RETURNING id
     """, (
         exam_id,
         current_user['id']
     ))
-
     attempt_row = cursor.fetchone()
 
     if isinstance(attempt_row, dict):
@@ -1061,36 +1060,12 @@ def start_exam(current_user, exam_id):
     else:
         attempt_id = attempt_row[0]
 
-    questions = conn.execute(
-        "SELECT id FROM questions WHERE exam_id = %s", (exam_id,)
-    ).fetchall()
-    for q_raw in questions:
-        q = normalize_keys(q_raw)
-
-        cursor.execute("""
-           INSERT INTO questions (
-              exam_id,
-              question_text,
-              option_a,
-              option_b,
-              option_c,
-              option_d,
-              correct_option
-         )
-         VALUES (%s,%s,%s,%s,%s,%s,%s)
-    """, (
-        exam_id,
-        q.get('question_text', ''),
-        q.get('option_a', ''),
-        q.get('option_b', ''),
-        q.get('option_c', ''),
-        q.get('option_d', ''),
-        q.get('correct_option', 'A')
-    ))
-
     conn.commit()
     conn.close()
-    return jsonify({'attempt_id': attempt_id})
+
+    return jsonify({
+        'attempt_id': attempt_id
+    })
 
 @app.route('/api/student/attempts/<int:attempt_id>', methods=['GET'])
 @token_required
