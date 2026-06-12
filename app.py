@@ -1040,11 +1040,27 @@ def start_exam(current_user, exam_id):
         return jsonify({'attempt_id': cur_attempt['id']})
 
     cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO exam_attempts (exam_id, student_id) VALUES (%s, %s)",
-        (exam_id, current_user['id'])
+
+    cursor.execute("""
+    INSERT INTO exam_attempts
+    (
+        exam_id,
+        student_id,
+        started_at
     )
-    attempt_id = cursor.lastrowid
+    VALUES (%s,%s,NOW())
+    RETURNING id
+    """, (
+        exam_id,
+        current_user['id']
+    ))
+
+    attempt_row = cursor.fetchone()
+
+    if isinstance(attempt_row, dict):
+        attempt_id = attempt_row['id']
+    else:
+        attempt_id = attempt_row[0]
 
     questions = conn.execute(
         "SELECT id FROM questions WHERE exam_id = %s", (exam_id,)
