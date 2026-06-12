@@ -1046,7 +1046,6 @@ def start_exam(current_user, exam_id):
     (
         exam_id,
         student_id,
-        started_at
     )
     VALUES (%s,%s,NOW())
     RETURNING id
