@@ -10,6 +10,7 @@ window.initProctoring = function (attemptId) {
     // We still track consecutive warnings to auto-clear the badge reliably.
     let consecutiveWarnings = 0;
     let clearBadgeTimer = null;
+    let examFinished = false;
 
     function setStatusOk() {
         consecutiveWarnings = 0;
