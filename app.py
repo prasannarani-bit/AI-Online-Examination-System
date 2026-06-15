@@ -10,6 +10,7 @@ import random
 import string
 from fpdf import FPDF
 import traceback
+from flask import send_file
 
 from models.database import init_db, get_db_connection, migrate_db
 from agents.exam_manager_agent import ExamManagerAgent
@@ -18,6 +19,7 @@ from agents.evaluation_agent import EvaluationAgent
 from agents.analytics_agent import AnalyticsAgent
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from agents.notification_agent import NotificationAgent
 
 app = Flask(__name__, static_folder='frontend', static_url_path='')
 CORS(app)
@@ -1204,6 +1206,41 @@ def get_result(current_user, attempt_id):
     if not attempt:
         return jsonify({'message': 'Result not found'}), 404
     return jsonify({'attempt': serialize_row(attempt)})
+@app.route('/api/student/certificate/<int:attempt_id>')
+@token_required
+def download_certificate(current_user, attempt_id):
+
+    conn = get_db_connection()
+
+    result = conn.execute("""
+        SELECT
+            u.full_name,
+            e.title,
+            a.score
+        FROM exam_attempts a
+        JOIN users u ON a.student_id = u.id
+        JOIN exams e ON a.exam_id = e.id
+        WHERE a.id = %s
+    """, (attempt_id,)).fetchone()
+
+    conn.close()
+
+    if not result:
+        return jsonify({
+            "message": "Certificate not found"
+        }), 404
+
+    pdf_path = NotificationAgent.generate_certificate(
+        result['full_name'],
+        result['title'],
+        result['score']
+    )
+
+    return send_file(
+        pdf_path,
+        as_attachment=True,
+        download_name="certificate.pdf"
+    )
 
 @app.route('/api/student/exams/<int:exam_id>/question-paper', methods=['GET'])
 @token_required
