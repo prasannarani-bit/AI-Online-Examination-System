@@ -1020,39 +1020,60 @@ def student_dashboard(current_user):
 @app.route('/api/student/exams/<int:exam_id>/start', methods=['POST'])
 @token_required
 def start_exam(current_user, exam_id):
+
     if current_user['role'] != 'student':
         return jsonify({'message': 'Unauthorized'}), 403
+
     conn = get_db_connection()
+
     completed_attempt = conn.execute(
-        "SELECT id FROM exam_attempts WHERE student_id = %s AND exam_id = %s AND status IN ('submitted', 'evaluated')",
+        """
+        SELECT id
+        FROM exam_attempts
+        WHERE student_id = %s
+        AND exam_id = %s
+        AND status IN ('submitted','evaluated')
+        """,
         (current_user['id'], exam_id)
     ).fetchone()
+
     if completed_attempt:
         conn.close()
         return jsonify({'message': 'Response is submitted'}), 400
 
     cur_attempt = conn.execute(
-        "SELECT id FROM exam_attempts WHERE student_id = %s AND exam_id = %s AND status = 'in_progress'",
+        """
+        SELECT id
+        FROM exam_attempts
+        WHERE student_id = %s
+        AND exam_id = %s
+        AND status = 'in_progress'
+        """,
         (current_user['id'], exam_id)
     ).fetchone()
+
     if cur_attempt:
         conn.close()
         return jsonify({'attempt_id': cur_attempt['id']})
 
     cursor = conn.cursor()
 
-    cursor.execute("""
-    INSERT INTO exam_attempts
-    (
-        exam_id,
-        student_id
+    cursor.execute(
+        """
+        INSERT INTO exam_attempts
+        (
+            exam_id,
+            student_id
+        )
+        VALUES (%s,%s)
+        RETURNING id
+        """,
+        (
+            exam_id,
+            current_user['id']
+        )
     )
-    VALUES (%s,%s)
-    RETURNING id
-    """, (
-        exam_id,
-        current_user['id']
-    ))
+
     attempt_row = cursor.fetchone()
 
     if isinstance(attempt_row, dict):
@@ -1060,13 +1081,49 @@ def start_exam(current_user, exam_id):
     else:
         attempt_id = attempt_row[0]
 
+    # ----------------------------------
+    # CREATE ATTEMPT ANSWER RECORDS
+    # ----------------------------------
+
+    questions = conn.execute(
+        """
+        SELECT id
+        FROM questions
+        WHERE exam_id = %s
+        """,
+        (exam_id,)
+    ).fetchall()
+
+    for q in questions:
+
+        if isinstance(q, dict):
+            question_id = q['id']
+        else:
+            question_id = q[0]
+
+        conn.execute(
+            """
+            INSERT INTO attempt_answers
+            (
+                attempt_id,
+                question_id,
+                selected_option,
+                is_correct
+            )
+            VALUES (%s,%s,NULL,NULL)
+            """,
+            (
+                attempt_id,
+                question_id
+            )
+        )
+
     conn.commit()
     conn.close()
 
     return jsonify({
         'attempt_id': attempt_id
     })
-
 @app.route('/api/student/attempts/<int:attempt_id>', methods=['GET'])
 @token_required
 def get_attempt(current_user, attempt_id):
