@@ -277,43 +277,17 @@
         }
 
         async function setupCertificate(attempt) {
-            // Fetch student profile for full name and college
-            const res = await ApiClient.get('/verify');
-            if (res.ok) {
-                const user = res.data;
-                document.getElementById('cert-student-name').textContent = user.full_name || user.username;
-                document.getElementById('cert-exam-title').textContent = attempt.title;
-                let cleanEndTime = attempt.end_time.trim();
-                if (cleanEndTime.indexOf('T') === -1) {
-                    cleanEndTime = cleanEndTime.replace(' ', 'T');
-                }
-                if (!cleanEndTime.endsWith('Z') && cleanEndTime.indexOf('+') === -1) {
-                    cleanEndTime += 'Z';
-                }
-                document.getElementById('cert-date').textContent = new Date(cleanEndTime).toLocaleDateString(undefined, {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                });
-                
-                document.getElementById('cert-college').textContent = user.college || 'JNTU-GV College of Engineering';
-                document.getElementById('cert-course').textContent = user.branch || user.department || 'II MCA';
-            }
 
             document.getElementById('downloadCertBtn').onclick = () => {
 
                 window.open(
-        `            ${ApiClient.baseUrl}/student/certificate/${attemptId}`,
-                     '_blank'
+                    `${ApiClient.baseUrl}/student/certificate/${attemptId}`,
+                    '_blank'
                 );
 
             };
-                
-                // Hide it back
-                element.style.left = '-9999px';
-            };
-        }
 
+        }
         if (attemptId) loadResult();
         else window.location.href = 'student_dashboard.html';
     </script>
