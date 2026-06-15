@@ -65,7 +65,6 @@ CREATE TABLE IF NOT EXISTS attempt_answers (
     attempt_id INTEGER NOT NULL,
     question_id INTEGER NOT NULL,
     selected_option TEXT,
-    is_correct INTEGER,
     FOREIGN KEY(attempt_id) REFERENCES exam_attempts(id),
     FOREIGN KEY(question_id) REFERENCES questions(id)
 );
