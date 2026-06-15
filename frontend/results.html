@@ -280,10 +280,37 @@
 
             document.getElementById('downloadCertBtn').onclick = () => {
 
-                window.open(
-                    `/api/student/certificate/${attemptId}`,
-                    '_blank'
-                );
+                async function downloadCertificate() {
+
+                    const token = localStorage.getItem('token');
+
+                    const response = await fetch(
+                        `/api/student/certificate/${attemptId}`,
+                        {
+                            headers: {
+                                 Authorization: `Bearer ${token}`
+                            }
+                         }
+                    );
+
+                    if (!response.ok) {
+                        alert("Unable to generate certificate");
+                        return;
+                    }
+
+                    const blob = await response.blob();
+
+                    const url = window.URL.createObjectURL(blob);
+
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'certificate.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                }
 
             };
 
