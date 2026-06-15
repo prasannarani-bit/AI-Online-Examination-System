@@ -59,8 +59,8 @@ class EvaluationAgent:
         
         for ans in answers:
 
-        if ans['selected_option'] == ans['correct_option']:
-            correct_count += 1
+            if ans['selected_option'] == ans['correct_option']:
+                correct_count += 1
             
         score_percent = int((correct_count / total_questions * 100)) if total_questions > 0 else 0
         
