@@ -136,7 +136,10 @@ window.initProctoring = function (attemptId) {
             setTimeout(() => {
                 window.location.href = 'submit_exam_forced.html?id=' + attemptId; // To be handled by start_exam's submit logic
                 // Or directly trigger existing submit function if available in scope
-                if (window.forceSubmitExam) window.forceSubmitExam();
+                if (!examFinished && window.forceSubmitExam) {
+                    examFinished = true;
+                    window.forceSubmitExam();
+                }
             }, 3000);
             return;
         }
@@ -163,17 +166,24 @@ window.initProctoring = function (attemptId) {
     }
 
     document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            triggerLockout('tab_switch');
-        }
-    });
+
+         if (examFinished)
+             return;
+
+         if (document.hidden) {
+             triggerLockout('tab_switch');
+         }
+     });
 
     window.addEventListener('blur', () => {
-        // Blur triggers when the user clicks out of the browser window 
-        // (to another app, desktop, or even a system notification)
+
+        if (examFinished)
+            return;
+
         if (!isLocked) {
             triggerLockout('background_activity');
         }
+
     });
 
     document.addEventListener('fullscreenchange', () => {
