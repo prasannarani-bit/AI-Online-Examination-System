@@ -58,11 +58,55 @@ class NotificationAgent:
         centered_text("CERTIFICATE", "Times", "B", 48, 58, color=PRIMARY_BLUE)
         centered_text("OF ACHIEVEMENT", "Helvetica", "B", 18, 70, color=PRIMARY_BLUE)
         centered_text("- oooo -", "Times", "", 20, 80, color=GOLD)
-        centered_text("This is to certify that", "Helvetica", "", 16, 95, color=TEXT_DARK)
-        centered_text(student_name, "Times", "BI", 42, 110, color=TEXT_DARK)
-        centered_text("has successfully completed the examination for", "Helvetica", "", 16, 140, color=TEXT_DARK)
-        centered_text(exam_title, "Helvetica", "B", 24, 152, color=PRIMARY_BLUE)
-        centered_text(f"with an outstanding score of {score}%", "Helvetica", "I", 14, 165, color=TEXT_DARK)
+        centered_text("THIS IS TO CERTIFY THAT", "Helvetica", "B", 15, 95, color=TEXT_DARK)
+
+        centered_text(
+            student_name,
+            "Times",
+            "BI",
+            34,
+            112,
+            color=TEXT_DARK
+        )
+
+        pdf.set_draw_color(180, 180, 180)
+        pdf.line(70, 132, 227, 132)
+
+        centered_text(
+            "has successfully passed the assessment for the examination",
+            "Helvetica",
+            "",
+            14,
+            142,
+            color=TEXT_DARK
+        )
+
+        centered_text(
+            exam_title,
+            "Helvetica",
+            "B",
+            20,
+            154,
+            color=PRIMARY_BLUE
+        )
+
+        centered_text(
+            f"with a score of {score}%",
+            "Helvetica",
+            "I",
+            13,
+            166,
+            color=TEXT_DARK
+        )
+
+        centered_text(
+            f"conducted on {date_str}",
+            "Helvetica",
+            "",
+            12,
+            176,
+            color=TEXT_DARK
+        )
 
         pdf.set_draw_color(*GOLD)
         pdf.set_line_width(0.5)
@@ -73,6 +117,16 @@ class NotificationAgent:
         pdf.set_xy(187, 198)
         pdf.set_font("Helvetica", "", 11)
         pdf.cell(70, 5, "JNTU-GV", border=0, ln=0, align='C')
+        certificate_id = f"CERT-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+
+        centered_text(
+            f"Certificate ID: {certificate_id}",
+            "Helvetica",
+            "",
+            10,
+            190,
+            color=(100,100,100)
+        )
         centered_text(f"Issue Date: {date_str}", "Helvetica", "I", 9, 202, color=(120, 120, 120))
 
         temp_dir = os.path.join("internal_storage", "temp")
