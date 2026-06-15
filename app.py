@@ -1107,10 +1107,9 @@ def start_exam(current_user, exam_id):
             (
                 attempt_id,
                 question_id,
-                selected_option,
-                is_correct
+                selected_option
             )
-            VALUES (%s,%s,NULL,NULL)
+            VALUES (%s,%s,NULL)
             """,
             (
                 attempt_id,
