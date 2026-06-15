@@ -106,6 +106,10 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         const attemptId = urlParams.get('attempt_id');
+
+        window.examFinished = false;
+
+        let examSubmitted = false;
         let timeLeft = 0;
 
         async function initExam() {
@@ -153,18 +157,70 @@
         }
 
         async function submitExam() {
-            const formData = new FormData(document.getElementById('examForm'));
+
+            if (examSubmitted) {
+                return;
+            }
+
+            examSubmitted = true;
+
+            const submitBtn =
+                document.getElementById('submitExamBtn');
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Submitting...";
+
+            const formData =
+                new FormData(document.getElementById('examForm'));
+
             let answers = {};
+
             for (let [key, val] of formData.entries()) {
                 answers[key] = val;
             }
 
-            const res = await ApiClient.post(`/student/attempts/${attemptId}/submit`, { answers });
-            if (res.ok) {
-                window.location.href = `results.html?attempt_id=${attemptId}`;
-            } else {
-                alert(res.data.message);
-            }
+            console.log("Submitting answers:", answers);
+
+            try {
+
+                 const res = await ApiClient.post(
+                    `/student/attempts/${attemptId}/submit`,
+                    { answers }
+                );
+  
+                console.log("Submit response:", res);
+
+                if (res.ok) {
+
+                    window.examFinished = true;
+
+                    window.location.href =
+                        `results.html?attempt_id=${attemptId}`;
+
+                } else {
+
+                     examSubmitted = false;
+
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "Submit Exam";
+
+                     alert(
+                         res.data?.message ||
+                        "Failed to submit exam"
+                    );
+                }
+
+              } catch (err) {
+
+                 console.error("Submit error:", err);
+
+                 examSubmitted = false;
+
+                 submitBtn.disabled = false;
+                 submitBtn.innerText = "Submit Exam";
+
+                 alert("Network error while submitting exam.");
+              }
         }
         window.forceSubmitExam = submitExam;
 
@@ -188,9 +244,13 @@
             }, 1000);
         }
 
-        document.getElementById('examForm').addEventListener('submit', (e) => {
+        document.getElementById('examForm').addEventListener('submit', async (e) => {
+
             e.preventDefault();
-            submitExam();
+
+            console.log("Submit button clicked");
+
+            await submitExam();
         });
 
         if (!attemptId) window.location.href = 'student_dashboard.html';
