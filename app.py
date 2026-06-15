@@ -1206,7 +1206,7 @@ def get_result(current_user, attempt_id):
     if not attempt:
         return jsonify({'message': 'Result not found'}), 404
     return jsonify({'attempt': serialize_row(attempt)})
-@app.route('/api/student/certificate/<int:attempt_id>')
+@app.route('/api/student/certificate/<int:attempt_id>', methods=['GET'])
 @token_required
 def download_certificate(current_user, attempt_id):
 
