@@ -8,8 +8,6 @@
     <!-- Google Fonts for Certificate -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Great+Vibes&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
     <!-- PDF Generation Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root {
             --primary-blue: #102C57;
@@ -215,76 +213,7 @@
             </div>
         </div>
     </div>
-
-    <!-- Hidden Certificate Template -->
-    <div id="certificate-template">
-        <!-- Borders -->
-        <div class="cert-border-outer"></div>
-        <div class="cert-border-inner"></div>
-
-        <!-- Geometric Shapes TR -->
-        <div class="geo-shape shape-tr-2"></div>
-        <div class="geo-shape shape-tr-1"></div>
-        <div class="tr-gold-line"></div>
-
-        <!-- Geometric Shapes BL -->
-        <div class="geo-shape shape-bl-2"></div>
-        <div class="geo-shape shape-bl-1"></div>
-        <div class="bl-gold-line"></div>
-
-        <!-- Floral Corners -->
-        <img src="images/floral_corner.png" class="floral-corner floral-tl" alt="">
-        <img src="images/floral_corner.png" class="floral-corner floral-br" alt="">
-
-        <!-- University Header -->
-        <div class="cert-header">
-            <div class="header-text-container-cert">
-                <div class="univ-name-cert">Jawaharlal Nehru Technological University</div>
-                <div class="univ-loc-cert">Gurajada Vizianagaram</div>
-            </div>
-        </div>
-
-        <!-- Content -->
-        <div class="cert-content">
-
-            <h2 class="main-title-cert">Certificate</h2>
-            <h4 class="sub-title-cert">Of Achievement</h4>
-
-            <div class="ornament-cert">❧ ━━━━━━ ❦ ━━━━━━ ☙</div>
-
-            <div class="cert-intro-cert">This is to certify that</div>
-
-            <div class="student-name-cert" id="cert-student-name">...</div>
-
-            <div class="details-line">
-                of <span class="details-val" id="cert-college">...</span>
-                studying <span class="details-val" id="cert-course">...</span>
-            </div>
-
-            <p class="achievement-text-cert">
-                has successfully passed the assessment for the exam<br>
-                <strong id="cert-exam-title">...</strong><br>
-                conducted on <span id="cert-date">...</span>
-            </p>
-
-            <div class="cert-footer-cert">
-                <div class="sig-box" style="visibility: hidden;">
-                    <div class="sig-line-cert"></div>
-                    <div class="sig-name-cert">-</div>
-                </div>
-                
-                <img src="https://www.freeiconspng.com/uploads/blue-seal-png-15.png" class="footer-seal" alt="">
-
-                <div class="sig-box">
-                    <div style="height: 40px;"></div>
-                    <div class="sig-line-cert"></div>
-                    <div class="sig-name-cert">Registrar</div>
-                    <div class="sig-title-cert">JNTU-GV</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    
     <script src="js/api.js"></script>
     <script>
         ApiClient.checkAuth(['student']);
@@ -371,31 +300,14 @@
                 document.getElementById('cert-course').textContent = user.branch || user.department || 'II MCA';
             }
 
-            document.getElementById('downloadCertBtn').onclick = async () => {
-                const { jsPDF } = window.jspdf;
-                const element = document.getElementById('certificate-template');
-                
-                // Temporarily show it for capture
-                element.style.left = '0';
-                
-                const canvas = await html2canvas(element, {
-                    scale: 2, // Consistency with user requirement
-                    useCORS: true,
-                    logging: false,
-                    backgroundColor: '#FDFBF4',
-                    width: 1123,
-                    height: 794
-                });
-                
-                const imgData = canvas.toDataURL('image/png');
-                const pdf = new jsPDF({
-                    orientation: 'landscape',
-                    unit: 'px',
-                    format: [1123, 794]
-                });
-                
-                pdf.addImage(imgData, 'PNG', 0, 0, 1123, 794, undefined, 'FAST');
-                pdf.save(`Certificate_${attempt.title.replace(/\s+/g, '_')}.pdf`);
+            document.getElementById('downloadCertBtn').onclick = () => {
+
+                window.open(
+        `            ${ApiClient.baseUrl}/student/certificate/${attemptId}`,
+                     '_blank'
+                );
+
+            };
                 
                 // Hide it back
                 element.style.left = '-9999px';
