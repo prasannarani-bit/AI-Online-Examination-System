@@ -36,7 +36,7 @@ class EvaluationAgent:
             FROM exam_attempts a
             JOIN exams e ON a.exam_id = e.id
             JOIN users u ON a.student_id = u.id
-            WHERE a.id = ?
+            WHERE a.id = %s
         """
         attempt = conn.execute(query, (attempt_id,)).fetchone()
         
@@ -50,7 +50,7 @@ class EvaluationAgent:
             SELECT a.id, a.selected_option, q.correct_option 
             FROM attempt_answers a
             JOIN questions q ON a.question_id = q.id
-            WHERE a.attempt_id = ?
+            WHERE a.attempt_id = %s
         """
         answers = conn.execute(query_answers, (attempt_id,)).fetchall()
         
@@ -58,16 +58,14 @@ class EvaluationAgent:
         correct_count = 0
         
         for ans in answers:
-            is_correct = 1 if ans['selected_option'] == ans['correct_option'] else 0
-            if is_correct:
-                correct_count += 1
-                
-            conn.execute("UPDATE attempt_answers SET is_correct = ? WHERE id = ?", (is_correct, ans['id']))
+
+        if ans['selected_option'] == ans['correct_option']:
+            correct_count += 1
             
         score_percent = int((correct_count / total_questions * 100)) if total_questions > 0 else 0
         
         # update attempt
-        conn.execute("UPDATE exam_attempts SET score = ?, status = 'evaluated' WHERE id = ?", (score_percent, attempt_id))
+        conn.execute("UPDATE exam_attempts SET score = %s, status = 'evaluated' WHERE id = %s", (score_percent, attempt_id))
         
         # --- TRIGGER NOTIFICATION ASYNCHRONOUSLY ---
         student_name = attempt['student_name'] or attempt['student_email']
