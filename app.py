@@ -456,6 +456,26 @@ def monitor_exams(current_user):
     """).fetchall()
     conn.close()
     return jsonify([serialize_row(l) for l in logs])
+    
+@app.route('/api/admin/proctor_logs', methods=['DELETE'])
+@token_required
+def admin_delete_all_logs(current_user):
+
+    if current_user['role'] != 'admin':
+        return jsonify({'message': 'Unauthorized'}), 403
+
+    conn = get_db_connection()
+
+    conn.execute("""
+        DELETE FROM proctoring_logs
+    """)
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        'message': 'All proctoring logs deleted successfully'
+    })
 
 @app.route('/api/admin/proctor_logs/<int:log_id>', methods=['DELETE'])
 @token_required
