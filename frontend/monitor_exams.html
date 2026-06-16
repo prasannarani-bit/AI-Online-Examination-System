@@ -21,7 +21,10 @@
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>Live Exam Monitoring</h2>
-            <button onclick="loadLogs();" class="btn btn-primary"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+            <div>
+                <button onclick="deleteAllLogs();" class="btn btn-danger me-2" id="btn-delete-all"><i class="bi bi-trash"></i> Delete All</button>
+                <button onclick="loadLogs();" class="btn btn-primary"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+            </div>
         </div>
         <div class="row mt-4" id="logsContainer">
             <!-- Data Injected -->
@@ -72,7 +75,15 @@
                 alert('Error: ' + res.data.message);
             }
         }
-
+        async function deleteAllLogs() {
+            if (!confirm('Are you sure you want to delete ALL proctoring violation records? This action cannot be undone.')) return;
+            const res = await ApiClient.delete('/admin/proctor_logs');
+            if (res.ok) {
+                loadLogs();
+            } else {
+                alert('Error: ' + res.data.message);
+            }
+        }
         loadLogs();
         // optionally refresh every 10 seconds
         setInterval(loadLogs, 10000);
