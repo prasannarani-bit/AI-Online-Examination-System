@@ -278,19 +278,20 @@
 
         async function setupCertificate(attempt) {
 
-            document.getElementById('downloadCertBtn').onclick = () => {
+            document.getElementById('downloadCertBtn').onclick = async () => {
 
-                async function downloadCertificate() {
+                try {
 
                     const token = localStorage.getItem('token');
 
                     const response = await fetch(
                         `/api/student/certificate/${attemptId}`,
                         {
+                            method: 'GET',
                             headers: {
-                                 Authorization: `Bearer ${token}`
+                                Authorization: `Bearer ${token}`
                             }
-                         }
+                        }
                     );
 
                     if (!response.ok) {
@@ -305,11 +306,16 @@
                     const a = document.createElement('a');
                     a.href = url;
                     a.download = 'certificate.pdf';
+
                     document.body.appendChild(a);
                     a.click();
 
                     a.remove();
                     window.URL.revokeObjectURL(url);
+
+                } catch (err) {
+                    console.error(err);
+                    alert("Certificate download failed");
                 }
 
             };
