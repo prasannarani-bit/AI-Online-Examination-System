@@ -1,465 +1,127 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Student Dashboard - Agentic Exam System">
-  <title>Student Dashboard - Agentic Exam System</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="css/dashboard.css">
-  <style>
-    .exam-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .exam-card {
-      background: white; border-radius: var(--radius-md); border: 1px solid var(--border-color);
-      padding: 20px; box-shadow: var(--shadow-sm); transition: var(--transition); position: relative; overflow: hidden;
-    }
-    .exam-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
-    .exam-card-accent { position: absolute; top: 0; left: 0; width: 4px; height: 100%; border-radius: 4px 0 0 4px; }
-    .exam-card-subject { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
-    .exam-card-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
-    .exam-card-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5; }
-    .exam-card-meta { display: flex; gap: 16px; margin-bottom: 16px; }
-    .exam-card-meta-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-secondary); }
-    .submitted-tag { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--success); padding: 6px 0; }
-  </style>
+    <title>Student Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 </head>
-<body>
-<div class="dashboard-layout">
 
-<!-- Sidebar -->
-  <aside class="sidebar" id="sidebar">
-    <a href="student_dashboard.html" class="sidebar-brand">
-      <div class="sidebar-brand-icon"><i class="bi bi-mortarboard-fill"></i></div>
-      <div>
-        <div class="sidebar-brand-text">Agentic Exam</div>
-        <div class="sidebar-brand-sub">System</div>
-      </div>
-    </a>
-      
-    <div class="sidebar-user">
-      <div class="sidebar-avatar" id="sidebarAvatar">S</div>
-      <div>
-        <div class="sidebar-user-name" id="sidebarName">Student</div>
-        <div class="sidebar-user-role">Student</div>
-      </div>
-    </div>
-      
-    <nav class="sidebar-nav">
-      <div class="sidebar-section-label">Main Menu</div>
-        
-      <a href="student_dashboard.html" class="sidebar-item active" id="nav-dashboard">
-        <i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span>
-      </a>
-      <a href="#my-exams" class="sidebar-item" id="nav-exams">
-        <i class="bi bi-journal-text"></i><span>My Exams</span>
-      </a>
-      <a href="#results-section" class="sidebar-item" id="nav-results">
-        <i class="bi bi-bar-chart-line-fill"></i><span>Results</span>
-      </a>
-      <a href="profile.html" class="sidebar-item" id="nav-profile">
-        <i class="bi bi-person-circle"></i><span>Profile</span>
-     </a>
-        
-      <div class="sidebar-section-label" style="margin-top:8px;">Account</div>
-      <a href="#" class="sidebar-item" onclick="ApiClient.clearTokens(); window.location.href='login.html'" id="nav-logout">
-        <i class="bi bi-box-arrow-right"></i><span>Logout</span>
-      </a>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">Agentic Exam System</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0" id="user-nav"></ul>
+            </div>
+        </div>
     </nav>
-      
-    <div class="sidebar-footer">
-      <div class="sidebar-help" onclick="openHelpModal();" style="cursor:pointer">
-        <div class="sidebar-help-icon"><i class="bi bi-question-circle"></i></div>
-        <div class="sidebar-help-text"><strong>Need Help?</strong>Contact Support</div>
-      </div>
-    </div>
-  </aside>
-    
-  <!-- Main Content -->
-  <div class="main-content">
-      
-    <!-- Top Header -->
-    <header class="top-header">
-      <div class="top-header-title">
-        <h1 id="pageTitle">Dashboard</h1>
-        <p id="pageSubtitle">Here's what's happening with your exams.</p>
-      </div>
-      <div class="header-actions">
-        <div class="header-icon-btn" title="Notifications" onclick="openNotificationModal();" style="cursor:pointer">
-          <i class="bi bi-bell"></i>
-          <div class="header-notification-dot"></div>
-        </div>
-        <a href="profile.html" class="header-avatar" id="headerAvatar" title="Profile">S</a>
-      </div>
-    </header>
+    <div class="container mt-4">
+        <h2 class="mb-4">Student Dashboard</h2>
 
-    <!-- Page Content -->
-    <div class="page-content">
-        
-      <!-- Welcome Banner -->
-      <div class="welcome-banner">
-        <h2>Welcome back, <span id="welcomeName">Student</span>! 👋</h2>
-        <p>Manage and track your exams effortlessly.</p>
-      </div>
-        
-      <!-- Stats -->
-      <div class="stats-grid" id="statsGrid">
-        <div class="stat-card">
-          <div class="stat-card-icon bg-primary-soft" style="color:var(--primary)"><i class="bi bi-journal-text"></i></div>
-          <div class="stat-card-value" id="statAvailable">–</div>
-          <div class="stat-card-label">Available Exams</div>
+        <h4 class="mt-4">Available Exams</h4>
+        <div class="row mt-3" id="availableExamsContainer">
         </div>
-        <div class="stat-card">
-          <div class="stat-card-icon bg-success-soft" style="color:var(--success)"><i class="bi bi-check-circle"></i></div>
-          <div class="stat-card-value" id="statCompleted">–</div>
-          <div class="stat-card-label">Exams Completed</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-icon bg-warning-soft" style="color:var(--warning)"><i class="bi bi-hourglass-split"></i></div>
-          <div class="stat-card-value" id="statInProgress">–</div>
-          <div class="stat-card-label">In Progress</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-icon bg-info-soft" style="color:var(--info)"><i class="bi bi-trophy"></i></div>
-          <div class="stat-card-value" id="statAvgScore">–</div>
-          <div class="stat-card-label">Average Score</div>
-        </div>
-      </div>
-        
-      <!-- Available Exams -->
-      <div id="my-exams">
-        <div class="section-header">
-          <div class="section-title"><i class="bi bi-journal-text me-2 text-primary-dash"></i>Available Exams</div>
-          <span class="section-link" style="cursor:pointer" onclick="document.getElementById('my-exams').scrollIntoView({behavior:'smooth'})">View All</span>
-        </div>
-        <div class="exam-card-grid" id="availableExamsContainer">
-          <div class="empty-state"><i class="bi bi-hourglass"></i><p>Loading exams...</p></div>
-        </div>
-      </div>
-        
-      <!-- Past Attempts -->
-      <div id="results-section">
-        <div class="section-header">
-          <div class="section-title"><i class="bi bi-clock-history me-2 text-primary-dash"></i>Your Past Attempts</div>
-        </div>
-        <div class="dash-card">
-          <div class="table-responsive">
-            <table class="dash-table" id="attemptsTable">
-              <thead>
+
+        <h4 class="mt-5">Your Past Attempts</h4>
+        <table class="table table-hover mt-3 shadow-sm bg-white rounded">
+            <thead class="table-light">
                 <tr>
-                  <th>Exam Title</th>
-                  <th>Date</th>
-                  <th>Score</th>
-                  <th>Status</th>
-                  <th>Action</th>
+                    <th>Exam</th>
+                    <th>Date</th>
+                    <th>Score</th>
+                    <th>Status</th>
+                    <th>Action</th>
                 </tr>
-             </thead>
-              <tbody id="pastAttemptsContainer">
-                <tr><td colspan="5" class="text-center" style="padding:30px;color:var(--text-muted)"><i class="bi bi-hourglass me-2"></i>Loading...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+            </thead>
+            <tbody id="pastAttemptsContainer">
+            </tbody>
+        </table>
+    </div>
 
-    </div><!-- /page-content -->
-  </div><!-- /main-content -->
-</div><!-- /dashboard-layout -->
-    
-<!-- Toast -->
-<div class="toast-dash" id="toastMsg">
-  <i class="bi bi-check-circle-fill" style="color:var(--success);font-size:18px"></i>
-  <span id="toastText">Action successful!</span>
-</div>
+    <script src="js/api.js"></script>
+    <script>
+        ApiClient.checkAuth(['student']);
+        ApiClient.setupNav();
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="js/api.js"></script>
-<script>
-  ApiClient.checkAuth(['student']);
-
-  // Set user info
-  const fullName = localStorage.getItem('full_name') || localStorage.getItem('username') || 'Student';
-  const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-  document.getElementById('welcomeName').textContent = fullName;
-  document.getElementById('sidebarName').textContent = fullName;
-  document.getElementById('sidebarAvatar').textContent = initials;
-  document.getElementById('headerAvatar').textContent = initials;
-
-  // Check for pending exam from shared link
-  const pendingExamId = localStorage.getItem('pending_exam_id');
-  if (pendingExamId) {
-    localStorage.removeItem('pending_exam_id');
-    window.location.href = `pre_exam.html?id=${pendingExamId}`;
-  }
-    
-  // Nav active state
-  document.querySelectorAll('.sidebar-item').forEach(item => {
-    item.addEventListener('click', function() {
-      document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-      this.classList.add('active');
-    });
-  });
-    
-  const COLORS = [
-    { accent: '#4f46e5', bg: 'bg-primary-soft', icon: 'bi-journal-text', color: 'var(--primary)' },
-    { accent: '#10b981', bg: 'bg-success-soft', icon: 'bi-clipboard-check', color: 'var(--success)' },
-    { accent: '#f59e0b', bg: 'bg-warning-soft', icon: 'bi-book', color: 'var(--warning)' },
-    { accent: '#3b82f6', bg: 'bg-info-soft', icon: 'bi-cpu', color: 'var(--info)' },
-    { accent: '#8b5cf6', bg: 'bg-purple-soft', icon: 'bi-code-slash', color: '#8b5cf6' },
-    { accent: '#06b6d4', bg: 'bg-cyan-soft', icon: 'bi-diagram-3', color: '#06b6d4' },
-  ];
-    
-  async function loadDashboard() {
-    const res = await ApiClient.get('/student/dashboard');
-    if (!res.ok) return;
-      
-    const { available_exams, past_attempts } = res.data;
-      
-    // Stats
-    const completed = past_attempts.filter(a => a.status === 'evaluated').length;
-    const inProgress = past_attempts.filter(a => a.status === 'in_progress').length;
-    const scores = past_attempts.filter(a => a.status === 'evaluated' && a.score != null).map(a => a.score);
-    const avgScore = scores.length ? Math.round(scores.reduce((a,b) => a+b, 0) / scores.length) : 0;
-      
-    document.getElementById('statAvailable').textContent = available_exams.length;
-    document.getElementById('statCompleted').textContent = completed;
-    document.getElementById('statInProgress').textContent = inProgress;
-    document.getElementById('statAvgScore').textContent = scores.length ? avgScore + '%' : '–';
-      
-    // Available exams
-    const ac = document.getElementById('availableExamsContainer');
-    if (available_exams.length === 0) {
-      ac.innerHTML = `<div class="dash-card" style="grid-column:1/-1"><div class="empty-state"><i class="bi bi-journal-x"></i><p>No exams are currently published and available to take.</p></div></div>`;
-    } else {
-      ac.innerHTML = available_exams.map((e, i) => {
-        const c = COLORS[i % COLORS.length];
-        const hasAttempted = e.attempt_count > 0;
-        return `
-          <div class="exam-card">
-            <div class="exam-card-accent" style="background:${c.accent}"></div>
-            <div class="exam-card-subject" style="color:${c.color}">${e.title.split(' ')[0] || 'Exam'}</div>
-            <div class="exam-card-title">${e.title}</div>
-            <div class="exam-card-desc">${e.description || 'No description provided.'}</div>
-            <div class="exam-card-meta">
-              <div class="exam-card-meta-item"><i class="bi bi-clock" style="color:${c.color}"></i>${e.duration_minutes} mins</div>
-              <div class="exam-card-meta-item"><i class="bi bi-patch-check" style="color:${c.color}"></i>${e.passing_score}% Passing</div>
-            </div>
-            ${hasAttempted ? `
-              <div class="submitted-tag"><i class="bi bi-check-circle-fill"></i>Response is submitted</div>
-              <a href="question_paper.html?id=${e.id}" class="btn-outline-dash w-100 d-flex justify-content-center mt-1">
-                <i class="bi bi-eye"></i>View Paper
-              </a>
-            ` : `
-              <a href="pre_exam.html?id=${e.id}" class="btn-primary-dash w-100 justify-content-center">
-                <i class="bi bi-play-circle"></i>Start Exam
-              </a>
-            `}
-          </div>`;
-      }).join('');
-    }
-      
-    // Past attempts
-    const pc = document.getElementById('pastAttemptsContainer');
-    if (past_attempts.length === 0) {
-      pc.innerHTML = `<tr><td colspan="5" style="padding:30px;text-align:center;color:var(--text-muted)"><i class="bi bi-inbox" style="font-size:24px;display:block;margin-bottom:8px;opacity:0.4"></i>No past attempts found.</td></tr>`;
-    } else {
-      const formatTime = (utcStr) => {
-        if (!utcStr) return '—';
-        let s = utcStr.trim().replace(' ', 'T');
-        if (!s.endsWith('Z') && !s.includes('+')) s += 'Z';
-        return new Date(s).toLocaleString(undefined, { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
-      };
-      pc.innerHTML = past_attempts.map(a => {
-        let statusBadge = '';
-        if (a.status === 'evaluated')    statusBadge = `<span class="badge-pill badge-success"><i class="bi bi-check-circle-fill"></i>Evaluated</span>`;
-        else if (a.status === 'submitted') statusBadge = `<span class="badge-pill badge-info"><i class="bi bi-send"></i>Submitted</span>`;
-        else                              statusBadge = `<span class="badge-pill badge-warning"><i class="bi bi-hourglass-split"></i>In Progress</span>`;
-        return `
-          <tr>
-            <td><strong>${a.title}</strong></td>
-            <td>${formatTime(a.start_time)}</td>
-            <td><strong style="color:var(--primary)">${a.status === 'evaluated' ? a.score+'%' : '–'}</strong></td>
-            <td>${statusBadge}</td>
-            <td>${a.status === 'evaluated' ? `<a href="results.html?attempt_id=${a.id}" class="btn-outline-dash btn-sm-dash"><i class="bi bi-eye"></i>View Result</a>` : '–'}</td>
-          </tr>`;
-      }).join('');
-    }
-    // Aggregate notifications
-    aggregateNotifications(available_exams, past_attempts);
-  }
-    
-  // Modals Controller — lazy init so Bootstrap JS is always ready
-  let notificationQueue = [];
-    
-  function openHelpModal() {
-    const m = new bootstrap.Modal(document.getElementById('helpModal'));
-    m.show();
-  }
-    
-  document.addEventListener('DOMContentLoaded', () => {
-    const sf = document.getElementById('supportForm');
-    if (sf) sf.addEventListener('submit', (e) => {
-      e.preventDefault();
-      document.getElementById('supportMsg').value = '';
-      const m = bootstrap.Modal.getInstance(document.getElementById('helpModal'));
-      if (m) m.hide();
-      showToast('Support message submitted! We will email you back.');
-    });
-  });
-    
-  function openNotificationModal() {
-    const listEl = document.getElementById('notificationList');
-    if (notificationQueue.length === 0) {
-      listEl.innerHTML = `<div class="p-4 text-center text-muted small"><i class="bi bi-bell-slash d-block fs-3 mb-2 opacity-50"></i>No recent notifications.</div>`;
-    } else {
-      listEl.innerHTML = notificationQueue.map(n => `
-        <div class="list-group-item p-3 border-bottom border-light">
-          <div class="d-flex justify-content-between align-items-start mb-1">
-            <span class="badge-pill bg-light text-primary" style="font-size:10px">${n.tag}</span>
-            <span style="font-size:10px;color:var(--text-muted)">${n.time}</span>
-          </div>
-          <div style="font-size:12.5px;color:var(--text-primary);line-height:1.4">${n.text}</div>
-        </div>
-      `).join('');
-    }
-    const m = new bootstrap.Modal(document.getElementById('notificationModal'));
-    m.show();
-  }
-    
-  function clearNotificationBadge() {
-    const dot = document.querySelector('.header-notification-dot');
-    if (dot) dot.style.display = 'none';
-    showToast('Notifications cleared.');
-  }
-    
-  function aggregateNotifications(availableExams, pastAttempts) {
-    notificationQueue = [];
-    if (availableExams && availableExams.length > 0) {
-      availableExams.forEach(e => {
-        if (e.attempt_count === 0) {
-          notificationQueue.push({
-            tag: 'NEW EXAM',
-            time: 'Active',
-            text: `You have an exam ready to take: <strong>${e.title}</strong> (${e.duration_minutes} minutes).`
-          });
+        // Check for pending exam from shared link
+        const pendingExamId = localStorage.getItem('pending_exam_id');
+        if (pendingExamId) {
+            localStorage.removeItem('pending_exam_id');
+            window.location.href = `pre_exam.html?id=${pendingExamId}`;
         }
-        });
-    }
-    if (pastAttempts && pastAttempts.length > 0) {
-      pastAttempts.filter(a => a.status === 'evaluated').slice(0, 3).forEach(a => {
-        notificationQueue.push({
-          tag: 'RESULT RELEASED',
-          time: 'New',
-          text: `Your exam response for <strong>${a.title}</strong> has been evaluated with a score of <strong>${a.score}%</strong>.`
-        });
-      });
-    }
-    const dot = document.querySelector('.header-notification-dot');
-    if (dot && notificationQueue.length > 0) {
-      dot.style.display = 'block';
-    }
-  }
-    
-function showToast(msg) {
-    const t = document.getElementById('toastMsg');
-    document.getElementById('toastText').textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 3000);
-  }
-    
-  async function init() {
-    await loadDashboard();
-  }
-  init();
-</script>
-    
-<!-- Help Modal -->
-<div class="modal fade" id="helpModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content" style="border-radius: var(--radius-lg)">
-      <div class="modal-header bg-light border-bottom-0">
-        <h5 class="modal-title fw-bold"><i class="bi bi-question-circle text-primary me-2"></i>Student Help &amp; Support</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body p-4">
-        <div class="row g-4">
-          <div class="col-md-7">
-            <h6 class="fw-bold mb-3">Student FAQs</h6>
-            <div class="accordion accordion-flush" id="faqAccordion">
-              <div class="accordion-item">
-                <h2 class="accordion-header">
-                  <button class="accordion-button collapsed fw-bold small" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                    How do I start my exam?
-                  </button>
-                </h2>
-                <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                  <div class="accordion-body text-muted small">
-                    Click "Start Exam" on any available exam card. You will see pre-exam instructions, webcam verification checkout, and then access the questions.
-                  </div>
-                </div>
-              </div>
-              <div class="accordion-item">
-                <h2 class="accordion-header">
-                  <button class="accordion-button collapsed fw-bold small" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                    What if the AI proctor locks my exam?
-                  </button>
-                </h2>
-                <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                  <div class="accordion-body text-muted small">
-                    If background activity, tab-switching, or absence of face is detected, the proctor overlay locks you out for 10 seconds. On the third violation, the exam auto-submits.
-                  </div>
-                </div>
-              </div>
-              <div class="accordion-item">
-                <h2 class="accordion-header">
-                  <button class="accordion-button collapsed fw-bold small" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
-                    Where can I download my certificate?
-                  </button>
-                </h2>
-                <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                  <div class="accordion-body text-muted small">
-                    For completed attempts that passed the passing criteria, click "View Result" next to the attempt to open the results screen and download your gold-certified JNTU-GV PDF.
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-5 border-start">
-            <h6 class="fw-bold mb-3">Contact Support</h6>
-            <form id="supportForm">
-              <div class="mb-3">
-                <label class="form-label fw-bold small text-secondary">Your Message</label>
-                <textarea class="form-control-dash" id="supportMsg" rows="4" placeholder="Report test environment issues..." required></textarea>
-              </div>
-              <button type="submit" class="btn-primary-dash w-100 justify-content-center" style="width:100%">
-                <i class="bi bi-send-fill"></i>Send message
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-    
-<!-- Notification Modal -->
-<div class="modal fade" id="notificationModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content" style="border-radius: var(--radius-lg)">
-      <div class="modal-header bg-light border-bottom-0">
-        <h5 class="modal-title fw-bold"><i class="bi bi-bell text-primary me-2"></i>Notifications</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body p-0">
-        <div id="notificationList" class="list-group list-group-flush" style="max-height:360px;overflow-y:auto">
-          <div class="p-4 text-center text-muted small">No notifications found.</div>
-        </div>
-      </div>
-      <div class="modal-footer bg-light border-top-0 py-2">
-        <button class="btn btn-sm btn-outline-secondary w-100 fw-bold border-0" onclick="clearNotificationBadge()">Mark all as read</button>
-      </div>
-    </div>
-  </div>
-</div>
+
+        async function loadDashboard() {
+            const res = await ApiClient.get('/student/dashboard');
+            if (res.ok) {
+                const ac = document.getElementById('availableExamsContainer');
+                if (res.data.available_exams.length === 0) {
+                    ac.innerHTML = `<div class="col-12"><div class="alert alert-info">No exams are currently published and available to take.</div></div>`;
+                } else {
+                    ac.innerHTML = res.data.available_exams.map(e => {
+                        const hasAttempted = e.attempt_count > 0;
+                        return `
+                        <div class="col-md-4">
+                            <div class="card bg-white shadow-sm border-0 mb-4 h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title fw-bold text-primary">${e.title}</h5>
+                                    <p class="card-text text-muted flex-grow-1">${e.description || 'No description assigned.'}</p>
+                                    <ul class="list-unstyled mb-3">
+                                        <li><strong>Duration:</strong> ${e.duration_minutes} mins</li>
+                                        <li><strong>Passing Score:</strong> ${e.passing_score}%</li>
+                                    </ul>
+                                    ${hasAttempted ? `
+                                        <div class="mt-auto">
+                                            <div class="text-success mb-2 text-center fw-semibold">
+                                                <i class="bi bi-check-circle-fill me-1"></i>Response is submitted
+                                            </div>
+                                            <a href="question_paper.html?id=${e.id}" class="btn btn-outline-primary w-100 fw-bold">View Paper</a>
+                                        </div>
+                                    ` : `
+                                        <a href="pre_exam.html?id=${e.id}" class="btn btn-primary w-100 fw-bold mt-auto">Start Exam</a>
+                                    `}
+                                </div>
+                            </div>
+                        </div>
+                    `}).join('');
+                }
+
+                const pc = document.getElementById('pastAttemptsContainer');
+                if (res.data.past_attempts.length === 0) {
+                    pc.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No past attempts found.</td></tr>`;
+                } else {
+                    const formatTime = (utcStr) => {
+                        if (!utcStr) return '—';
+                        let cleanStr = utcStr.trim();
+                        if (cleanStr.indexOf('T') === -1) {
+                            cleanStr = cleanStr.replace(' ', 'T');
+                        }
+                        if (!cleanStr.endsWith('Z') && cleanStr.indexOf('+') === -1) {
+                            cleanStr += 'Z';
+                        }
+                        const date = new Date(cleanStr);
+                        return date.toLocaleString(undefined, {
+                            year: 'numeric', month: 'short', day: 'numeric',
+                            hour: '2-digit', minute: '2-digit'
+                        });
+                    };
+
+                    pc.innerHTML = res.data.past_attempts.map(a => `
+                        <tr>
+                            <td>${a.title}</td>
+                            <td>${formatTime(a.start_time)}</td>
+                            <td>${a.status === 'evaluated' ? a.score : '-'}</td>
+                            <td>${a.status === 'evaluated' ? '<span class="badge bg-success">Evaluated</span>' : a.status === 'submitted' ? '<span class="badge bg-info">Submitted</span>' : '<span class="badge bg-warning">In Progress</span>'}</td>
+                            <td>${a.status === 'evaluated' ? `<a href="results.html?attempt_id=${a.id}" class="btn btn-sm btn-outline-primary">View Result</a>` : ''}</td>
+                        </tr>
+                    `).join('');
+                }
+            }
+        }
+        loadDashboard();
+    </script>
 </body>
+
 </html>
