@@ -3,99 +3,161 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="All Student Results &amp; Reports - Agentic AI Exam System">
     <title>All Results - Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="index.html">Agentic Exam System</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0" id="user-nav"></ul>
-            </div>
-        </div>
-    </nav>
-    <div class="container mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>All Student Results</h2>
-            <a href="admin_dashboard.html" class="btn btn-outline-secondary">Back to Dashboard</a>
-        </div>
-        
-        <div class="card bg-white shadow-sm border-0">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Attempt ID</th>
-                                <th>Student</th>
-                                <th>Exam</th>
-                                <th>Score</th>
-                                <th>Violations</th>
-                                <th>Status</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody id="resultsTableBody">
-                            <tr>
-                                <td colspan="7" class="text-center">Loading results...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+<body>
+<div class="dashboard-root">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar sidebar-admin">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon"><i class="bi bi-mortarboard-fill"></i></div>
+      <div>
+        <div class="sidebar-logo-text">Agentic AI</div>
+        <div class="sidebar-logo-sub">Exam System</div>
+      </div>
     </div>
+    <nav class="sidebar-nav">
+      <a href="admin_dashboard.html" class="nav-item-s">
+        <span class="nav-icon"><i class="bi bi-grid-1x2-fill"></i></span> Dashboard
+      </a>
+      <a href="manage_users.html" class="nav-item-s">
+        <span class="nav-icon"><i class="bi bi-people-fill"></i></span> Users
+      </a>
+      <a href="admin_exams.html" class="nav-item-s">
+        <span class="nav-icon"><i class="bi bi-journal-check"></i></span> Exams
+      </a>
+      <a href="monitor_exams.html" class="nav-item-s">
+        <span class="nav-icon"><i class="bi bi-activity"></i></span> Monitoring
+        <span class="nav-badge">Live</span>
+      </a>
+      <a href="admin_results.html" class="nav-item-s active" id="nav-reports">
+        <span class="nav-icon"><i class="bi bi-bar-chart-line-fill"></i></span> Reports
+      </a>
+      <a href="admin_files.html" class="nav-item-s" id="nav-files">
+        <span class="nav-icon"><i class="bi bi-folder-fill"></i></span> Faculty Files
+      </a>
+      <a href="landing.html" class="nav-item-s">
+        <span class="nav-icon"><i class="bi bi-house-door-fill"></i></span> Back to Home
+      </a>
+      <div class="sidebar-divider"></div>
+      <button class="nav-item-s" onclick="doLogout()" style="color:rgba(200,255,220,.8)">
+        <span class="nav-icon"><i class="bi bi-box-arrow-right"></i></span> Logout
+      </button>
+    </nav>
+  </aside>
 
-    <script src="js/api.js"></script>
-    <script>
-        ApiClient.checkAuth(['admin']);
-        ApiClient.setupNav();
+  <!-- ===== MAIN ===== -->
+  <div class="main-content">
 
-        async function loadAllResults() {
-            const res = await ApiClient.get('/admin/attempts');
-            const tbody = document.getElementById('resultsTableBody');
-            if (res.ok) {
-                if (res.data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="text-center">No exam attempts found.</td></tr>';
-                    return;
-                }
-                tbody.innerHTML = res.data.map(att => `
-                    <tr>
-                        <td>${att.id}</td>
-                        <td><strong>${att.student_name}</strong></td>
-                        <td>${att.exam_title}</td>
-                        <td>${att.score !== null ? att.score : '-'}</td>
-                        <td>
-                            <span class="badge ${att.violation_count > 0 ? 'bg-danger' : 'bg-success'}">
-                                ${att.violation_count}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="badge ${getStatusBadge(att.status)}">
-                                ${att.status}
-                            </span>
-                        </td>
-                        <td>${ApiClient.formatDate(att.start_time)}</td>
-                    </tr>
-                `).join('');
-            } else {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Error: ${res.data.message}</td></tr>`;
+    <!-- Top Header -->
+    <header class="top-header" style="position:relative;">
+      <div class="header-greeting">
+        <h5><i class="bi bi-bar-chart-line-fill me-2 text-success"></i>Student Results &amp; Reports</h5>
+        <span>System-wide evaluation records, scores, and proctoring stats</span>
+      </div>
+      <div class="header-actions">
+        <a href="admin_dashboard.html" class="btn btn-sm btn-outline-secondary" style="border-radius:8px; font-size:13px; font-weight:600;">
+          <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+        </a>
+      </div>
+    </header>
+
+    <!-- Page Body -->
+    <div class="page-body">
+
+      <div class="section-card mb-4">
+        <div class="section-card-header d-flex justify-content-between align-items-center">
+          <h6><i class="bi bi-file-earmark-bar-graph me-2 text-primary"></i>All Exam Attempt Records</h6>
+          <span id="resultsCountBadge" class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">0 Attempts</span>
+        </div>
+        <div class="table-responsive">
+          <table class="dash-table">
+            <thead>
+              <tr>
+                <th>Attempt ID</th>
+                <th>Student</th>
+                <th>Exam</th>
+                <th>Score</th>
+                <th>Violations</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="resultsTableBody">
+              <tr>
+                <td colspan="7" class="text-center py-4 text-muted">
+                  <div class="spinner-border spinner-border-sm me-2" role="status"></div>Loading results...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /page-body -->
+  </div><!-- /main-content -->
+</div><!-- /dashboard-root -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/api.js"></script>
+<script>
+    ApiClient.checkAuth(['admin']);
+
+    function doLogout() {
+        ApiClient.clearTokens();
+        window.location.href = 'login.html';
+    }
+
+    async function loadAllResults() {
+        const res = await ApiClient.get('/admin/attempts');
+        const tbody = document.getElementById('resultsTableBody');
+        if (res.ok) {
+            document.getElementById('resultsCountBadge').textContent = `${res.data.length} Attempt(s)`;
+            if (res.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No exam attempts found in system.</td></tr>';
+                return;
             }
+            tbody.innerHTML = res.data.map(att => `
+                <tr>
+                    <td>${att.id}</td>
+                    <td class="fw-semibold text-dark">${att.student_name}</td>
+                    <td>${att.exam_title}</td>
+                    <td><strong>${att.score !== null ? att.score + '%' : '-'}</strong></td>
+                    <td>
+                        <span class="badge ${att.violation_count > 0 ? 'bg-danger-subtle text-danger border border-danger-subtle' : 'bg-success-subtle text-success border border-success-subtle'} rounded-pill">
+                            ${att.violation_count}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge ${getStatusBadge(att.status)} rounded-pill">
+                            ${att.status}
+                        </span>
+                    </td>
+                    <td>${ApiClient.formatDate(att.start_time)}</td>
+                </tr>
+            `).join('');
+        } else {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">Error: ${res.data.message}</td></tr>`;
         }
+    }
 
-        function getStatusBadge(status) {
-            switch(status) {
-                case 'evaluated': return 'bg-success';
-                case 'submitted': return 'bg-info';
-                case 'in_progress': return 'bg-warning text-dark';
-                default: return 'bg-secondary';
-            }
+    function getStatusBadge(status) {
+        switch(status) {
+            case 'evaluated': return 'bg-success-subtle text-success';
+            case 'submitted': return 'bg-info-subtle text-info';
+            case 'in_progress': return 'bg-warning-subtle text-warning';
+            default: return 'bg-secondary-subtle text-secondary';
         }
+    }
 
-        loadAllResults();
-    </script>
+    loadAllResults();
+</script>
 </body>
-
 </html>
