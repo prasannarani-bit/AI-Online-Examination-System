@@ -1,305 +1,552 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <title>Faculty Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Faculty Dashboard - Agentic AI Exam System">
+  <title>Faculty Dashboard - Agentic AI Exam System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/style.css">
 </head>
+<body>
+<div class="dashboard-root">
 
-<body class="bg-light">
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="index.html">Agentic Exam System</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0" id="user-nav"></ul>
-            </div>
-        </div>
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar sidebar-faculty">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon"><i class="bi bi-mortarboard-fill"></i></div>
+      <div>
+        <div class="sidebar-logo-text">Agentic AI</div>
+        <div class="sidebar-logo-sub">Exam System</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="faculty_dashboard.html" class="nav-item-s active" id="nav-dashboard">
+        <span class="nav-icon"><i class="bi bi-grid-1x2-fill"></i></span> Dashboard
+      </a>
+      <a href="#my-exams" class="nav-item-s" id="nav-myexams" onclick="scrollToSection('my-exams',event)">
+        <span class="nav-icon"><i class="bi bi-journal-check"></i></span> My Exams
+      </a>
+      <a href="create_exam.html" class="nav-item-s" id="nav-create">
+        <span class="nav-icon"><i class="bi bi-plus-circle-fill"></i></span> Create Exam
+      </a>
+      <a href="#results-section" class="nav-item-s" id="nav-students" onclick="scrollToSection('results-section',event)">
+        <span class="nav-icon"><i class="bi bi-people-fill"></i></span> Students
+      </a>
+      <a href="analytics.html" class="nav-item-s" id="nav-analytics">
+        <span class="nav-icon"><i class="bi bi-bar-chart-line-fill"></i></span> Results &amp; Analytics
+      </a>
+      <a href="#uploads" class="nav-item-s" id="nav-uploads" onclick="scrollToSection('uploads',event)">
+        <span class="nav-icon"><i class="bi bi-cloud-upload-fill"></i></span> Uploads
+      </a>
+      <a href="landing.html" class="nav-item-s">
+        <span class="nav-icon"><i class="bi bi-house-door-fill"></i></span> Back to Home
+      </a>
+      <div class="sidebar-divider"></div>
+      <button class="nav-item-s" onclick="openHelp()">
+        <span class="nav-icon"><i class="bi bi-question-circle-fill"></i></span> Need Help?
+      </button>
+      <button class="nav-item-s" onclick="doLogout()" style="color:rgba(255,200,200,.85)">
+        <span class="nav-icon"><i class="bi bi-box-arrow-right"></i></span> Logout
+      </button>
     </nav>
-    <div class="container mt-4">
-        <h2 class="mb-4">Faculty Dashboard</h2>
-        <div class="row">
-            <div class="col-md-4">
-                <div class="card bg-white shadow-sm border-0 mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">Create Exam</h5>
-                        <p class="card-text text-muted">Set up a new MCQ exam and upload questions.</p>
-                        <a href="create_exam.html" class="btn btn-outline-success">Create Exam</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card bg-white shadow-sm border-0 mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">Analytics</h5>
-                        <p class="card-text text-muted">View AI-generated performance reports.</p>
-                        <a href="analytics.html" class="btn btn-outline-info">View Reports</a>
-                    </div>
-                </div>
-            </div>
-        </div>
+  </aside>
 
-        <div id="storageAlert"></div>
-        <div class="card shadow-sm border-0 mb-4 mt-2">
-            <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
-                <span>Internal Storage Library</span>
-                <button class="btn btn-sm btn-light" onclick="document.getElementById('uploadFileContainer').classList.toggle('d-none')">Upload New File</button>
-            </div>
-            <div class="card-body">
-                <div id="uploadFileContainer" class="d-none mb-3 p-3 bg-light border rounded">
-                    <form id="uploadStorageForm" class="d-flex align-items-center gap-2">
-                        <input type="file" id="storageFile" class="form-control" required>
-                        <button type="submit" class="btn btn-primary text-nowrap">Upload File</button>
-                    </form>
-                </div>
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID</th>
-                            <th>Filename</th>
-                            <th>Uploaded At</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="storageFilesTable">
-                    </tbody>
-                </table>
-            </div>
-        </div>
+  <!-- ===== MAIN ===== -->
+  <div class="main-content">
 
-        <h4 class="mt-4">Your Exams</h4>
-        <table class="table table-hover mt-3 shadow-sm bg-white rounded">
-            <thead class="table-light">
-                <tr>
-                    <th>ID</th>
-                    <th>Title</th>
-                    <th>Duration</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
+    <!-- Top Header -->
+    <header class="top-header" style="position:relative;">
+      <div class="header-greeting">
+        <h5 id="welcomeMsg">Welcome, Faculty! 👋</h5>
+        <span>Faculty Dashboard</span>
+      </div>
+      <div class="header-actions">
+        <!-- Notification Bell -->
+        <div style="position:relative;">
+          <button class="notif-btn" id="notifBtn" onclick="toggleNotif(event)" title="Notifications">
+            <i class="bi bi-bell-fill"></i>
+            <span class="notif-badge" id="notifBadge">2</span>
+          </button>
+        </div>
+        <!-- Profile Avatar (top-right only) -->
+        <div style="position:relative;">
+          <button class="profile-btn" id="profileBtn" onclick="toggleProfile(event)">
+            <div class="profile-avatar" id="profileAvatar" style="background:linear-gradient(135deg,#7c3aed,#a855f7)">F</div>
+            <span class="profile-name" id="profileName">Faculty</span>
+            <i class="bi bi-chevron-down" style="font-size:10px;color:#94a3b8;margin-left:2px;"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Notification Dropdown -->
+      <div class="notif-dropdown" id="notifDropdown">
+        <div class="notif-header">
+          <h6><i class="bi bi-bell-fill me-1 text-primary"></i> Notifications</h6>
+          <a href="#" onclick="clearNotifs(event)">Mark all read</a>
+        </div>
+        <div id="notifList">
+          <div class="notif-item">
+            <div class="notif-dot green"></div>
+            <div>
+              <div class="notif-text">Student <strong>Prasanna</strong> submitted exam: Operating Systems</div>
+              <div class="notif-time">5 minutes ago</div>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-dot orange"></div>
+            <div>
+              <div class="notif-text">AI exam generation completed for <strong>DBMS Syllabus</strong></div>
+              <div class="notif-time">30 minutes ago</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Dropdown -->
+      <div class="profile-dropdown" id="profileDropdown">
+        <div class="profile-dd-header">
+          <div class="profile-dd-avatar" id="profileDdAvatar" style="background:linear-gradient(135deg,#7c3aed,#a855f7)">F</div>
+          <div class="profile-dd-name" id="profileDdName">Faculty</div>
+          <div class="profile-dd-role">Faculty</div>
+        </div>
+        <a href="profile.html" class="profile-dd-item"><i class="bi bi-person-fill me-2 text-primary"></i> My Profile</a>
+        <a href="analytics.html" class="profile-dd-item"><i class="bi bi-bar-chart me-2 text-success"></i> Analytics</a>
+        <div class="profile-dd-divider"></div>
+        <button class="profile-dd-item danger" onclick="doLogout()"><i class="bi bi-box-arrow-right me-2"></i> Logout</button>
+      </div>
+    </header>
+
+    <!-- Page Body -->
+    <div class="page-body">
+
+      <!-- Stats Row -->
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon purple"><i class="bi bi-journal-text"></i></div>
+            <div>
+              <div class="stat-value" id="statTotalExams">—</div>
+              <div class="stat-label">Total Exams</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon green"><i class="bi bi-broadcast-pin"></i></div>
+            <div>
+              <div class="stat-value" id="statPublished">—</div>
+              <div class="stat-label">Published</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon blue"><i class="bi bi-people-fill"></i></div>
+            <div>
+              <div class="stat-value" id="statStudents">—</div>
+              <div class="stat-label">Student Attempts</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon orange"><i class="bi bi-graph-up-arrow"></i></div>
+            <div>
+              <div class="stat-value" id="statAvgPerf">—</div>
+              <div class="stat-label">Avg Performance</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="section-card mb-4">
+        <div class="section-card-header">
+          <h6><i class="bi bi-lightning-charge-fill me-2 text-warning"></i>Quick Actions</h6>
+        </div>
+        <div class="section-card-body">
+          <div class="row g-3">
+            <div class="col-6 col-md-3">
+              <a href="create_exam.html" class="quick-card">
+                <div class="quick-card-icon" style="background:#eff6ff;color:#3b82f6"><i class="bi bi-plus-circle-fill"></i></div>
+                <div class="quick-card-label">Create New Exam</div>
+              </a>
+            </div>
+            <div class="col-6 col-md-3">
+              <a href="faculty_dashboard.html#uploads" class="quick-card" onclick="scrollToUploads(event)">
+                <div class="quick-card-icon" style="background:#f0fdf4;color:#22c55e"><i class="bi bi-cloud-upload-fill"></i></div>
+                <div class="quick-card-label">Upload Syllabus</div>
+              </a>
+            </div>
+            <div class="col-6 col-md-3">
+              <a href="analytics.html" class="quick-card">
+                <div class="quick-card-icon" style="background:#faf5ff;color:#a855f7"><i class="bi bi-bar-chart-line-fill"></i></div>
+                <div class="quick-card-label">View Reports</div>
+              </a>
+            </div>
+            <div class="col-6 col-md-3">
+              <a href="faculty_dashboard.html#results-section" class="quick-card" onclick="scrollToResults(event)">
+                <div class="quick-card-icon" style="background:#fff7ed;color:#f97316"><i class="bi bi-people-fill"></i></div>
+                <div class="quick-card-label">Student Results</div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- My Exams -->
+      <div class="section-card mb-4" id="my-exams">
+        <div class="section-card-header">
+          <h6><i class="bi bi-collection-fill me-2 text-primary"></i>My Exams</h6>
+          <a href="create_exam.html" class="btn btn-sm btn-primary px-3 py-1" style="font-size:12px">+ New Exam</a>
+        </div>
+        <div class="table-responsive">
+          <table class="dash-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Duration</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
             </thead>
             <tbody id="examsTable">
+              <tr><td colspan="4" class="text-center py-4 text-muted">
+                <div class="spinner-border spinner-border-sm me-2" role="status"></div>Loading...
+              </td></tr>
             </tbody>
-        </table>
+          </table>
+        </div>
+      </div>
 
-        <h4 class="mt-5">Recent Student Results</h4>
-        <div class="table-responsive bg-white rounded shadow-sm mb-5">
-            <table class="table table-hover mb-0">
-                <thead class="table-dark">
-                        <tr>
-                            <th>Attempt ID</th>
-                            <th>Student Name</th>
-                            <th>Exam Title</th>
-                            <th>Score</th>
-                            <th>Proctoring Status</th>
-                            <th>Submitted At</th>
-                        </tr>
-                </thead>
-                <tbody id="resultsTable">
-                </tbody>
+      <!-- Storage / Uploads -->
+      <div class="section-card mb-4" id="uploads">
+        <div class="section-card-header">
+          <h6><i class="bi bi-folder-fill me-2 text-success"></i>Internal Storage</h6>
+          <button class="btn btn-sm btn-outline-success px-3 py-1" style="font-size:12px"
+            onclick="document.getElementById('uploadFileContainer').classList.toggle('d-none')">
+            Upload File
+          </button>
+        </div>
+        <div class="section-card-body">
+          <div id="storageAlert"></div>
+          <div id="uploadFileContainer" class="d-none mb-3 p-3 bg-light border rounded-3">
+            <form id="uploadStorageForm" class="d-flex align-items-center gap-2">
+              <input type="file" id="storageFile" class="form-control form-control-sm" required>
+              <button type="submit" class="btn btn-primary btn-sm text-nowrap">Upload</button>
+            </form>
+          </div>
+          <div class="table-responsive">
+            <table class="dash-table">
+              <thead>
+                <tr><th>ID</th><th>Filename</th><th>Uploaded</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="storageFilesTable">
+                <tr><td colspan="4" class="text-center py-3 text-muted">Loading files...</td></tr>
+              </tbody>
             </table>
+          </div>
         </div>
-    </div>
+      </div>
 
-    <!-- Toast Notification -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3">
-        <div id="shareToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="d-flex">
-                <div class="toast-body">
-                    Exam link copied to clipboard!
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
+      <!-- Student Results -->
+      <div class="section-card mb-4" id="results-section">
+        <div class="section-card-header">
+          <h6><i class="bi bi-people-fill me-2 text-secondary"></i>Recent Student Results</h6>
+          <a href="analytics.html" class="view-all-link">View Analytics →</a>
         </div>
+        <div class="table-responsive">
+          <table class="dash-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Student Name</th>
+                <th>Exam Title</th>
+                <th>Score</th>
+                <th>Proctoring</th>
+                <th>Submitted</th>
+              </tr>
+            </thead>
+            <tbody id="resultsTable">
+              <tr><td colspan="6" class="text-center py-4 text-muted">
+                <div class="spinner-border spinner-border-sm me-2" role="status"></div>Loading...
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /page-body -->
+  </div><!-- /main-content -->
+</div><!-- /dashboard-root -->
+
+
+
+<!-- Help Modal -->
+<div class="help-modal-overlay" id="helpOverlay" onclick="closeHelpOnBg(event)">
+  <div class="help-modal">
+    <div class="help-modal-header">
+      <h6><i class="bi bi-headset me-2"></i>Help &amp; Support</h6>
+      <button class="help-modal-close" onclick="closeHelp()"><i class="bi bi-x"></i></button>
     </div>
+    <div class="help-modal-body">
+      <div class="help-item">
+        <div class="help-item-icon"><i class="bi bi-plus-circle-fill"></i></div>
+        <div>
+          <div class="help-item-title">Creating an Exam</div>
+          <div class="help-item-desc">Click "Create Exam" in the sidebar or Quick Actions. Fill in the details and upload questions.</div>
+        </div>
+      </div>
+      <div class="help-item">
+        <div class="help-item-icon"><i class="bi bi-robot"></i></div>
+        <div>
+          <div class="help-item-title">AI Question Generation</div>
+          <div class="help-item-desc">Upload a syllabus file in Internal Storage, then click "Generate Exam" to auto-create MCQs using AI.</div>
+        </div>
+      </div>
+      <div class="help-item">
+        <div class="help-item-icon"><i class="bi bi-share-fill"></i></div>
+        <div>
+          <div class="help-item-title">Sharing Exams</div>
+          <div class="help-item-desc">Publish an exam, then click the Share Link button to copy a direct link for students.</div>
+        </div>
+      </div>
+      <div class="help-item">
+        <div class="help-item-icon"><i class="bi bi-envelope-fill"></i></div>
+        <div>
+          <div class="help-item-title">Contact Support</div>
+          <div class="help-item-desc">Email <strong>support@agenticexam.edu</strong> or contact your system administrator.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/api.js"></script>
-    <script>
-        ApiClient.checkAuth(['faculty']);
-        ApiClient.setupNav();
+<!-- Share Toast -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+  <div id="shareToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+    <div class="d-flex">
+      <div class="toast-body">Exam link copied to clipboard!</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
 
-        async function loadExams() {
-            const res = await ApiClient.get('/faculty/exams');
-            if (res.ok) {
-                const tbody = document.getElementById('examsTable');
-                if (res.data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No exams created yet.</td></tr>`;
-                } else {
-                    tbody.innerHTML = res.data.map(e => `
-                        <tr>
-                            <td>${e.id}</td>
-                            <td>${e.title}</td>
-                            <td>${e.duration_minutes} mins</td>
-                            <td>
-                                ${e.is_published ? '<span class="badge bg-success">Published</span>' : '<span class="badge bg-warning text-dark">Draft</span>'}
-                            </td>
-                            <td>
-                                <a href="edit_exam.html?id=${e.id}" class="btn btn-sm btn-primary">Edit / Push</a>
-                                ${e.is_published ? `<button onclick="shareExam(${e.id}, '${e.title}')" class="btn btn-sm btn-info text-white ms-1">Share Link</button>` : ''}
-                                <button onclick="deleteExam(${e.id})" class="btn btn-sm btn-danger ms-1">Delete</button>
-                            </td>
-                        </tr>
-                    `).join('');
-                }
-            }
-        }
-        async function loadStorageFiles() {
-            const res = await ApiClient.get('/faculty/storage/files');
-            if (res.ok) {
-                const tbody = document.getElementById('storageFilesTable');
-                if (res.data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No files in internal storage.</td></tr>`;
-                } else {
-                    tbody.innerHTML = res.data.map(f => `
-                        <tr>
-                            <td>${f.id}</td>
-                            <td class="fw-bold">${f.filename}</td>
-                            <td>${ApiClient.formatDateTime(f.uploaded_at)}</td>
-                            <td>
-                                <button onclick="triggerGenerateExam(${f.id}, '${f.filename}')" class="btn btn-sm btn-outline-success">Generate Exam</button>
-                                <button onclick="deleteStorageFile(${f.id})" class="btn btn-sm btn-outline-danger ms-1">Delete</button>
-                            </td>
-                        </tr>
-                    `).join('');
-                }
-            }
-        }
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/api.js"></script>
+<script>
+  ApiClient.checkAuth(['faculty']);
 
-        document.getElementById('uploadStorageForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const fileInput = document.getElementById('storageFile');
-            if (fileInput.files.length === 0) return;
-            
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            
-            const alertBox = document.getElementById('storageAlert');
-            alertBox.innerHTML = `<div class="alert alert-info py-2">Uploading file to internal storage...</div>`;
-            
-            const res = await ApiClient.postFormData('/faculty/storage/upload', formData);
-            if (res.ok) {
-                alertBox.innerHTML = `<div class="alert alert-success py-2">${res.data.message}</div>`;
-                document.getElementById('uploadStorageForm').reset();
-                document.getElementById('uploadFileContainer').classList.add('d-none');
-                loadStorageFiles();
-                setTimeout(() => alertBox.innerHTML = '', 3000);
-            } else {
-                alertBox.innerHTML = `<div class="alert alert-danger py-2">${res.data.message || 'Error uploading file'}</div>`;
-            }
-        });
+  // ── Header info ──
+  const username = localStorage.getItem('username') || 'Faculty';
+  const fullName = localStorage.getItem('full_name') || username;
+  const initial  = (fullName.charAt(0) || 'F').toUpperCase();
+  document.getElementById('welcomeMsg').textContent    = `Welcome, ${fullName}! 👋`;
+  document.getElementById('profileName').textContent   = fullName;
+  document.getElementById('profileAvatar').textContent = initial;
+  document.getElementById('profileDdName').textContent = fullName;
+  document.getElementById('profileDdAvatar').textContent = initial;
 
-        async function triggerGenerateExam(fileId, filename) {
-            const title = prompt(`Enter Exam Title for generated exam from: ${filename}`);
-            if (!title) return;
-            const duration = prompt(`Enter EXAM DURATION in minutes:`, "30");
-            if (!duration) return;
-            const passingScore = prompt(`Enter PASSING SCORE (0-100):`, "50");
-            if (!passingScore) return;
-            const numQuestions = prompt(`How many AI questions to generate?`, "5");
-            if (!numQuestions) return;
-            
-            const alertBox = document.getElementById('storageAlert');
-            alertBox.innerHTML = `<div class="alert alert-info py-2">Generating exam... this might take 10-15 seconds.</div>`;
-            
-            const res = await ApiClient.post('/faculty/storage/generate_exam', {
-                file_id: fileId,
-                title: title,
-                duration: duration,
-                passing_score: passingScore,
-                num_questions: numQuestions
-            });
-            
-            if (res.ok) {
-                alertBox.innerHTML = `<div class="alert alert-success py-2">${res.data.message} Redirecting...</div>`;
-                loadExams();
-                setTimeout(() => {
-                    window.location.href = `edit_exam.html?id=${res.data.exam_id}`;
-                }, 1500);
-            } else {
-                alertBox.innerHTML = `<div class="alert alert-danger py-2">${res.data.message || 'Error generating exam'}</div>`;
-            }
-        }
+  // ── Dropdowns ──
+  function toggleNotif(e) {
+    e.stopPropagation();
+    document.getElementById('profileDropdown').classList.remove('open');
+    document.getElementById('notifDropdown').classList.toggle('open');
+  }
+  function toggleProfile(e) {
+    e.stopPropagation();
+    document.getElementById('notifDropdown').classList.remove('open');
+    document.getElementById('profileDropdown').classList.toggle('open');
+  }
+  document.addEventListener('click', () => {
+    document.getElementById('notifDropdown').classList.remove('open');
+    document.getElementById('profileDropdown').classList.remove('open');
+  });
+  function clearNotifs(e) {
+    e.preventDefault();
+    document.getElementById('notifList').innerHTML = '<div class="notif-empty"><i class="bi bi-check-all fs-4 d-block mb-1 text-success"></i>All caught up!</div>';
+    document.getElementById('notifBadge').style.display = 'none';
+  }
 
-        async function deleteExam(id) {
-            if (!confirm('Are you sure you want to completely delete this exam and all its associated attempts/questions?')) return;
-            const res = await ApiClient.request(`/faculty/exams/${id}`, { method: 'DELETE' });
-            if (res.ok) {
-                alert('Exam deleted successfully!');
-                loadExams();
-            } else {
-                alert(res.data.message || 'Failed to delete exam.');
-            }
-        }
+  // ── Help ──
+  function openHelp()  { document.getElementById('helpOverlay').classList.add('open'); }
+  function closeHelp() { document.getElementById('helpOverlay').classList.remove('open'); }
+  function closeHelpOnBg(e) { if (e.target === document.getElementById('helpOverlay')) closeHelp(); }
 
-        async function deleteStorageFile(id) {
-            if (!confirm('Are you sure you want to delete this file from internal storage?')) return;
-            const res = await ApiClient.request(`/faculty/storage/files/${id}`, { method: 'DELETE' });
-            if (res.ok) {
-                alert('File deleted successfully!');
-                loadStorageFiles();
-            } else {
-                alert(res.data.message || 'Failed to delete file.');
-            }
-        }
+  // ── Scroll helpers ──
+  function scrollToUploads(e) { e.preventDefault(); document.getElementById('uploads').scrollIntoView({ behavior:'smooth' }); }
+  function scrollToResults(e) { e.preventDefault(); document.getElementById('results-section').scrollIntoView({ behavior:'smooth' }); }
+  function scrollToSection(id, e) { if(e) e.preventDefault(); const el = document.getElementById(id); if(el) el.scrollIntoView({ behavior:'smooth' }); }
 
-        async function loadResults() {
-            const res = await ApiClient.get('/faculty/results');
-            if (res.ok) {
-                const tbody = document.getElementById('resultsTable');
-                if (res.data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">No student results available yet.</td></tr>`;
-                } else {
-                    tbody.innerHTML = res.data.map(r => `
-                        <tr>
-                            <td>#${r.id}</td>
-                            <td class="fw-bold">${r.student_name}</td>
-                            <td>${r.exam_title}</td>
-                            <td><span class="badge ${r.score >= 50 ? 'bg-success' : 'bg-danger'} fs-6">${r.score}%</span></td>
-                            <td>
-                                ${r.violation_count > 0 ? 
-                                    '<span class="badge bg-danger rounded-pill px-3" title="Cheating suspected by AI Proctoring">Bad Review</span>' : 
-                                    '<span class="badge bg-success rounded-pill px-3">Clean Result</span>'}
-                            </td>
-                            <td>${ApiClient.formatDateTime(r.end_time)}</td>
-                        </tr>
-                    `).join('');
-                }
-            }
-        }
+  // ── Logout ──
+  function doLogout() { ApiClient.clearTokens(); window.location.href = 'login.html'; }
 
-        async function shareExam(id, title) {
-            const shareUrl = `${window.location.origin}/login.html?exam_id=${id}`;
-            const shareData = {
-                title: `Exam: ${title}`,
-                text: `Join the exam "${title}" on the Agentic AI Exam System.`,
-                url: shareUrl
-            };
+  // ── Load Exams ──
+  async function loadExams() {
+    const res = await ApiClient.get('/faculty/exams');
+    if (!res.ok) return;
+    const tbody = document.getElementById('examsTable');
+    const total     = res.data.length;
+    const published = res.data.filter(e => e.is_published).length;
+    document.getElementById('statTotalExams').textContent = total;
+    document.getElementById('statPublished').textContent  = published;
 
-            if (navigator.share) {
-                try {
-                    await navigator.share(shareData);
-                } catch (err) {
-                    console.log('Error sharing:', err);
-                }
-            } else {
-                // Fallback to copy to clipboard
-                try {
-                    await navigator.clipboard.writeText(shareUrl);
-                    const toastEl = document.getElementById('shareToast');
-                    const toast = new bootstrap.Toast(toastEl);
-                    toast.show();
-                } catch (err) {
-                    alert('Could not copy link: ' + shareUrl);
-                }
-            }
-        }
+    if (total === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-muted">No exams created yet.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = res.data.map(e => `
+      <tr>
+        <td class="fw-semibold">${e.title}</td>
+        <td>${e.duration_minutes} mins</td>
+        <td>${e.is_published ? '<span class="badge-pub">Published</span>' : '<span class="badge-draft">Draft</span>'}</td>
+        <td>
+          <a href="edit_exam.html?id=${e.id}" class="btn btn-sm btn-primary py-1 px-2 me-1" style="font-size:11px">Edit</a>
+          ${e.is_published ? `<button data-share-id="${e.id}" data-share-title="${e.title.replace(/"/g,'&quot;')}" class="btn btn-sm btn-info text-white py-1 px-2 me-1 btn-share-exam" style="font-size:11px">Share</button>` : ''}
+          <button data-exam-id="${e.id}" class="btn btn-sm btn-outline-danger py-1 px-2 btn-del-exam" style="font-size:11px">Delete</button>
+        </td>
+      </tr>`).join('');
 
-        loadExams();
-        loadStorageFiles();
-        loadResults();
-    </script>
+    tbody.querySelectorAll('.btn-del-exam').forEach(btn => {
+      btn.addEventListener('click', () => window.deleteExam(btn.getAttribute('data-exam-id')));
+    });
+    tbody.querySelectorAll('.btn-share-exam').forEach(btn => {
+      btn.addEventListener('click', () => window.shareExam(btn.getAttribute('data-share-id'), btn.getAttribute('data-share-title')));
+    });
+  }
+
+  // ── Load Storage Files ──
+  async function loadStorageFiles() {
+    const res = await ApiClient.get('/faculty/storage/files');
+    if (!res.ok) return;
+    const tbody = document.getElementById('storageFilesTable');
+    if (res.data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" class="text-center py-3 text-muted">No files uploaded yet.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = res.data.map(f => `
+      <tr>
+        <td>${f.id}</td>
+        <td class="fw-semibold" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.filename}</td>
+        <td style="font-size:11px">${ApiClient.formatDateTime(f.uploaded_at)}</td>
+        <td>
+          <button data-file-id="${f.id}" data-file-name="${f.filename.replace(/"/g,'&quot;')}" class="btn btn-sm btn-outline-success py-1 px-2 me-1 btn-gen-exam" style="font-size:11px">Generate Exam</button>
+          <button data-file-id="${f.id}" class="btn btn-sm btn-outline-danger py-1 px-2 btn-del-file" style="font-size:11px">Delete</button>
+        </td>
+      </tr>`).join('');
+
+    tbody.querySelectorAll('.btn-gen-exam').forEach(btn => {
+      btn.addEventListener('click', () => window.triggerGenerateExam(btn.getAttribute('data-file-id'), btn.getAttribute('data-file-name')));
+    });
+    tbody.querySelectorAll('.btn-del-file').forEach(btn => {
+      btn.addEventListener('click', () => window.deleteStorageFile(btn.getAttribute('data-file-id')));
+    });
+  }
+
+  // ── Upload File ──
+  document.getElementById('uploadStorageForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fileInput = document.getElementById('storageFile');
+    if (fileInput.files.length === 0) return;
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    const alertBox = document.getElementById('storageAlert');
+    alertBox.innerHTML = `<div class="alert alert-info py-2 mb-2">Uploading...</div>`;
+    const res = await ApiClient.postFormData('/faculty/storage/upload', formData);
+    if (res.ok) {
+      alertBox.innerHTML = `<div class="alert alert-success py-2 mb-2">${res.data.message}</div>`;
+      document.getElementById('uploadStorageForm').reset();
+      document.getElementById('uploadFileContainer').classList.add('d-none');
+      loadStorageFiles();
+      setTimeout(() => alertBox.innerHTML = '', 3000);
+    } else {
+      alertBox.innerHTML = `<div class="alert alert-danger py-2 mb-2">${res.data.message || 'Upload error'}</div>`;
+    }
+  });
+
+  // ── Generate Exam ──
+  window.triggerGenerateExam = async function(fileId, filename) {
+    const title       = prompt(`Exam title (from: ${filename})`); if (!title) return;
+    const duration    = prompt('Duration (minutes):', '30');      if (!duration) return;
+    const passingScore= prompt('Passing score (0-100):', '50');   if (!passingScore) return;
+    const numQ        = prompt('Number of AI questions:', '5');   if (!numQ) return;
+    const alertBox = document.getElementById('storageAlert');
+    alertBox.innerHTML = `<div class="alert alert-info py-2 mb-2"><span class="spinner-border spinner-border-sm me-2"></span>Generating exam questions via AI... Please wait.</div>`;
+    const res = await ApiClient.post('/faculty/storage/generate_exam', {
+      file_id: fileId, title, duration, passing_score: passingScore, num_questions: numQ
+    });
+    if (res.ok) {
+      alertBox.innerHTML = `<div class="alert alert-success py-2 mb-2">${res.data.message} Redirecting to exam editor...</div>`;
+      loadExams();
+      setTimeout(() => window.location.href = `edit_exam.html?id=${res.data.exam_id}`, 1500);
+    } else {
+      alertBox.innerHTML = `<div class="alert alert-danger py-2 mb-2">${res.data.message || 'Generation failed'}</div>`;
+    }
+  };
+
+  // ── Delete Exam ──
+  window.deleteExam = async function(id) {
+    if (!confirm('Delete this exam and all associated data?')) return;
+    const res = await ApiClient.delete(`/faculty/exams/${id}`);
+    if (res.ok) { loadExams(); }
+    else alert(res.data.message || 'Delete failed.');
+  };
+
+  // ── Delete File ──
+  window.deleteStorageFile = async function(id) {
+    if (!confirm('Delete this stored file?')) return;
+    const res = await ApiClient.delete(`/faculty/storage/files/${id}`);
+    if (res.ok) { loadStorageFiles(); }
+    else alert(res.data.message || 'Delete failed.');
+  };
+
+  // ── Load Results ──
+  async function loadResults() {
+    const res = await ApiClient.get('/faculty/results');
+    if (!res.ok) return;
+    const tbody = document.getElementById('resultsTable');
+    const attempts = res.data.length;
+    const scores   = res.data.filter(r => r.score != null).map(r => parseFloat(r.score));
+    const avg      = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) + '%' : 'N/A';
+    document.getElementById('statStudents').textContent = attempts;
+    document.getElementById('statAvgPerf').textContent  = avg;
+
+    if (attempts === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No student results yet.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = res.data.map(r => `
+      <tr>
+        <td>#${r.id}</td>
+        <td class="fw-semibold">${r.student_name}</td>
+        <td>${r.exam_title}</td>
+        <td><span class="fw-bold" style="color:${r.score>=50?'#059669':'#dc2626'}">${r.score}%</span></td>
+        <td>${r.violation_count > 0
+          ? '<span class="badge-draft">⚠ Bad Review</span>'
+          : '<span class="badge-pub">✓ Clean</span>'}</td>
+        <td style="font-size:11px">${ApiClient.formatDateTime(r.end_time)}</td>
+      </tr>`).join('');
+  }
+
+  // ── Share Exam ──
+  window.shareExam = async function(id, title) {
+    const url  = `${window.location.origin}/login.html?exam_id=${id}`;
+    const data = { title: `Exam: ${title}`, text: `Join "${title}" on Agentic AI Exam System.`, url };
+    if (navigator.share) {
+      try { await navigator.share(data); } catch {}
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        new bootstrap.Toast(document.getElementById('shareToast')).show();
+      } catch { alert('Share link: ' + url); }
+    }
+  };
+
+  loadExams();
+  loadStorageFiles();
+  loadResults();
+</script>
 </body>
-
 </html>
