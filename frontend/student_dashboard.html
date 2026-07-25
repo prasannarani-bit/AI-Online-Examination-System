@@ -1,127 +1,786 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <title>Student Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Student Dashboard - Agentic AI Exam System">
+  <title>Student Dashboard - Agentic AI Exam System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Great+Vibes&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- PDF Generation Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    :root {
+        --primary-blue: #102C57;
+        --gold: #C5A059;
+        --cream: #FDFBF4;
+    }
+
+    /* Exact Official Certificate Styles from Exam System */
+    #certificate-template {
+        width: 1123px; /* A4 Landscape at 96 DPI */
+        height: 794px;
+        background: var(--cream);
+        position: fixed;
+        left: -9999px;
+        top: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Montserrat', sans-serif;
+        color: #1a1a1a;
+        border: 2px solid var(--gold);
+        overflow: hidden;
+        page-break-inside: avoid;
+        page-break-after: avoid;
+    }
+
+    .cert-border-outer {
+        position: absolute;
+        top: 15px; left: 15px; right: 15px; bottom: 15px;
+        border: 1px solid var(--gold);
+        pointer-events: none;
+    }
+
+    .cert-border-inner {
+        position: absolute;
+        top: 25px; left: 25px; right: 25px; bottom: 25px;
+        border: 2px solid var(--gold);
+        pointer-events: none;
+    }
+
+    /* Geometric Shapes */
+    .geo-shape {
+        position: absolute;
+        background-color: var(--primary-blue);
+        z-index: 1;
+    }
+
+    .shape-tr-1 {
+        top: -50px; right: -50px; width: 300px; height: 200px;
+        rotate: -35deg; clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 50% 80%);
+        opacity: 0.95;
+    }
+    .shape-tr-2 {
+        top: -20px; right: -80px; width: 350px; height: 250px;
+        rotate: -40deg; clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 30% 70%);
+        opacity: 0.85; background-color: #1a3c6e;
+    }
+    .tr-gold-line {
+        position: absolute; top: 110px; right: -20px; width: 400px; height: 2px;
+        background: var(--gold); rotate: -35deg; z-index: 2;
+    }
+
+    .shape-bl-1 {
+        bottom: -50px; left: -50px; width: 350px; height: 250px;
+        rotate: -35deg; clip-path: polygon(50% 20%, 100% 0%, 100% 100%, 0% 100%);
+        opacity: 0.95;
+    }
+    .shape-bl-2 {
+        bottom: -30px; left: -80px; width: 400px; height: 300px;
+        rotate: -40deg; clip-path: polygon(30% 30%, 100% 0%, 100% 100%, 0% 100%);
+        opacity: 0.85; background-color: #1a3c6e;
+    }
+    .bl-gold-line {
+        position: absolute; bottom: 120px; left: -30px; width: 400px; height: 2px;
+        background: var(--gold); rotate: -35deg; z-index: 2;
+    }
+
+    .floral-corner {
+        position: absolute; width: 180px; z-index: 5;
+    }
+    .floral-tl { top: 40px; left: 40px; }
+    .floral-br { bottom: 40px; right: 40px; transform: rotate(180deg); }
+
+    .cert-header {
+        padding-top: 70px; text-align: center; position: relative; z-index: 10;
+    }
+
+    .cert-content {
+        text-align: center; z-index: 10; position: relative; padding: 0 100px;
+    }
+
+    .univ-name-cert {
+        font-family: 'Playfair Display', serif; font-size: 26px; color: var(--primary-blue);
+        text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 5px; font-weight: 700;
+    }
+    .univ-loc-cert {
+        font-family: 'Playfair Display', serif; font-size: 20px; color: var(--primary-blue);
+        text-transform: uppercase; letter-spacing: 3px; margin-bottom: 25px; font-weight: 700;
+    }
+
+    .main-title-cert {
+        font-family: 'Playfair Display', serif; font-size: 48px; color: var(--primary-blue);
+        letter-spacing: 8px; text-transform: uppercase; margin: 0;
+    }
+    .sub-title-cert {
+        font-family: 'Playfair Display', serif; font-size: 22px; color: var(--primary-blue);
+        letter-spacing: 5px; text-transform: uppercase; font-weight: 600; margin-bottom: 10px;
+    }
+
+    .ornament-cert { margin: 10px 0; font-size: 20px; color: var(--gold); }
+    .cert-intro-cert { font-size: 16px; text-transform: uppercase; letter-spacing: 2px; color: #333; margin-bottom: 15px; }
+
+    .student-name-cert {
+        font-family: 'Great Vibes', cursive; font-size: 82px; color: #1a1a1a;
+        margin: 15px 0; border-bottom: 1px solid rgba(0,0,0,0.1); display: inline-block; min-width: 600px;
+    }
+
+    .details-line { font-size: 17px; margin-bottom: 15px; color: #444; }
+    .details-val { font-weight: 600; border-bottom: 1px solid #999; padding: 0 10px; color: var(--primary-blue); }
+
+    .achievement-text-cert {
+        font-size: 16px; line-height: 1.6; max-width: 850px; margin: 0 auto 30px; color: #444;
+    }
+
+    .cert-footer-cert {
+        display: flex; justify-content: space-between; align-items: flex-end; padding: 0 100px; margin-top: 20px;
+    }
+
+    .sig-box { text-align: center; width: 250px; }
+    .sig-line-cert { border-top: 1px solid var(--gold); margin-bottom: 8px; }
+    .sig-name-cert { font-weight: 600; font-size: 15px; color: var(--primary-blue); }
+    .sig-title-cert { font-size: 13px; color: #666; text-transform: uppercase; }
+    .footer-seal { height: 70px; opacity: 0.6; }
+
+    /* Scaled modal preview container */
+    .cert-modal-viewport {
+      width: 100%;
+      height: 480px;
+      overflow: hidden;
+      position: relative;
+      background: #f1f5f9;
+      border-radius: 8px;
+    }
+    .cert-modal-scaler {
+      transform: scale(0.58);
+      transform-origin: top left;
+      position: absolute;
+      left: 15px;
+      top: 15px;
+    }
+  </style>
 </head>
+<body>
+<div class="dashboard-root">
 
-<body class="bg-light">
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="index.html">Agentic Exam System</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0" id="user-nav"></ul>
-            </div>
-        </div>
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar sidebar-student">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon"><i class="bi bi-mortarboard-fill"></i></div>
+      <div>
+        <div class="sidebar-logo-text">Agentic AI</div>
+        <div class="sidebar-logo-sub">Exam System</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="student_dashboard.html" class="nav-item-s active" id="nav-dashboard">
+        <span class="nav-icon"><i class="bi bi-grid-1x2-fill"></i></span> Dashboard
+      </a>
+      <a href="#available" class="nav-item-s" id="nav-myexams">
+        <span class="nav-icon"><i class="bi bi-journal-check"></i></span> My Exams
+      </a>
+      <a href="#results-section" class="nav-item-s" id="nav-results">
+        <span class="nav-icon"><i class="bi bi-bar-chart-line-fill"></i></span> Results
+      </a>
+      <a href="landing.html" class="nav-item-s">
+        <span class="nav-icon"><i class="bi bi-house-door-fill"></i></span> Back to Home
+      </a>
+      <div class="sidebar-divider"></div>
+      <button class="nav-item-s" id="nav-help" onclick="openHelp()">
+        <span class="nav-icon"><i class="bi bi-question-circle-fill"></i></span> Need Help?
+      </button>
+      <button class="nav-item-s" onclick="doLogout()" style="color:rgba(255,200,200,.85)">
+        <span class="nav-icon"><i class="bi bi-box-arrow-right"></i></span> Logout
+      </button>
     </nav>
-    <div class="container mt-4">
-        <h2 class="mb-4">Student Dashboard</h2>
+  </aside>
 
-        <h4 class="mt-4">Available Exams</h4>
-        <div class="row mt-3" id="availableExamsContainer">
+  <!-- ===== MAIN ===== -->
+  <div class="main-content">
+
+    <!-- Top Header -->
+    <header class="top-header" style="position:relative;">
+      <div class="header-greeting">
+        <h5 id="welcomeMsg">Welcome back! 👋</h5>
+        <span id="welcomeSub">Student Dashboard</span>
+      </div>
+      <div class="header-actions">
+        <!-- Notification Bell -->
+        <div style="position:relative;">
+          <button class="notif-btn" id="notifBtn" onclick="toggleNotif(event)" title="Notifications">
+            <i class="bi bi-bell-fill"></i>
+            <span class="notif-badge" id="notifBadge">3</span>
+          </button>
         </div>
+        <!-- Profile Avatar (top-right only) -->
+        <div style="position:relative;">
+          <button class="profile-btn" id="profileBtn" onclick="toggleProfile(event)">
+            <div class="profile-avatar" id="profileAvatar" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">S</div>
+            <span class="profile-name" id="profileName">Student</span>
+            <i class="bi bi-chevron-down" style="font-size:10px;color:#94a3b8;margin-left:2px;"></i>
+          </button>
+        </div>
+      </div>
 
-        <h4 class="mt-5">Your Past Attempts</h4>
-        <table class="table table-hover mt-3 shadow-sm bg-white rounded">
-            <thead class="table-light">
-                <tr>
-                    <th>Exam</th>
-                    <th>Date</th>
-                    <th>Score</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
+      <!-- Notification Dropdown -->
+      <div class="notif-dropdown" id="notifDropdown">
+        <div class="notif-header">
+          <h6><i class="bi bi-bell-fill me-1 text-primary"></i> Notifications</h6>
+          <a href="#" onclick="clearNotifs(event)">Mark all read</a>
+        </div>
+        <div id="notifList">
+          <div class="notif-item">
+            <div class="notif-dot green"></div>
+            <div>
+              <div class="notif-text">New exam published: <strong>Database Management Systems</strong></div>
+              <div class="notif-time">2 minutes ago</div>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-dot orange"></div>
+            <div>
+              <div class="notif-text">Your result for <strong>Operating Systems</strong> has been evaluated</div>
+              <div class="notif-time">1 hour ago</div>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-dot"></div>
+            <div>
+              <div class="notif-text">Exam reminder: <strong>Computer Networks</strong> is available now</div>
+              <div class="notif-time">3 hours ago</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Dropdown -->
+      <div class="profile-dropdown" id="profileDropdown">
+        <div class="profile-dd-header">
+          <div class="profile-dd-avatar" id="profileDdAvatar" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">S</div>
+          <div class="profile-dd-name" id="profileDdName">Student</div>
+          <div class="profile-dd-role">Student</div>
+        </div>
+        <a href="profile.html" class="profile-dd-item"><i class="bi bi-person-fill me-2 text-primary"></i> My Profile</a>
+        <a href="#results-section" onclick="scrollToResults(event)" class="profile-dd-item"><i class="bi bi-bar-chart me-2 text-success"></i> My Results</a>
+        <div class="profile-dd-divider"></div>
+        <button class="profile-dd-item danger" onclick="doLogout()"><i class="bi bi-box-arrow-right me-2"></i> Logout</button>
+      </div>
+    </header>
+
+    <!-- Page Body -->
+    <div class="page-body">
+
+      <!-- Stats Row -->
+      <div class="row g-3 mb-4" id="statsRow">
+        <div class="col-6 col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon blue"><i class="bi bi-journal-text"></i></div>
+            <div>
+              <div class="stat-value" id="statAvailable">—</div>
+              <div class="stat-label">Available Exams</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon green"><i class="bi bi-check-circle-fill"></i></div>
+            <div>
+              <div class="stat-value" id="statCompleted">—</div>
+              <div class="stat-label">Completed</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon orange"><i class="bi bi-hourglass-split"></i></div>
+            <div>
+              <div class="stat-value" id="statInProgress">—</div>
+              <div class="stat-label">In Progress</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon purple"><i class="bi bi-trophy-fill"></i></div>
+            <div>
+              <div class="stat-value" id="statAvgScore">—</div>
+              <div class="stat-label">Avg Score</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Available Exams -->
+      <div class="section-card mb-4" id="available">
+        <div class="section-card-header">
+          <h6><i class="bi bi-collection-play-fill me-2 text-primary"></i>Available Exams</h6>
+          <span class="view-all-link" id="examCount">Loading...</span>
+        </div>
+        <div class="section-card-body">
+          <div class="row g-3" id="availableExamsContainer">
+            <div class="col-12 text-center py-4 text-muted">
+              <div class="spinner-border spinner-border-sm me-2" role="status"></div>Loading exams...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results & Past Attempts Section -->
+      <div class="section-card mb-4" id="results-section">
+        <div class="section-card-header d-flex justify-content-between align-items-center">
+          <h6><i class="bi bi-bar-chart-line-fill me-2 text-primary"></i>Your Exam Results &amp; Past Attempts</h6>
+          <span class="badge bg-primary rounded-pill px-3" id="resultsCount">0 Results</span>
+        </div>
+        <div class="table-responsive">
+          <table class="dash-table">
+            <thead>
+              <tr>
+                <th>Exam Title</th>
+                <th>Date</th>
+                <th>Score</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
             </thead>
             <tbody id="pastAttemptsContainer">
+              <tr><td colspan="5" class="text-center py-4 text-muted">
+                <div class="spinner-border spinner-border-sm me-2" role="status"></div>Loading...
+              </td></tr>
             </tbody>
-        </table>
+          </table>
+        </div>
+      </div>
+
+      <!-- Certificates Section -->
+      <div class="section-card mb-4" id="certificates-section">
+        <div class="section-card-header d-flex justify-content-between align-items-center">
+          <h6><i class="bi bi-award-fill me-2 text-warning"></i>Your Received Certificates</h6>
+          <span class="badge bg-warning text-dark rounded-pill px-3" id="certCount">0 Certificates</span>
+        </div>
+        <div class="section-card-body">
+          <div class="row g-3" id="certificatesContainer">
+            <div class="col-12 text-center py-4 text-muted">
+              <div class="spinner-border spinner-border-sm me-2" role="status"></div>Loading certificates...
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-body -->
+  </div><!-- /main-content -->
+</div><!-- /dashboard-root -->
+
+<!-- Official Hidden Certificate Template for PDF Rendering -->
+<div id="certificate-template">
+    <!-- Borders -->
+    <div class="cert-border-outer"></div>
+    <div class="cert-border-inner"></div>
+
+    <!-- Geometric Shapes TR -->
+    <div class="geo-shape shape-tr-2"></div>
+    <div class="geo-shape shape-tr-1"></div>
+    <div class="tr-gold-line"></div>
+
+    <!-- Geometric Shapes BL -->
+    <div class="geo-shape shape-bl-2"></div>
+    <div class="geo-shape shape-bl-1"></div>
+    <div class="bl-gold-line"></div>
+
+    <!-- Floral Corners -->
+    <img src="images/floral_corner.png" class="floral-corner floral-tl" alt="">
+    <img src="images/floral_corner.png" class="floral-corner floral-br" alt="">
+
+    <!-- University Header -->
+    <div class="cert-header">
+        <div class="header-text-container-cert">
+            <div class="univ-name-cert">Jawaharlal Nehru Technological University</div>
+            <div class="univ-loc-cert">Gurajada Vizianagaram</div>
+        </div>
     </div>
 
-    <script src="js/api.js"></script>
-    <script>
-        ApiClient.checkAuth(['student']);
-        ApiClient.setupNav();
+    <!-- Content -->
+    <div class="cert-content">
+        <h2 class="main-title-cert">Certificate</h2>
+        <h4 class="sub-title-cert">Of Achievement</h4>
 
-        // Check for pending exam from shared link
-        const pendingExamId = localStorage.getItem('pending_exam_id');
-        if (pendingExamId) {
-            localStorage.removeItem('pending_exam_id');
-            window.location.href = `pre_exam.html?id=${pendingExamId}`;
-        }
+        <div class="ornament-cert">❧ ━━━━━━ ❦ ━━━━━━ ☙</div>
 
-        async function loadDashboard() {
-            const res = await ApiClient.get('/student/dashboard');
-            if (res.ok) {
-                const ac = document.getElementById('availableExamsContainer');
-                if (res.data.available_exams.length === 0) {
-                    ac.innerHTML = `<div class="col-12"><div class="alert alert-info">No exams are currently published and available to take.</div></div>`;
-                } else {
-                    ac.innerHTML = res.data.available_exams.map(e => {
-                        const hasAttempted = e.attempt_count > 0;
-                        return `
-                        <div class="col-md-4">
-                            <div class="card bg-white shadow-sm border-0 mb-4 h-100">
-                                <div class="card-body d-flex flex-column">
-                                    <h5 class="card-title fw-bold text-primary">${e.title}</h5>
-                                    <p class="card-text text-muted flex-grow-1">${e.description || 'No description assigned.'}</p>
-                                    <ul class="list-unstyled mb-3">
-                                        <li><strong>Duration:</strong> ${e.duration_minutes} mins</li>
-                                        <li><strong>Passing Score:</strong> ${e.passing_score}%</li>
-                                    </ul>
-                                    ${hasAttempted ? `
-                                        <div class="mt-auto">
-                                            <div class="text-success mb-2 text-center fw-semibold">
-                                                <i class="bi bi-check-circle-fill me-1"></i>Response is submitted
-                                            </div>
-                                            <a href="question_paper.html?id=${e.id}" class="btn btn-outline-primary w-100 fw-bold">View Paper</a>
-                                        </div>
-                                    ` : `
-                                        <a href="pre_exam.html?id=${e.id}" class="btn btn-primary w-100 fw-bold mt-auto">Start Exam</a>
-                                    `}
-                                </div>
-                            </div>
-                        </div>
-                    `}).join('');
-                }
+        <div class="cert-intro-cert">This is to certify that</div>
 
-                const pc = document.getElementById('pastAttemptsContainer');
-                if (res.data.past_attempts.length === 0) {
-                    pc.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No past attempts found.</td></tr>`;
-                } else {
-                    const formatTime = (utcStr) => {
-                        if (!utcStr) return '—';
-                        let cleanStr = utcStr.trim();
-                        if (cleanStr.indexOf('T') === -1) {
-                            cleanStr = cleanStr.replace(' ', 'T');
-                        }
-                        if (!cleanStr.endsWith('Z') && cleanStr.indexOf('+') === -1) {
-                            cleanStr += 'Z';
-                        }
-                        const date = new Date(cleanStr);
-                        return date.toLocaleString(undefined, {
-                            year: 'numeric', month: 'short', day: 'numeric',
-                            hour: '2-digit', minute: '2-digit'
-                        });
-                    };
+        <div class="student-name-cert" id="cert-student-name">Student Name</div>
 
-                    pc.innerHTML = res.data.past_attempts.map(a => `
-                        <tr>
-                            <td>${a.title}</td>
-                            <td>${formatTime(a.start_time)}</td>
-                            <td>${a.status === 'evaluated' ? a.score : '-'}</td>
-                            <td>${a.status === 'evaluated' ? '<span class="badge bg-success">Evaluated</span>' : a.status === 'submitted' ? '<span class="badge bg-info">Submitted</span>' : '<span class="badge bg-warning">In Progress</span>'}</td>
-                            <td>${a.status === 'evaluated' ? `<a href="results.html?attempt_id=${a.id}" class="btn btn-sm btn-outline-primary">View Result</a>` : ''}</td>
-                        </tr>
-                    `).join('');
-                }
+        <div class="details-line">
+            of <span class="details-val" id="cert-college">JNTU-GV College of Engineering</span>
+            studying <span class="details-val" id="cert-course">Computer Science &amp; Engineering</span>
+        </div>
+
+        <p class="achievement-text-cert">
+            has successfully passed the assessment for the exam<br>
+            <strong id="cert-exam-title">Exam Title</strong><br>
+            conducted on <span id="cert-date">Date</span>
+        </p>
+
+        <div class="cert-footer-cert">
+            <div class="sig-box" style="visibility: hidden;">
+                <div class="sig-line-cert"></div>
+                <div class="sig-name-cert">-</div>
+            </div>
+            
+            <img src="https://www.freeiconspng.com/uploads/blue-seal-png-15.png" class="footer-seal" alt="Seal">
+
+            <div class="sig-box">
+                <div style="height: 40px;"></div>
+                <div class="sig-line-cert"></div>
+                <div class="sig-name-cert">Registrar</div>
+                <div class="sig-title-cert">JNTU-GV</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Certificate View Modal -->
+<div class="modal fade" id="certModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+      <div class="modal-header border-0 bg-light">
+        <h6 class="modal-title fw-bold text-primary"><i class="bi bi-award-fill me-2 text-warning"></i>Official Examination Certificate</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-3">
+        <div class="cert-modal-viewport">
+          <div class="cert-modal-scaler" id="certModalContent">
+            <!-- Dynamically cloned official certificate -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-0 bg-light justify-content-between">
+        <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary btn-sm px-4 fw-bold" onclick="downloadCertPDF()">
+          <i class="bi bi-download me-1"></i> Download Official Certificate (PDF)
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Help Modal -->
+<div class="help-modal-overlay" id="helpOverlay" onclick="closeHelpOnBg(event)">
+  <div class="help-modal">
+    <div class="help-modal-header">
+      <h6><i class="bi bi-headset me-2"></i>Help &amp; Support</h6>
+      <button class="help-modal-close" onclick="closeHelp()"><i class="bi bi-x"></i></button>
+    </div>
+    <div class="help-modal-body">
+      <div class="help-item">
+        <div class="help-item-icon"><i class="bi bi-play-circle-fill"></i></div>
+        <div>
+          <div class="help-item-title">How to Start an Exam</div>
+          <div class="help-item-desc">Click "Start Exam" on any available exam card. Ensure your camera is enabled for proctoring.</div>
+        </div>
+      </div>
+      <div class="help-item">
+        <div class="help-item-icon"><i class="bi bi-bar-chart-line-fill"></i></div>
+        <div>
+          <div class="help-item-title">View Your Results</div>
+          <div class="help-item-desc">After submission, results appear in "Your Exam Results &amp; Past Attempts" once evaluated by the system.</div>
+        </div>
+      </div>
+      <div class="help-item">
+        <div class="help-item-icon"><i class="bi bi-award-fill"></i></div>
+        <div>
+          <div class="help-item-title">Download Certificates</div>
+          <div class="help-item-desc">Passed exams automatically grant official certificates in "Your Received Certificates".</div>
+        </div>
+      </div>
+      <div class="help-item">
+        <div class="help-item-icon"><i class="bi bi-envelope-fill"></i></div>
+        <div>
+          <div class="help-item-title">Contact Support</div>
+          <div class="help-item-desc">Email us at <strong>support@agenticexam.edu</strong> or speak to your faculty coordinator.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:9999;">
+  <div id="mainToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+    <div class="d-flex">
+      <div class="toast-body" id="toastMsg">Done!</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/api.js"></script>
+<script>
+  ApiClient.checkAuth(['student']);
+
+  // Set header info
+  const username = localStorage.getItem('username') || 'Student';
+  const fullName = localStorage.getItem('full_name') || username;
+  const initial  = (fullName.charAt(0) || 'S').toUpperCase();
+  document.getElementById('welcomeMsg').textContent   = `Welcome back, ${fullName}! 👋`;
+  document.getElementById('profileName').textContent  = fullName;
+  document.getElementById('profileAvatar').textContent = initial;
+  document.getElementById('profileDdName').textContent = fullName;
+  document.getElementById('profileDdAvatar').textContent = initial;
+
+  // Help modal functions
+  function openHelp()  { document.getElementById('helpOverlay').classList.add('open'); }
+  function closeHelp() { document.getElementById('helpOverlay').classList.remove('open'); }
+  function closeHelpOnBg(e) { if (e.target === document.getElementById('helpOverlay')) closeHelp(); }
+
+  // Dropdown toggles
+  function toggleNotif(e) {
+    e.stopPropagation();
+    document.getElementById('profileDropdown').classList.remove('open');
+    document.getElementById('notifDropdown').classList.toggle('open');
+  }
+  function toggleProfile(e) {
+    e.stopPropagation();
+    document.getElementById('notifDropdown').classList.remove('open');
+    document.getElementById('profileDropdown').classList.toggle('open');
+  }
+  document.addEventListener('click', () => {
+    document.getElementById('notifDropdown').classList.remove('open');
+    document.getElementById('profileDropdown').classList.remove('open');
+  });
+  function clearNotifs(e) {
+    e.preventDefault();
+    document.getElementById('notifList').innerHTML = '<div class="notif-empty"><i class="bi bi-check-all fs-4 d-block mb-1 text-success"></i>All caught up!</div>';
+    document.getElementById('notifBadge').style.display = 'none';
+  }
+
+  // Logout
+  function doLogout() {
+    ApiClient.clearTokens();
+    window.location.href = 'login.html';
+  }
+
+  // Scroll functions
+  function scrollToResults(e) {
+    if(e) e.preventDefault();
+    document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // Navigation click handlers
+  document.getElementById('nav-dashboard').addEventListener('click', (e) => {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  document.getElementById('nav-myexams').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('available').scrollIntoView({ behavior: 'smooth' });
+  });
+  document.getElementById('nav-results').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
+  });
+
+  // Pending exam check
+  const pendingExamId = localStorage.getItem('pending_exam_id');
+  if (pendingExamId) {
+    localStorage.removeItem('pending_exam_id');
+    window.location.href = `pre_exam.html?id=${pendingExamId}`;
+  }
+
+  const formatTime = (utcStr) => {
+    if (!utcStr) return '—';
+    let s = utcStr.trim();
+    if (!s.includes('T')) s = s.replace(' ', 'T');
+    if (!s.endsWith('Z') && !s.includes('+')) s += 'Z';
+    return new Date(s).toLocaleString(undefined, { year:'numeric', month:'short', day:'numeric' });
+  };
+
+  let currentCertTitle = '';
+
+  function prepareCertData(title, dateStr) {
+    currentCertTitle = title;
+    document.getElementById('cert-student-name').textContent = fullName;
+    document.getElementById('cert-exam-title').textContent = title;
+    document.getElementById('cert-date').textContent = dateStr || new Date().toLocaleDateString();
+    
+    // Copy into modal scaler
+    const template = document.getElementById('certificate-template');
+    const clone = template.cloneNode(true);
+    clone.id = 'modal-certificate-preview';
+    clone.style.position = 'relative';
+    clone.style.left = '0';
+    clone.style.top = '0';
+    
+    const scaler = document.getElementById('certModalContent');
+    scaler.innerHTML = '';
+    scaler.appendChild(clone);
+  }
+
+  function viewCertModal(id, title, score, date) {
+    prepareCertData(title, date);
+    const modal = new bootstrap.Modal(document.getElementById('certModal'));
+    modal.show();
+  }
+
+  async function downloadCertPDF() {
+    const element = document.getElementById('certificate-template');
+    if (!element) return;
+    
+    const toastMsg = document.getElementById('toastMsg');
+    toastMsg.textContent = 'Generating Official PDF Certificate...';
+    const toast = new bootstrap.Toast(document.getElementById('mainToast'));
+    toast.show();
+
+    try {
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL('image/png');
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF('landscape', 'pt', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`${currentCertTitle.replace(/\s+/g, '_')}_Official_Certificate.pdf`);
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+    }
+  }
+
+  function directDownloadCert(id, title, score, date) {
+    prepareCertData(title, date);
+    downloadCertPDF();
+  }
+
+  async function loadDashboard() {
+    const res = await ApiClient.get('/student/dashboard');
+    if (!res.ok) return;
+    const { available_exams, past_attempts } = res.data;
+
+    // Stats
+    const completed   = past_attempts.filter(a => a.status === 'evaluated').length;
+    const inProgress  = past_attempts.filter(a => a.status === 'in_progress').length;
+    const scores      = past_attempts.filter(a => a.status === 'evaluated' && a.score != null).map(a => parseFloat(a.score));
+    const avgScore    = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) + '%' : 'N/A';
+
+    document.getElementById('statAvailable').textContent = available_exams.length;
+    document.getElementById('statCompleted').textContent  = completed;
+    document.getElementById('statInProgress').textContent = inProgress;
+    document.getElementById('statAvgScore').textContent   = avgScore;
+    document.getElementById('examCount').textContent      = `${available_exams.length} exam(s)`;
+
+    // Available Exams
+    const ac = document.getElementById('availableExamsContainer');
+    if (available_exams.length === 0) {
+      ac.innerHTML = `<div class="col-12"><div class="alert alert-info rounded-3">No exams are currently published and available to take.</div></div>`;
+    } else {
+      ac.innerHTML = available_exams.map(e => {
+        const hasAttempted = e.attempt_count > 0;
+        const icons = ['bi-cpu-fill','bi-hdd-stack-fill','bi-diagram-3-fill','bi-code-slash','bi-layers-fill'];
+        const icon  = icons[e.id % icons.length] || 'bi-journal-text';
+        return `
+        <div class="col-md-4 col-sm-6">
+          <div class="exam-card">
+            <div class="exam-card-icon"><i class="bi ${icon}"></i></div>
+            <div class="exam-card-title">${e.title}</div>
+            <div class="exam-card-meta">
+              <i class="bi bi-clock me-1"></i>${e.duration_minutes} mins &nbsp;·&nbsp;
+              <i class="bi bi-check2-circle me-1"></i>Pass: ${e.passing_score}%
+              ${e.description ? `<br><span class="text-muted">${e.description.substring(0,60)}${e.description.length>60?'...':''}</span>` : ''}
+            </div>
+            ${hasAttempted
+              ? `<div class="text-success text-center mb-2 fw-semibold" style="font-size:13px"><i class="bi bi-check-circle-fill me-1"></i>Response Submitted</div>
+                 <a href="question_paper.html?id=${e.id}" class="btn-start" style="background:linear-gradient(90deg,#10b981,#059669)">View Paper</a>`
+              : `<a href="pre_exam.html?id=${e.id}" class="btn-start">Start Exam</a>`
             }
-        }
-        loadDashboard();
-    </script>
-</body>
+          </div>
+        </div>`;
+      }).join('');
+    }
 
+    // Past Attempts & Results
+    const pc = document.getElementById('pastAttemptsContainer');
+    document.getElementById('resultsCount').textContent = `${past_attempts.length} Result(s)`;
+
+    if (past_attempts.length === 0) {
+      pc.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">No past attempts found.</td></tr>`;
+    } else {
+      pc.innerHTML = past_attempts.map(a => {
+        const statusBadge = a.status === 'evaluated'
+          ? '<span class="badge-eval">Evaluated</span>'
+          : a.status === 'submitted'
+            ? '<span class="badge-sub">Submitted</span>'
+            : '<span class="badge-prog">In Progress</span>';
+        const action = a.status === 'evaluated'
+          ? `<a href="results.html?attempt_id=${a.id}" class="btn btn-sm btn-outline-primary py-1 px-2" style="font-size:12px"><i class="bi bi-bar-chart me-1"></i>View Breakdown</a>`
+          : '—';
+        return `<tr>
+          <td class="fw-semibold">${a.title}</td>
+          <td>${formatTime(a.start_time)}</td>
+          <td>${a.status === 'evaluated' ? `<strong>${a.score}</strong>` : '—'}</td>
+          <td>${statusBadge}</td>
+          <td>${action}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    // Render Certificates
+    const certsContainer = document.getElementById('certificatesContainer');
+    const evaluatedAttempts = past_attempts.filter(a => a.status === 'evaluated');
+    
+    document.getElementById('certCount').textContent = `${evaluatedAttempts.length} Certificate(s)`;
+
+    if (evaluatedAttempts.length === 0) {
+      certsContainer.innerHTML = `
+        <div class="col-12 text-center py-4">
+          <div class="text-muted" style="font-size:14px;">
+            <i class="bi bi-award fs-1 d-block mb-2 text-warning" style="opacity:0.6;"></i>
+            No certificates earned yet. Complete and submit an exam to receive your official certificate!
+          </div>
+        </div>`;
+    } else {
+      certsContainer.innerHTML = evaluatedAttempts.map(a => {
+        const dateStr = formatTime(a.start_time);
+        const scoreVal = a.score != null ? a.score + '%' : 'Passed';
+        const safeTitle = a.title.replace(/'/g, "\\'");
+        return `
+        <div class="col-md-6 col-lg-4">
+          <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden" style="background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%); border: 1px solid #e2e8f0 !important;">
+            <div class="card-body p-4 d-flex flex-column">
+              <div class="d-flex align-items-center gap-3 mb-3">
+                <div style="width:48px; height:48px; border-radius:12px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;">
+                  <i class="bi bi-award-fill"></i>
+                </div>
+                <div>
+                  <h6 class="fw-bold mb-1 text-dark" style="font-size:15px;">${a.title}</h6>
+                  <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill" style="font-size:11px;">
+                    <i class="bi bi-check-circle-fill me-1"></i>Official Certificate
+                  </span>
+                </div>
+              </div>
+              <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center text-muted" style="font-size:12px;">
+                <div><i class="bi bi-calendar3 me-1"></i>${dateStr}</div>
+                <div><strong class="text-dark">${scoreVal}</strong></div>
+              </div>
+              <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-sm btn-outline-primary flex-fill fw-semibold" onclick="viewCertModal('${a.id}', '${safeTitle}', '${scoreVal}', '${dateStr}')">
+                  <i class="bi bi-eye me-1"></i> View
+                </button>
+                <button class="btn btn-sm btn-primary flex-fill fw-semibold" onclick="directDownloadCert('${a.id}', '${safeTitle}', '${scoreVal}', '${dateStr}')">
+                  <i class="bi bi-download me-1"></i> PDF
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  loadDashboard();
+</script>
+</body>
 </html>
