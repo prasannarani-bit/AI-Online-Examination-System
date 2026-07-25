@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Agentic AI Exam System - Smarter Exams with AI Intelligence. Adaptive MCQs, real-time proctoring, instant evaluation and advanced analytics.">
+  <title>Agentic AI Exam System - Smarter Exams with AI Intelligence</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Styling adjustments to match the robot landing page format */
+    .land-nav {
+      border-bottom: 1px solid #e2e8f0;
+      background: #fff;
+    }
+    .land-nav-logo-text {
+      color: #0f172a;
+      font-weight: 700;
+      font-size: 18px;
+    }
+    .land-nav-logo-sub {
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 500;
+      margin-top: 1px;
+    }
+    .land-nav-links a {
+      color: #475569;
+      font-size: 14.5px;
+      font-weight: 500;
+    }
+    .land-nav-links a.active {
+      color: #2563eb;
+    }
+    .land-nav-links a:hover {
+      color: #2563eb;
+    }
+    .btn-outline-brand {
+      border: 1.5px solid #2563eb;
+      color: #2563eb;
+      border-radius: 8px;
+      padding: 8px 24px;
+      background: transparent;
+      font-weight: 600;
+      font-size: 14.5px;
+    }
+    .btn-outline-brand:hover {
+      background: #2563eb;
+      color: #fff;
+    }
+    .btn-brand {
+      background: #2563eb;
+      color: #fff;
+      border-radius: 8px;
+      padding: 8px 24px;
+      border: none;
+      font-weight: 600;
+      font-size: 14.5px;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+    .btn-brand:hover {
+      opacity: 0.9;
+      color: #fff;
+    }
+    .hero-badge {
+      background: #eff6ff;
+      color: #2563eb;
+      border: 1px solid #dbeafe;
+      border-radius: 50px;
+      padding: 6px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-block;
+      margin-bottom: 24px;
+    }
+    .hero-title {
+      font-size: 52px;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.15;
+      margin-bottom: 20px;
+    }
+    .hero-title .highlight {
+      color: #2563eb;
+      background: none;
+      -webkit-text-fill-color: initial;
+    }
+    .hero-desc {
+      font-size: 16px;
+      color: #475569;
+      line-height: 1.6;
+      margin-bottom: 32px;
+      max-width: 480px;
+    }
+    .btn-hero-primary {
+      background: #2563eb;
+      color: #fff;
+      padding: 12px 28px;
+      font-weight: 700;
+      border-radius: 8px;
+      font-size: 15px;
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border: none;
+    }
+    .btn-hero-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+      color: #fff;
+    }
+    .btn-hero-secondary {
+      border: 1.5px solid #2563eb;
+      color: #2563eb;
+      background: #fff;
+      padding: 12px 28px;
+      font-weight: 600;
+      border-radius: 8px;
+      font-size: 15px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .btn-hero-secondary:hover {
+      background: #eff6ff;
+      transform: translateY(-2px);
+      color: #2563eb;
+    }
+    
+    /* Bottom feature cards row */
+    .land-features-row {
+      padding: 40px 5% 80px;
+      background: #fff;
+    }
+    .feature-card-item {
+      background: #fff;
+      border: 1px solid #f1f5f9;
+      border-radius: 16px;
+      padding: 30px 20px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+      height: 100%;
+      transition: transform 0.22s ease, box-shadow 0.22s ease;
+    }
+    .feature-card-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    }
+    .feature-circle-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #eff6ff;
+      color: #2563eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin: 0 auto 20px;
+    }
+    .feature-card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 10px;
+    }
+    .feature-card-desc {
+      font-size: 13.5px;
+      color: #64748b;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body class="landing-body">
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="land-nav">
+    <a href="landing.html" class="land-nav-logo">
+      <div class="land-nav-logo-icon" style="background: #2563eb;"><i class="bi bi-mortarboard-fill"></i></div>
+      <div>
+        <div class="land-nav-logo-text">Agentic AI Exam System</div>
+        <div class="land-nav-logo-sub">Intelligent. Secure. Reliable.</div>
+      </div>
+    </a>
+    <div class="land-nav-links">
+      <a href="#home" class="active">Home</a>
+      <a href="#features">Features</a>
+      <a href="#about">About Us</a>
+    </div>
+    <div class="land-nav-cta" id="navCtaContainer">
+      <a href="login.html" class="btn-outline-brand">Login</a>
+      <a href="register.html" class="btn-brand">Get Started</a>
+    </div>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero" id="home" style="background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); min-height: 520px; padding: 60px 5%;">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <i class="bi bi-lightning-charge-fill"></i> AI Powered &nbsp;·&nbsp; Secure &nbsp;·&nbsp; Reliable
+      </div>
+      <h1 class="hero-title">
+        Smarter Exams with<br><span class="highlight">AI Intelligence</span>
+      </h1>
+      <p class="hero-desc">
+        Our Agentic AI system creates adaptive exams, monitors integrity in real-time and delivers insights that help students learn better and educators teach better.
+      </p>
+      <div class="hero-actions">
+        <a href="register.html" class="btn-hero-primary">
+          Get Started
+        </a>
+        <a href="#features" class="btn-hero-secondary">
+          <i class="bi bi-play-fill" style="font-size: 18px;"></i> Watch Demo
+        </a>
+      </div>
+    </div>
+    <div class="hero-image">
+      <img src="images/ai_robot_hero.png" alt="AI Examination Platform Illustration" style="max-width: 480px; animation: float 4s ease-in-out infinite;">
+    </div>
+  </section>
+
+  <!-- ===== FEATURES ===== -->
+  <section class="land-features-row" id="features">
+    <div class="container">
+      <div class="row g-4">
+        <!-- Card 1 -->
+        <div class="col-md-3 col-sm-6">
+          <div class="feature-card-item">
+            <div class="feature-circle-icon">
+              <i class="bi bi-file-earmark-text-fill"></i>
+            </div>
+            <h4 class="feature-card-title">AI Generated Exams</h4>
+            <p class="feature-card-desc">Generate MCQ exams instantly from your syllabus using AI.</p>
+          </div>
+        </div>
+        <!-- Card 2 -->
+        <div class="col-md-3 col-sm-6">
+          <div class="feature-card-item">
+            <div class="feature-circle-icon">
+              <i class="bi bi-display"></i>
+            </div>
+            <h4 class="feature-card-title">Smart Proctoring</h4>
+            <p class="feature-card-desc">AI-powered monitoring ensures a fair and secure environment.</p>
+          </div>
+        </div>
+        <!-- Card 3 -->
+        <div class="col-md-3 col-sm-6">
+          <div class="feature-card-item">
+            <div class="feature-circle-icon">
+              <i class="bi bi-clipboard-check-fill"></i>
+            </div>
+            <h4 class="feature-card-title">Instant Evaluation</h4>
+            <p class="feature-card-desc">Get results and performance insights in real-time.</p>
+          </div>
+        </div>
+        <!-- Card 4 -->
+        <div class="col-md-3 col-sm-6">
+          <div class="feature-card-item">
+            <div class="feature-circle-icon">
+              <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <h4 class="feature-card-title">Advanced Analytics</h4>
+            <p class="feature-card-desc">Detailed reports to track progress and improve outcomes.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- ===== ABOUT ===== -->
+  <section class="about-us" id="about" style="background:#fff; padding:80px 5%;">
+    <div class="container text-center">
+      <div style="font-size:12px; font-weight:700; color:#2563eb; text-transform:uppercase; letter-spacing:2px; margin-bottom:12px;">About Us</div>
+      <h2 style="font-size:32px; font-weight:800; color:#0f172a; margin-bottom:14px;">Built for the Future of Education</h2>
+      <p style="font-size:16px; color:#64748b; max-width:640px; margin:0 auto 36px; line-height:1.7;">
+        The Agentic AI Exam System was built to bridge the gap between traditional paper-based exams and the digital-first world. Our platform empowers educators and students with AI tools that are reliable, transparent and easy to use.
+      </p>
+      <div style="text-align:center;">
+        <a href="register.html" class="btn-hero-primary">Start Your Journey</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="land-footer" id="contact" style="background: #0f172a; padding: 40px 5%;">
+    <div style="margin-bottom:10px;">
+      <strong style="color:#fff">Agentic Exam System</strong> &nbsp;·&nbsp;
+      <a href="login.html">Login</a> &nbsp;·&nbsp;
+      <a href="register.html">Register</a>
+    </div>
+    <div>© 2026 Agentic AI Exam System. All rights reserved. &nbsp;|&nbsp; AI-Powered &nbsp;·&nbsp; Secure &nbsp;·&nbsp; Reliable</div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    // Update navbar CTA if logged in
+    const role = localStorage.getItem('role');
+    if (role) {
+      const cta = document.getElementById('navCtaContainer');
+      let dashUrl = 'student_dashboard.html';
+      if (role === 'admin') dashUrl = 'admin_dashboard.html';
+      else if (role === 'faculty') dashUrl = 'faculty_dashboard.html';
+      if (cta) {
+        cta.innerHTML = `
+          <a href="${dashUrl}" class="btn-brand"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
+        `;
+      }
+    }
+
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth' }); }
+      });
+    });
+  </script>
+</body>
+</html>
