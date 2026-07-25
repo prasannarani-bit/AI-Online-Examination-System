@@ -1,162 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Login to the Agentic AI Exam System">
-  <title>Login - Agentic AI Exam System</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="css/style.css">
+    <meta charset="UTF-8">
+    <meta name="description" content="Login to the Agentic AI Exam System">
+    <title>Login - Agentic Exam System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="auth-body">
 
-  <!-- Auth Navbar -->
-  <nav class="auth-nav">
-    <a href="landing.html" class="auth-nav-logo">
-      <div class="auth-nav-logo-icon"><i class="bi bi-mortarboard-fill"></i></div>
-      <div>
-        <div class="auth-nav-logo-text">Agentic AI Exam System</div>
-      </div>
-    </a>
-    <div style="display: flex; align-items: center; gap: 16px;">
-      <a href="landing.html" class="btn btn-sm btn-outline-secondary" style="font-size:13px; font-weight:600; border-radius:6px;"><i class="bi bi-house-door-fill me-1"></i> Back to Home</a>
-      <div style="font-size:13px;color:#64748b;">
-        Don't have an account? <a href="register.html" class="auth-link">Register here</a>
-      </div>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div id="errorMsg" class="alert alert-danger d-none"></div>
+                <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                    <div class="card-header bg-primary text-white text-center py-4">
+                        <i class="bi bi-shield-lock fs-2 d-block mb-1"></i>
+                        <h4 class="mb-0 fw-bold">Login to Exam System</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <form id="loginForm">
+                            <div class="mb-3">
+                                <label for="email" class="form-label fw-bold">Email Address</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                    <input type="email" id="email" class="form-control form-control-lg"
+                                        placeholder="you@example.com" required autocomplete="email">
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label for="password" class="form-label fw-bold">Password</label>
+                                <div class="input-group mb-2">
+                                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                    <input type="password" id="password" class="form-control form-control-lg"
+                                        placeholder="Enter your password" required autocomplete="current-password">
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePasswordBtn"
+                                        title="Show / Hide password"
+                                        style="border-left: none;">
+                                        <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                                    </button>
+                                </div>
+                                <div class="text-end">
+                                    <a href="forgot_password.html" class="text-decoration-none small">Forgot Password?</a>
+                                </div>
+                            </div>
+                            <button type="submit" id="loginBtn" class="btn btn-primary btn-lg w-100 fw-bold">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                            </button>
+                        </form>
+                        <hr class="mt-4 mb-3">
+                        <div class="text-center">
+                            <p class="mb-0">Don't have an account? <a href="register.html" class="text-decoration-none fw-bold">Register here</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </nav>
 
-  <main class="auth-main">
-    <div class="auth-card">
-      <!-- Header -->
-      <div class="auth-card-header">
-        <div class="auth-card-header-icon">
-          <i class="bi bi-shield-lock-fill"></i>
-        </div>
-        <h2>Welcome Back!</h2>
-        <p>Login to continue to your account</p>
-      </div>
+    <script src="js/api.js"></script>
+    <script>
+        // Check for pending exam link
+        const urlParams = new URLSearchParams(window.location.search);
+        const examId = urlParams.get('exam_id');
+        if (examId) {
+            localStorage.setItem('pending_exam_id', examId);
+            
+            // If already logged in as student, just redirect
+            if (localStorage.getItem('token') && localStorage.getItem('role') === 'student') {
+                window.location.href = `pre_exam.html?id=${examId}`;
+            }
+        }
+        // Show / Hide password toggle
+        document.getElementById('togglePasswordBtn').addEventListener('click', function () {
+            const pwdInput = document.getElementById('password');
+            const icon = document.getElementById('togglePasswordIcon');
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                icon.classList.replace('bi-eye', 'bi-eye-slash');
+                this.title = 'Hide password';
+            } else {
+                pwdInput.type = 'password';
+                icon.classList.replace('bi-eye-slash', 'bi-eye');
+                this.title = 'Show password';
+            }
+        });
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Logging in...';
 
-      <!-- Body -->
-      <div class="auth-card-body">
-        <div class="form-error-msg" id="errorMsg"></div>
+            const res = await ApiClient.post('/login', {
+                email: document.getElementById('email').value.trim().toLowerCase(),
+                password: document.getElementById('password').value
+            });
 
-        <form id="loginForm" novalidate>
-          <!-- Email -->
-          <div class="form-group">
-            <label class="auth-label" for="email">Email Address</label>
-            <div class="auth-input-wrap">
-              <i class="bi bi-envelope auth-input-icon"></i>
-              <input type="email" id="email" class="auth-input"
-                placeholder="Enter your email" required autocomplete="email">
-            </div>
-          </div>
-
-          <!-- Password -->
-          <div class="form-group">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-              <label class="auth-label" for="password" style="margin:0">Password</label>
-              <a href="forgot_password.html" class="auth-link" style="font-size:12px">Forgot Password?</a>
-            </div>
-            <div class="auth-input-wrap">
-              <i class="bi bi-lock auth-input-icon"></i>
-              <input type="password" id="password" class="auth-input"
-                placeholder="Enter your password" required autocomplete="current-password"
-                style="padding-right:48px">
-              <button type="button" id="togglePasswordBtn" class="auth-input-btn" style="border-left:none;border:none;position:absolute;right:0;top:0;bottom:0;padding:0 12px;background:none;cursor:pointer;color:#64748b;">
-                <i class="bi bi-eye" id="togglePasswordIcon"></i>
-              </button>
-            </div>
-          </div>
-
-          <!-- Remember me -->
-          <div class="form-group" style="margin-bottom:22px;">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <input type="checkbox" id="rememberMe" style="width:16px;height:16px;accent-color:#4f46e5;cursor:pointer;">
-              <label for="rememberMe" style="font-size:13px;color:#64748b;cursor:pointer;margin:0;">Remember me</label>
-            </div>
-          </div>
-
-          <!-- Submit -->
-          <button type="submit" id="loginBtn" class="btn-auth">
-            <i class="bi bi-box-arrow-in-right me-2"></i>Login
-          </button>
-        </form>
-
-        <!-- Divider -->
-        <div class="auth-divider" style="margin:22px 0;">
-          <span>or</span>
-        </div>
-
-        <!-- Register link -->
-        <div style="text-align:center;font-size:13.5px;color:#64748b;">
-          Don't have an account? <a href="register.html" class="auth-link">Register here</a>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <script src="js/api.js"></script>
-  <script>
-    // Check for pending exam link
-    const urlParams = new URLSearchParams(window.location.search);
-    const examId = urlParams.get('exam_id');
-    if (examId) {
-      localStorage.setItem('pending_exam_id', examId);
-      if (localStorage.getItem('token') && localStorage.getItem('role') === 'student') {
-        window.location.href = `pre_exam.html?id=${examId}`;
-      }
-    }
-
-    // If already logged in, redirect
-    const role = localStorage.getItem('role');
-    if (role && localStorage.getItem('token')) {
-      if (role === 'admin')   window.location.href = 'admin_dashboard.html';
-      else if (role === 'faculty') window.location.href = 'faculty_dashboard.html';
-      else if (role === 'student') window.location.href = 'student_dashboard.html';
-    }
-
-    // Toggle password visibility
-    document.getElementById('togglePasswordBtn').addEventListener('click', function () {
-      const pwd  = document.getElementById('password');
-      const icon = document.getElementById('togglePasswordIcon');
-      if (pwd.type === 'password') {
-        pwd.type = 'text';
-        icon.classList.replace('bi-eye', 'bi-eye-slash');
-      } else {
-        pwd.type = 'password';
-        icon.classList.replace('bi-eye-slash', 'bi-eye');
-      }
-    });
-
-    // Login
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('loginBtn');
-      const err = document.getElementById('errorMsg');
-      err.classList.remove('show');
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Logging in...';
-
-      const res = await ApiClient.post('/login', {
-        email:    document.getElementById('email').value.trim().toLowerCase(),
-        password: document.getElementById('password').value
-      });
-
-      if (res.ok) {
-        ApiClient.setToken(res.data.token);
-        localStorage.setItem('role',      res.data.role);
-        localStorage.setItem('username',  res.data.username);
-        localStorage.setItem('full_name', res.data.full_name || res.data.username);
-        window.location.href = 'index.html';
-      } else {
-        err.textContent = res.data.message || 'Login failed. Please try again.';
-        err.classList.add('show');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>Login';
-      }
-    });
-  </script>
+            if (res.ok) {
+                ApiClient.setToken(res.data.token);
+                localStorage.setItem('role', res.data.role);
+                localStorage.setItem('username', res.data.username);
+                localStorage.setItem('full_name', res.data.full_name || res.data.username);
+                window.location.href = 'index.html';
+            } else {
+                const err = document.getElementById('errorMsg');
+                err.textContent = res.data.message || 'Login failed. Please try again.';
+                err.classList.remove('d-none');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>Login';
+            }
+        });
+    </script>
 </body>
+
 </html>
