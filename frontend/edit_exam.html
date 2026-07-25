@@ -105,7 +105,7 @@
     <script src="js/api.js"></script>
     <script>
         console.log("DEBUG: Page script started");
-        ApiClient.checkAuth(['faculty']);
+        ApiClient.checkAuth(['faculty', 'admin']);
         console.log("DEBUG: Auth check passed");
         ApiClient.setupNav();
         console.log("DEBUG: Nav setup called");
@@ -144,9 +144,8 @@
                     document.getElementById('publishedBadge').classList.remove('d-none');
                     document.querySelectorAll('.form-element').forEach(el => el.disabled = true);
                 } else {
-                    const pb = document.getElementById('publishBtn');
-                    pb.classList.remove('d-none');
-                    pb.onclick = async () => {
+                    document.getElementById('publishBtn').classList.remove('d-none');
+                    document.getElementById('publishBtn').onclick = async () => {
                         const pres = await ApiClient.post(`/faculty/exams/${examId}/publish`);
                         if (pres.ok) window.location.reload();
                     };
@@ -162,7 +161,7 @@
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start">
                                         <h6 class="card-title fw-bold">${i + 1}. ${escapeHtml(q.question_text)}</h6>
-                                        ${!exam.is_published ? `<button onclick="deleteQuestion(${q.id})" class="btn btn-sm btn-outline-danger border-0" title="Delete Question">Delete</button>` : ''}
+                                        ${!exam.is_published ? `<button data-question-id="${q.id}" class="btn btn-sm btn-outline-danger border-0 btn-del-question" title="Delete Question">Delete</button>` : ''}
                                     </div>
                                     <ul class="list-unstyled ms-3 mt-2">
                                         <li class="${q.correct_option === 'A' ? 'text-success fw-bold' : ''}">A: ${escapeHtml(q.option_a)}</li>
@@ -173,13 +172,18 @@
                                 </div>
                             </div>
                         `).join('');
+
+                        qc.querySelectorAll('.btn-del-question').forEach(btn => {
+                            btn.addEventListener('click', () => window.deleteQuestion(btn.getAttribute('data-question-id')));
+                        });
                     } catch (err) {
                         console.error('Rendering error:', err);
                         qc.innerHTML = `<div class="alert alert-danger">Error rendering question list. Some questions may contain invalid characters.</div>`;
                     }
                 }
             } else {
-                window.location.href = 'faculty_dashboard.html';
+                const userRole = localStorage.getItem('role');
+                window.location.href = userRole === 'admin' ? 'admin_exams.html' : 'faculty_dashboard.html';
             }
         } catch (err) {
             console.error('Fetch error:', err);
@@ -260,15 +264,15 @@
             btn.textContent = 'Generate MCQs via AI';
         });
 
-        async function deleteQuestion(qId) {
+        window.deleteQuestion = async function(qId) {
             if (!confirm('Are you sure you want to remove this question?')) return;
-            const res = await ApiClient.request(`/faculty/exams/${examId}/questions/${qId}`, { method: 'DELETE' });
+            const res = await ApiClient.delete(`/faculty/exams/${examId}/questions/${qId}`);
             if (res.ok) {
                 loadExamDetails();
             } else {
-                alert(res.data.message || 'Error deleting question');
+                alert(res.data ? res.data.message : 'Error deleting question');
             }
-        }
+        };
 
         if (examId) loadExamDetails();
         else window.location.href = 'faculty_dashboard.html';
