@@ -3,99 +3,191 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="All System Exams - Agentic AI Exam System">
     <title>All Exams - Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="index.html">Agentic Exam System</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0" id="user-nav"></ul>
-            </div>
-        </div>
-    </nav>
-    <div class="container mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>All System Exams</h2>
-            <a href="admin_dashboard.html" class="btn btn-outline-secondary">Back to Dashboard</a>
-        </div>
-        
-        <div class="card bg-white shadow-sm border-0">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Title</th>
-                                <th>Faculty</th>
-                                <th>Duration</th>
-                                <th>Status</th>
-                                <th>Created At</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="examsTableBody">
-                            <tr>
-                                <td colspan="7" class="text-center">Loading exams...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+<body>
+<div class="dashboard-root">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar sidebar-admin">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon"><i class="bi bi-mortarboard-fill"></i></div>
+      <div>
+        <div class="sidebar-logo-text">Agentic AI</div>
+        <div class="sidebar-logo-sub">Exam System</div>
+      </div>
     </div>
+    <nav class="sidebar-nav">
+      <a href="admin_dashboard.html" class="nav-item-s">
+        <span class="nav-icon"><i class="bi bi-grid-1x2-fill"></i></span> Dashboard
+      </a>
+      <a href="manage_users.html" class="nav-item-s">
+        <span class="nav-icon"><i class="bi bi-people-fill"></i></span> Users
+      </a>
+      <a href="admin_exams.html" class="nav-item-s active" id="nav-exams">
+        <span class="nav-icon"><i class="bi bi-journal-check"></i></span> Exams
+      </a>
+      <a href="monitor_exams.html" class="nav-item-s" id="nav-monitor">
+        <span class="nav-icon"><i class="bi bi-activity"></i></span> Monitoring
+        <span class="nav-badge">Live</span>
+      </a>
+      <a href="admin_results.html" class="nav-item-s" id="nav-reports">
+        <span class="nav-icon"><i class="bi bi-bar-chart-line-fill"></i></span> Reports
+      </a>
+      <a href="admin_files.html" class="nav-item-s" id="nav-files">
+        <span class="nav-icon"><i class="bi bi-folder-fill"></i></span> Faculty Files
+      </a>
+      <a href="landing.html" class="nav-item-s">
+        <span class="nav-icon"><i class="bi bi-house-door-fill"></i></span> Back to Home
+      </a>
+      <div class="sidebar-divider"></div>
+      <button class="nav-item-s" onclick="doLogout()" style="color:rgba(200,255,220,.8)">
+        <span class="nav-icon"><i class="bi bi-box-arrow-right"></i></span> Logout
+      </button>
+    </nav>
+  </aside>
 
-    <script src="js/api.js"></script>
-    <script>
-        ApiClient.checkAuth(['admin']);
-        ApiClient.setupNav();
+  <!-- ===== MAIN ===== -->
+  <div class="main-content">
 
-        async function loadAllExams() {
-            const res = await ApiClient.get('/admin/exams');
-            const tbody = document.getElementById('examsTableBody');
-            if (res.ok) {
-                if (res.data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="text-center">No exams found.</td></tr>';
-                    return;
-                }
-                tbody.innerHTML = res.data.map(exam => `
-                    <tr>
-                        <td>${exam.id}</td>
-                        <td><strong>${exam.title}</strong></td>
-                        <td>${exam.faculty_name}</td>
-                        <td>${exam.duration_minutes} mins</td>
-                        <td>
-                            <span class="badge ${exam.is_published ? 'bg-success' : 'bg-secondary'}">
-                                ${exam.is_published ? 'Published' : 'Draft'}
-                            </span>
-                        </td>
-                        <td>${ApiClient.formatDate(exam.created_at)}</td>
-                        <td>
-                            <a href="edit_exam.html?id=${exam.id}" class="btn btn-sm btn-outline-primary">View/Edit</a>
-                            <button onclick="deleteExam(${exam.id})" class="btn btn-sm btn-outline-danger">Delete</button>
-                        </td>
-                    </tr>
-                `).join('');
-            } else {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Error: ${res.data.message}</td></tr>`;
+    <!-- Top Header -->
+    <header class="top-header" style="position:relative;">
+      <div class="header-greeting">
+        <h5><i class="bi bi-journal-check me-2 text-primary"></i>All System Exams</h5>
+        <span>Overview of all published and draft exams across faculty</span>
+      </div>
+      <div class="header-actions">
+        <a href="admin_dashboard.html" class="btn btn-sm btn-outline-secondary" style="border-radius:8px; font-size:13px; font-weight:600;">
+          <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+        </a>
+      </div>
+    </header>
+
+    <!-- Page Body -->
+    <div class="page-body">
+
+      <div id="examAlertMsg"></div>
+
+      <div class="section-card mb-4">
+        <div class="section-card-header d-flex justify-content-between align-items-center">
+          <h6><i class="bi bi-collection-fill me-2 text-primary"></i>System Exam Directory</h6>
+          <span id="examCountBadge" class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3">0 Exams</span>
+        </div>
+        <div class="table-responsive">
+          <table class="dash-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Faculty</th>
+                <th>Duration</th>
+                <th>Status</th>
+                <th>Created Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="examsTableBody">
+              <tr>
+                <td colspan="7" class="text-center py-4 text-muted">
+                  <div class="spinner-border spinner-border-sm me-2" role="status"></div>Loading exams...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /page-body -->
+  </div><!-- /main-content -->
+</div><!-- /dashboard-root -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/api.js"></script>
+<script>
+    ApiClient.checkAuth(['admin']);
+
+    function doLogout() {
+        ApiClient.clearTokens();
+        window.location.href = 'login.html';
+    }
+
+    function showAlert(msg, type='success') {
+        const alertEl = document.getElementById('examAlertMsg');
+        alertEl.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show rounded-3 mb-3" role="alert">
+            <i class="bi bi-${type==='success'?'check-circle':'exclamation-triangle'}-fill me-2"></i>${msg}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>`;
+        setTimeout(() => { alertEl.innerHTML = ''; }, 4000);
+    }
+
+    async function loadAllExams() {
+        const res = await ApiClient.get('/admin/exams');
+        const tbody = document.getElementById('examsTableBody');
+        if (res.ok) {
+            document.getElementById('examCountBadge').textContent = `${res.data.length} Exam(s)`;
+            if (res.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No exams found in system.</td></tr>';
+                return;
             }
-        }
+            tbody.innerHTML = res.data.map(exam => `
+                <tr>
+                    <td>${exam.id}</td>
+                    <td class="fw-semibold text-dark">${exam.title}</td>
+                    <td>${exam.faculty_name}</td>
+                    <td>${exam.duration_minutes} mins</td>
+                    <td>
+                        <span class="badge ${exam.is_published ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'} rounded-pill">
+                            ${exam.is_published ? 'Published' : 'Draft'}
+                        </span>
+                    </td>
+                    <td>${ApiClient.formatDate(exam.created_at)}</td>
+                    <td>
+                        <a href="edit_exam.html?id=${exam.id}" class="btn btn-sm btn-outline-primary me-1">
+                          <i class="bi bi-pencil-square me-1"></i>View/Edit
+                        </a>
+                        <button data-exam-id="${exam.id}" data-exam-title="${exam.title.replace(/"/g,'&quot;')}" class="btn btn-sm btn-outline-danger btn-delete-exam">
+                          <i class="bi bi-trash me-1"></i>Delete
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
 
-        async function deleteExam(id) {
-            if (!confirm('Are you sure you want to delete this exam and ALL associated data (questions, attempts, logs)?')) return;
-            const res = await ApiClient.delete(`/faculty/exams/${id}`);
-            if (res.ok) {
-                loadAllExams();
-            } else {
-                alert('Delete failed: ' + res.data.message);
-            }
+            // Attach delete listeners
+            tbody.querySelectorAll('.btn-delete-exam').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const id = btn.getAttribute('data-exam-id');
+                    const title = btn.getAttribute('data-exam-title');
+                    window.deleteExam(id, title);
+                });
+            });
+        } else {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">Error loading exams: ${res.data ? res.data.message : 'Unknown error'}</td></tr>`;
         }
+    }
 
-        loadAllExams();
-    </script>
+    window.deleteExam = async function(id, title) {
+        if (!confirm(`Delete exam "${title}"?\n\nThis will permanently remove the exam and ALL associated questions, attempts, and proctoring logs.`)) return;
+        
+        const btn = document.querySelector(`[data-exam-id="${id}"]`);
+        if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Deleting...'; }
+        
+        const res = await ApiClient.delete(`/admin/exams/${id}`);
+        if (res.ok) {
+            showAlert(`Exam "${title}" deleted successfully.`);
+            loadAllExams();
+        } else {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-trash me-1"></i>Delete'; }
+            showAlert('Delete failed: ' + (res.data ? res.data.message : 'Unknown error'), 'danger');
+        }
+    };
+
+    loadAllExams();
+</script>
 </body>
-
 </html>
