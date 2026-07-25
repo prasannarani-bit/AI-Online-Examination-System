@@ -1,483 +1,593 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="description" content="Register a new account on the Agentic AI Exam System">
-    <title>Register - Agentic Exam System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="css/style.css">
-    <style>
-        .role-fields { transition: all 0.3s ease; }
-        .field-icon { min-width: 38px; }
-
-         @keyframes btn-pulse {
-            0%   { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.7); }
-            70%  { box-shadow: 0 0 0 10px rgba(25, 135, 84, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0); }
-        }
-        .btn-pulse {
-            animation: btn-pulse 0.6s ease 2;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Create your account on the Agentic AI Exam System">
+  <title>Register - Agentic AI Exam System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .role-fields { transition: all 0.3s ease; }
+    @keyframes btn-pulse {
+      0%   { box-shadow: 0 0 0 0 rgba(79,70,229,0.7); }
+      70%  { box-shadow: 0 0 0 10px rgba(79,70,229,0); }
+      100% { box-shadow: 0 0 0 0 rgba(79,70,229,0); }
+    }
+    .btn-pulse { animation: btn-pulse 0.6s ease 2; }
+    /* section divider */
+    .fields-section { margin-top: 18px; padding-top: 18px; border-top: 1px solid #e2e8f0; }
+    .fields-section-label {
+      font-size: 11px; font-weight: 700; color: #64748b;
+      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    /* verified badge */
+    .verified-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: #d1fae5; color: #065f46;
+      padding: 4px 10px; border-radius: 6px;
+      font-size: 12px; font-weight: 700; margin-top: 6px;
+    }
+    /* step panel */
+    .step-panel { display: none; }
+    .step-panel.active { display: block; }
+  </style>
 </head>
+<body class="auth-body">
 
-<body class="bg-light">
-    <div class="container mt-4 mb-5">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div id="alertMsg" class="alert d-none"></div>
-                <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-                    <div class="card-header bg-success text-white text-center py-4">
-                        <i class="bi bi-person-plus fs-2 d-block mb-1"></i>
-                        <h4 class="mb-0 fw-bold">Create New Account</h4>
-                    </div>
-                    <div class="card-body p-4">
-                        <form id="registerForm" novalidate>
-
-                            <!-- Role Selection (first so fields adapt) -->
-                            <div class="mb-3">
-                                <label for="role" class="form-label fw-bold">I am a</label>
-                                <select id="role" class="form-select form-select-lg" required>
-                                    <option value="" disabled selected>Select your role…</option>
-                                    <option value="student">Student</option>
-                                    <option value="faculty">Faculty / Teacher</option>
-                                </select>
-                            </div>
-
-                            <!-- Common Fields -->
-                            <div class="mb-3">
-                                <label for="full_name" class="form-label fw-bold">Full Name</label>
-                                <div class="input-group">
-                                    <span class="input-group-text field-icon"><i class="bi bi-person"></i></span>
-                                    <input type="text" id="full_name" class="form-control form-control-lg"
-                                        placeholder="Enter your full name" required>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="email" class="form-label fw-bold">Email Address</label>
-                                <div class="input-group">
-                                    <span class="input-group-text field-icon"><i class="bi bi-envelope"></i></span>
-                                    <input type="email" id="email" class="form-control form-control-lg"
-                                        placeholder="you@example.com" required autocomplete="email">
-                                    <button class="btn btn-outline-primary" type="button" id="sendCodeBtn">Send Code</button>
-                                </div>
-                                <div class="form-text">Verification code will be sent to this email.</div>
-                            </div>
-
-                            <div class="mb-3 d-none" id="verificationSection">
-                                <label for="verification_code" class="form-label fw-bold">Verification Code</label>
-                                <div class="input-group">
-                                    <span class="input-group-text field-icon"><i class="bi bi-shield-check"></i></span>
-                                    <input type="text" id="verification_code" class="form-control form-control-lg"
-                                        placeholder="Enter 6-digit code" maxlength="6">
-                                    <button class="btn btn-outline-success fw-bold" type="button" id="verifyCodeBtn">
-                                        <i class="bi bi-patch-check me-1"></i>Verify Email
-                                    </button>
-                                </div>
-                                <div class="form-text text-muted" id="verifyHint">Check your inbox for the 6-digit code, then click <strong>Verify Email</strong>.</div>
-                                <div class="d-none mt-2" id="verifiedBadge">
-                                    <span class="badge bg-success fs-6 px-3 py-2"><i class="bi bi-check-circle-fill me-1"></i>Email Verified!</span>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="password" class="form-label fw-bold">Password</label>
-                                <div class="input-group">
-                                    <span class="input-group-text field-icon"><i class="bi bi-lock"></i></span>
-                                    <input type="password" id="password" class="form-control form-control-lg"
-                                        placeholder="Create a strong password" required autocomplete="new-password">
-                                    <button class="btn btn-outline-secondary" type="button" id="togglePwdBtn" title="Show password" style="border-left:none;">
-                                        <i class="bi bi-eye" id="togglePwdIcon"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="confirm_password" class="form-label fw-bold">Confirm Password</label>
-                                <div class="input-group">
-                                    <span class="input-group-text field-icon"><i class="bi bi-lock-fill"></i></span>
-                                    <input type="password" id="confirm_password" class="form-control form-control-lg"
-                                        placeholder="Re-enter your password" required autocomplete="new-password">
-                                    <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPwdBtn" title="Show password" style="border-left:none;">
-                                        <i class="bi bi-eye" id="toggleConfirmPwdIcon"></i>
-                                    </button>
-                                </div>
-                                <div class="form-text d-none" id="pwdMatchMsg"></div>
-                            </div>
-
-                            <!-- Student-specific fields -->
-                            <div id="studentFields" class="role-fields d-none">
-                                <hr class="my-3">
-                                <p class="text-muted small fw-bold mb-3"><i class="bi bi-mortarboard me-1"></i>STUDENT DETAILS</p>
-                                
-                                <div class="row g-3 mb-3">
-                                    <div class="col-md-6">
-                                        <label for="course_category" class="form-label fw-bold">Course Category</label>
-                                        <select id="course_category" class="form-select">
-                                            <option value="" selected disabled>Select Category</option>
-                                            <option value="UG">Undergraduate (UG)</option>
-                                            <option value="PG">Postgraduate (PG)</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="course_name" class="form-label fw-bold">Course</label>
-                                        <select id="course_name" class="form-select" disabled>
-                                            <option value="" selected disabled>Select Category First</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="row g-3 mb-3">
-                                    <div class="col-md-6">
-                                        <label for="year_of_study" class="form-label fw-bold">Year of Study</label>
-                                        <select id="year_of_study" class="form-select">
-                                            <option value="" selected disabled>Select Year</option>
-                                            <option value="1st Year">1st Year</option>
-                                            <option value="2nd Year">2nd Year</option>
-                                            <option value="3rd Year">3rd Year</option>
-                                            <option value="4th Year">4th Year</option>
-                                            <option value="5th Year">5th Year</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="roll_number" class="form-label fw-bold">Roll Number</label>
-                                        <input type="text" id="roll_number" class="form-control" placeholder="e.g. 2024CSE101">
-                                    </div>
-                                </div>
-
-                                <div class="mb-3 d-none" id="branchContainer">
-                                    <label for="branch" class="form-label fw-bold">Branch / Specialization</label>
-                                    <select id="branch" class="form-select">
-                                        <option value="" selected disabled>Select Branch</option>
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="class_name" class="form-label fw-bold">Section / Batch (Optional)</label>
-                                    <input type="text" id="class_name" class="form-control" placeholder="e.g. Section A, Batch 2024">
-                                </div>
-                            </div>
-
-                            <!-- Faculty-specific fields -->
-                            <div id="facultyFields" class="role-fields d-none">
-                                <hr class="my-3">
-                                <p class="text-muted small fw-bold mb-3"><i class="bi bi-building me-1"></i>FACULTY DETAILS</p>
-                                <div class="mb-3">
-                                    <label for="department" class="form-label fw-bold">Department</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text field-icon"><i class="bi bi-diagram-3"></i></span>
-                                        <select id="department" class="form-select">
-                                            <option value="" selected disabled>Select Department</option>
-                                            <option value="CSE">Computer Science (CSE)</option>
-                                            <option value="ECE">Electronics (ECE)</option>
-                                            <option value="EEE">Electrical (EEE)</option>
-                                            <option value="IT">Information Technology (IT)</option>
-                                            <option value="Mechanical">Mechanical</option>
-                                            <option value="Civil">Civil</option>
-                                            <option value="AI & ML">AI & ML</option>
-                                            <option value="Data Science">Data Science</option>
-                                            <option value="Mathematics">Mathematics</option>
-                                            <option value="Physics">Physics</option>
-                                            <option value="Chemistry">Chemistry</option>
-                                            <option value="Biology">Biology</option>
-                                            <option value="Finance">Finance</option>
-                                            <option value="HR">HR</option>
-                                            <option value="Marketing">Marketing</option>
-                                            <option value="Operations">Operations</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mt-4">
-                                <button type="submit" id="registerBtn" class="btn btn-success btn-lg w-100 fw-bold">
-                                    <i class="bi bi-person-check me-2"></i>Create Account
-                                </button>
-                            </div>
-                        </form>
-                        <hr class="mt-4 mb-3">
-                        <div class="text-center">
-                            <p class="mb-0">Already have an account? <a href="login.html" class="text-decoration-none fw-bold">Login here</a></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <!-- Auth Navbar -->
+  <nav class="auth-nav">
+    <a href="landing.html" class="auth-nav-logo">
+      <div class="auth-nav-logo-icon"><i class="bi bi-mortarboard-fill"></i></div>
+      <div><div class="auth-nav-logo-text">Agentic AI Exam System</div></div>
+    </a>
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <a href="landing.html" class="btn btn-sm btn-outline-secondary" style="font-size:13px; font-weight:600; border-radius:6px;"><i class="bi bi-house-door-fill me-1"></i> Back to Home</a>
+      <div style="font-size:13px;color:#64748b;">
+        Already have an account? <a href="login.html" class="auth-link">Login here</a>
+      </div>
     </div>
+  </nav>
 
-    <script src="js/api.js"></script>
-    <script>
-        const courseOptions = {
-            'UG': ['B.Tech', 'B.E.', 'BCA', 'B.Sc', 'B.Com', 'B.A.', 'BBA'],
-            'PG': ['M.Tech', 'M.E.', 'MCA', 'M.Sc', 'M.Com', 'M.A.', 'MBA']
-        };
+  <main class="auth-main" style="padding:28px 20px;">
+    <div class="auth-card auth-card-wide">
 
-        const branchOptions = {
-            'B.Tech': ['CSE', 'ECE', 'EEE', 'Mechanical', 'Civil', 'IT', 'AI & ML', 'Data Science'],
-            'B.Sc': ['Computer Science', 'Mathematics', 'Physics', 'Chemistry', 'Biology', 'Electronics'],
-            'M.Tech': ['CSE', 'ECE', 'Power Systems', 'Structural', 'Thermal', 'VLSI'],
-            'M.Sc': ['Computer Science', 'Mathematics', 'Physics', 'Chemistry'],
-            'MBA': ['Finance', 'HR', 'Marketing', 'Operations', 'IT']
-        };
+      <!-- Header -->
+      <div class="auth-card-header">
+        <div class="auth-card-header-icon"><i class="bi bi-person-plus-fill"></i></div>
+        <h2>Create Your Account</h2>
+        <p>Join us and start your learning journey</p>
+      </div>
 
-        // Handle category change for dynamic course list
-        document.getElementById('course_category').addEventListener('change', function() {
-            const cat = this.value;
-            const courseSelect = document.getElementById('course_name');
-            courseSelect.innerHTML = '<option value="" selected disabled>Select Course</option>';
-            document.getElementById('branchContainer').classList.add('d-none');
-            
-            if (courseOptions[cat]) {
-                courseSelect.disabled = false;
-                courseOptions[cat].forEach(course => {
-                    const opt = document.createElement('option');
-                    opt.value = course;
-                    opt.textContent = course;
-                    courseSelect.appendChild(opt);
-                });
-            } else {
-                courseSelect.disabled = true;
-            }
-        });
+      <!-- Body -->
+      <div class="auth-card-body">
 
-        // Handle course change for dynamic branch list
-        document.getElementById('course_name').addEventListener('change', function() {
-            const course = this.value;
-            const branchContainer = document.getElementById('branchContainer');
-            const branchSelect = document.getElementById('branch');
-            branchSelect.innerHTML = '<option value="" selected disabled>Select Branch</option>';
-            
-            if (branchOptions[course]) {
-                branchContainer.classList.remove('d-none');
-                branchOptions[course].forEach(branch => {
-                    const opt = document.createElement('option');
-                    opt.value = branch;
-                    opt.textContent = branch;
-                    branchSelect.appendChild(opt);
-                });
-            } else {
-                branchContainer.classList.add('d-none');
-            }
-        });
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+          <div class="step-dot active" id="dot1">1</div>
+          <div class="step-line" id="line1"></div>
+          <div class="step-dot" id="dot2">2</div>
+          <div class="step-line" id="line2"></div>
+          <div class="step-dot" id="dot3">3</div>
+        </div>
+        <div class="step-label-row" style="margin-bottom:24px;">
+          <div class="step-label active" id="lbl1">Account Info</div>
+          <div class="step-label" id="lbl2">Verification</div>
+          <div class="step-label" id="lbl3">Complete</div>
+        </div>
 
-        // Show/hide role-specific fields when role changes
-        document.getElementById('role').addEventListener('change', function () {
-            const role = this.value;
-            document.getElementById('studentFields').classList.toggle('d-none', role !== 'student');
-            document.getElementById('facultyFields').classList.toggle('d-none', role !== 'faculty');
-        });
+        <!-- Alert -->
+        <div class="form-error-msg" id="alertMsg" style="display:none;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:16px;"></div>
 
-        // Track whether the code has been verified
-        let emailVerified = false;
-        
-        // Send Verification Code
-        document.getElementById('sendCodeBtn').addEventListener('click', async function() {
-            const email = document.getElementById('email').value.trim();
-            const alertEl = document.getElementById('alertMsg');
-            if (!email || !email.includes('@')) {
-                alertEl.textContent = 'Please enter a valid email address first.';
-                alertEl.className = 'alert alert-danger';
-                return;
-            }
-            // Reset verification state when a new code is sent
-            emailVerified = false;
-            document.getElementById('verifiedBadge').classList.add('d-none');
-            document.getElementById('verification_code').value = '';
-            document.getElementById('verification_code').classList.remove('is-valid', 'is-invalid');
+        <form id="registerForm" novalidate>
 
-            this.disabled = true;
-            this.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-            
-            const res = await ApiClient.post('/auth/send-code', { email, purpose: 'register' });
-            
-            if (res.ok) {
-                alertEl.textContent = 'Verification code sent! Please check your email.';
-                alertEl.className = 'alert alert-success';
-                document.getElementById('verificationSection').classList.remove('d-none');
-                this.innerHTML = 'Resend Code';
-            } else {
-                alertEl.textContent = res.data.message || 'Failed to send code.';
-                alertEl.className = 'alert alert-danger';
-                this.innerHTML = 'Send Code';
-            }
-            this.disabled = false;
-        });
+          <!-- ══ STEP 1: Account Info ══ -->
+          <div class="step-panel active" id="step1">
 
-        // Verify Email Button
-        document.getElementById('verifyCodeBtn').addEventListener('click', async function() {
-            const email = document.getElementById('email').value.trim();
-            const code = document.getElementById('verification_code').value.trim();
-            const alertEl = document.getElementById('alertMsg');
-            const codeInput = document.getElementById('verification_code');
-            if (!code || code.length < 6) {
-                alertEl.textContent = 'Please enter the 6-digit verification code.';
-                alertEl.className = 'alert alert-danger';
-                codeInput.classList.add('is-invalid');
-                return;
-            }
-            this.disabled = true;
-            this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Verifying...';
-            const res = await ApiClient.post('/auth/verify-code', { email, code, purpose: 'register' });
-            if (res.ok && res.data.verified) {
-                emailVerified = true;
-                codeInput.classList.remove('is-invalid');
-                codeInput.classList.add('is-valid');
-                document.getElementById('verifiedBadge').classList.remove('d-none');
-                document.getElementById('verifyHint').classList.add('d-none');
-                alertEl.textContent = '✅ Email verified! You can now complete your registration.';
-                alertEl.className = 'alert alert-success';
-                this.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Verified';
-                this.classList.replace('btn-outline-success', 'btn-success');
-                this.disabled = true;
-            } else {
-                emailVerified = false;
-                codeInput.classList.add('is-invalid');
-                codeInput.classList.remove('is-valid');
-                alertEl.textContent = res.data?.message || 'Invalid or expired code. Please try again.';
-                alertEl.className = 'alert alert-danger';
-                this.innerHTML = '<i class="bi bi-patch-check me-1"></i>Verify Email';
-                this.disabled = false;
-            }
-        });
-        // Also reset verified state if the code input is manually changed after verification
-        document.getElementById('verification_code').addEventListener('input', function() {
-            if (emailVerified) {
-                emailVerified = false;
-                this.classList.remove('is-valid', 'is-invalid');
-                document.getElementById('verifiedBadge').classList.add('d-none');
-                document.getElementById('verifyHint').classList.remove('d-none');
-                const btn = document.getElementById('verifyCodeBtn');
-                btn.innerHTML = '<i class="bi bi-patch-check me-1"></i>Verify Email';
-                btn.classList.replace('btn-success', 'btn-outline-success');
-                btn.disabled = false;
-            }
-        });
+            <!-- Role -->
+            <div class="form-group">
+              <label class="auth-label" for="role">I am a</label>
+              <select id="role" class="auth-select" required>
+                <option value="" disabled selected>Select your role</option>
+                <option value="student">Student</option>
+                <option value="faculty">Faculty / Teacher</option>
+              </select>
+            </div>
 
-        // ── Show / Hide toggles for both password fields ──────────────────────
-        function makeToggle(btnId, iconId, inputId) {
-            document.getElementById(btnId).addEventListener('click', function () {
-                const inp  = document.getElementById(inputId);
-                const icon = document.getElementById(iconId);
-                if (inp.type === 'password') {
-                    inp.type = 'text';
-                    icon.classList.replace('bi-eye', 'bi-eye-slash');
-                    this.title = 'Hide password';
-                } else {
-                    inp.type = 'password';
-                    icon.classList.replace('bi-eye-slash', 'bi-eye');
-                    this.title = 'Show password';
-                }
-            });
+            <!-- Full Name -->
+            <div class="form-group">
+              <label class="auth-label" for="full_name">Full Name</label>
+              <div class="auth-input-wrap">
+                <i class="bi bi-person auth-input-icon"></i>
+                <input type="text" id="full_name" class="auth-input" placeholder="Enter your full name" required>
+              </div>
+            </div>
+
+            <!-- Email -->
+            <div class="form-group">
+              <label class="auth-label" for="email">Email Address</label>
+              <div class="auth-input-wrap">
+                <i class="bi bi-envelope auth-input-icon"></i>
+                <input type="email" id="email" class="auth-input" placeholder="you@example.com"
+                  required autocomplete="email" style="padding-right:100px">
+                <button type="button" id="sendCodeBtn" class="auth-input-btn">Send Code</button>
+              </div>
+              <div class="form-hint">A verification code will be sent to this email.</div>
+            </div>
+
+            <!-- Inline Verification Code Input (Step 1) -->
+            <div class="form-group d-none" id="step1CodeGroup" style="background:#f8fafc;padding:14px;border-radius:10px;border:1px solid #cbd5e1;margin-top:12px;">
+              <label class="auth-label text-primary fw-bold" for="step1_code"><i class="bi bi-shield-lock-fill me-1"></i> Enter Verification Code</label>
+              <div style="display:flex;gap:8px;">
+                <div class="auth-input-wrap" style="flex:1">
+                  <i class="bi bi-shield-check auth-input-icon"></i>
+                  <input type="text" id="step1_code" class="auth-input"
+                    placeholder="Enter 6-digit code" maxlength="6"
+                    style="letter-spacing:4px;font-size:16px;font-weight:700;text-align:center;padding-left:36px;background:#ffffff;">
+                </div>
+                <button type="button" id="step1VerifyBtn"
+                  style="padding:0 16px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;">
+                  Verify
+                </button>
+              </div>
+              <div class="verified-badge d-none mt-2" id="step1VerifiedBadge">
+                <i class="bi bi-check-circle-fill"></i> Email Verified!
+              </div>
+            </div>
+
+            <!-- Student Fields -->
+            <div id="studentFields" class="role-fields d-none">
+              <div class="fields-section">
+                <div class="fields-section-label"><i class="bi bi-mortarboard"></i> Student Details</div>
+                <div class="row g-2 mb-3">
+                  <div class="col-6">
+                    <label class="auth-label" for="course_category">Course Category</label>
+                    <select id="course_category" class="auth-select">
+                      <option value="" selected disabled>Select Category</option>
+                      <option value="UG">Undergraduate (UG)</option>
+                      <option value="PG">Postgraduate (PG)</option>
+                    </select>
+                  </div>
+                  <div class="col-6">
+                    <label class="auth-label" for="course_name">Course</label>
+                    <select id="course_name" class="auth-select" disabled>
+                      <option value="" selected disabled>Select Category First</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="row g-2 mb-3">
+                  <div class="col-6">
+                    <label class="auth-label" for="year_of_study">Year of Study</label>
+                    <select id="year_of_study" class="auth-select">
+                      <option value="" selected disabled>Select Year</option>
+                      <option>1st Year</option><option>2nd Year</option>
+                      <option>3rd Year</option><option>4th Year</option><option>5th Year</option>
+                    </select>
+                  </div>
+                  <div class="col-6">
+                    <label class="auth-label" for="roll_number">Roll Number</label>
+                    <div class="auth-input-wrap">
+                      <i class="bi bi-hash auth-input-icon"></i>
+                      <input type="text" id="roll_number" class="auth-input" placeholder="e.g. 2024CSE101">
+                    </div>
+                  </div>
+                </div>
+                <div class="mb-3 d-none" id="branchContainer">
+                  <label class="auth-label" for="branch">Branch / Specialization</label>
+                  <select id="branch" class="auth-select"><option value="" selected disabled>Select Branch</option></select>
+                </div>
+                <div>
+                  <label class="auth-label" for="class_name">Section / Batch (Optional)</label>
+                  <div class="auth-input-wrap">
+                    <i class="bi bi-people auth-input-icon"></i>
+                    <input type="text" id="class_name" class="auth-input" placeholder="e.g. Section A">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Faculty Fields -->
+            <div id="facultyFields" class="role-fields d-none">
+              <div class="fields-section">
+                <div class="fields-section-label"><i class="bi bi-building"></i> Faculty Details</div>
+                <label class="auth-label" for="department">Department</label>
+                <select id="department" class="auth-select">
+                  <option value="" selected disabled>Select Department</option>
+                  <option value="CSE">Computer Science (CSE)</option>
+                  <option value="ECE">Electronics (ECE)</option>
+                  <option value="EEE">Electrical (EEE)</option>
+                  <option value="IT">Information Technology (IT)</option>
+                  <option value="Mechanical">Mechanical</option>
+                  <option value="Civil">Civil</option>
+                  <option value="AI &amp; ML">AI &amp; ML</option>
+                  <option value="Data Science">Data Science</option>
+                  <option value="Mathematics">Mathematics</option>
+                  <option value="Physics">Physics</option>
+                  <option value="Chemistry">Chemistry</option>
+                  <option value="Finance">Finance</option>
+                  <option value="HR">HR</option>
+                  <option value="Marketing">Marketing</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <button type="button" id="nextToStep2Btn" class="btn-auth">
+                Next <i class="bi bi-arrow-right ms-1"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- ══ STEP 2: Verification ══ -->
+          <div class="step-panel" id="step2">
+            <div style="text-align:center;margin-bottom:24px;">
+              <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:22px;color:#fff;">
+                <i class="bi bi-shield-lock-fill"></i>
+              </div>
+              <div style="font-size:15px;font-weight:700;color:#1e293b;">Verify Your Email</div>
+              <div style="font-size:13px;color:#64748b;margin-top:4px;" id="emailHintText">Enter the 6-digit code sent to your email.</div>
+            </div>
+
+            <!-- Verification Code -->
+            <div class="form-group">
+              <label class="auth-label" for="verification_code">Verification Code</label>
+              <div style="display:flex;gap:8px;">
+                <div class="auth-input-wrap" style="flex:1">
+                  <i class="bi bi-shield-check auth-input-icon"></i>
+                  <input type="text" id="verification_code" class="auth-input"
+                    placeholder="Enter 6-digit code" maxlength="6"
+                    style="letter-spacing:4px;font-size:18px;font-weight:700;text-align:center;padding-left:42px;">
+                </div>
+                <button type="button" id="verifyCodeBtn"
+                  style="padding:0 16px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;">
+                  Verify Email
+                </button>
+              </div>
+              <div class="form-hint" id="verifyHint">Check your inbox, then click Verify Email.</div>
+              <div class="verified-badge d-none" id="verifiedBadge">
+                <i class="bi bi-check-circle-fill"></i> Email Verified!
+              </div>
+            </div>
+
+            <!-- Resend -->
+            <div style="text-align:center;margin:14px 0;font-size:13px;color:#64748b;">
+              Didn't receive it? <button type="button" id="resendBtn" class="auth-link" style="background:none;border:none;padding:0;cursor:pointer;font-family:inherit;font-size:13px;">Resend Code</button>
+            </div>
+
+            <div style="display:flex;gap:10px;margin-top:20px;">
+              <button type="button" id="backToStep1Btn"
+                style="flex:1;padding:13px;border:1.5px solid #e2e8f0;border-radius:8px;background:#f8fafc;font-size:14px;font-weight:600;color:#374151;cursor:pointer;font-family:inherit;">
+                <i class="bi bi-arrow-left me-1"></i> Back
+              </button>
+              <button type="button" id="nextToStep3Btn" class="btn-auth" style="flex:2;">
+                Next <i class="bi bi-arrow-right ms-1"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- ══ STEP 3: Password & Complete ══ -->
+          <div class="step-panel" id="step3">
+            <div style="text-align:center;margin-bottom:24px;">
+              <div style="font-size:15px;font-weight:700;color:#1e293b;">Set Your Password</div>
+              <div style="font-size:13px;color:#64748b;margin-top:4px;">Almost there! Create a strong password.</div>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+              <label class="auth-label" for="password">Password</label>
+              <div class="auth-input-wrap">
+                <i class="bi bi-lock auth-input-icon"></i>
+                <input type="password" id="password" class="auth-input"
+                  placeholder="Create a strong password" required autocomplete="new-password"
+                  style="padding-right:48px;">
+                <button type="button" id="togglePwdBtn" style="position:absolute;right:0;top:0;bottom:0;padding:0 13px;background:none;border:none;color:#64748b;cursor:pointer;">
+                  <i class="bi bi-eye" id="togglePwdIcon"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="form-group">
+              <label class="auth-label" for="confirm_password">Confirm Password</label>
+              <div class="auth-input-wrap">
+                <i class="bi bi-lock-fill auth-input-icon"></i>
+                <input type="password" id="confirm_password" class="auth-input"
+                  placeholder="Re-enter your password" required autocomplete="new-password"
+                  style="padding-right:48px;">
+                <button type="button" id="toggleConfirmPwdBtn" style="position:absolute;right:0;top:0;bottom:0;padding:0 13px;background:none;border:none;color:#64748b;cursor:pointer;">
+                  <i class="bi bi-eye" id="toggleConfirmPwdIcon"></i>
+                </button>
+              </div>
+              <div class="form-text d-none" id="pwdMatchMsg"></div>
+            </div>
+
+            <div style="display:flex;gap:10px;margin-top:20px;">
+              <button type="button" id="backToStep2Btn"
+                style="flex:1;padding:13px;border:1.5px solid #e2e8f0;border-radius:8px;background:#f8fafc;font-size:14px;font-weight:600;color:#374151;cursor:pointer;font-family:inherit;">
+                <i class="bi bi-arrow-left me-1"></i> Back
+              </button>
+              <button type="submit" id="registerBtn" class="btn-auth" style="flex:2;">
+                <i class="bi bi-person-check me-1"></i> Create Account
+              </button>
+            </div>
+          </div>
+
+        </form>
+
+        <!-- Login link -->
+        <div style="text-align:center;margin-top:22px;font-size:13.5px;color:#64748b;">
+          Already have an account? <a href="login.html" class="auth-link">Login here</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script>
+    /* ─── Step Navigation ─── */
+    let currentStep = 1;
+    let emailVerified = false;
+
+    function goToStep(n) {
+      document.querySelectorAll('.step-panel').forEach((p,i) => p.classList.toggle('active', i+1 === n));
+      [1,2,3].forEach(i => {
+        const dot = document.getElementById('dot'+i);
+        const lbl = document.getElementById('lbl'+i);
+        dot.classList.remove('active','done');
+        lbl.classList.remove('active');
+        if (i < n)  { dot.classList.add('done'); dot.innerHTML = '<i class="bi bi-check"></i>'; }
+        if (i === n){ dot.classList.add('active'); if(i>1) dot.textContent = i; else dot.textContent = i; }
+        if (i > n)  { dot.textContent = i; }
+        if (i === n) lbl.classList.add('active');
+      });
+      // lines
+      if (document.getElementById('line1')) document.getElementById('line1').classList.toggle('done', n >= 2);
+      if (document.getElementById('line2')) document.getElementById('line2').classList.toggle('done', n >= 3);
+      // reset dot numbers for non-done
+      [1,2,3].forEach(i => {
+        const dot = document.getElementById('dot'+i);
+        if (!dot.classList.contains('done') && !dot.classList.contains('active')) dot.textContent = i;
+        if (dot.classList.contains('active') && !dot.classList.contains('done')) dot.textContent = i;
+      });
+      currentStep = n;
+      document.getElementById('alertMsg').style.display = 'none';
+    }
+
+    function showAlert(msg, type='danger') {
+      const el = document.getElementById('alertMsg');
+      el.textContent = msg;
+      el.style.display = 'block';
+      el.style.background = type==='success'?'#d1fae5':type==='warning'?'#fef3c7':'#fef2f2';
+      el.style.border = `1px solid ${type==='success'?'#6ee7b7':type==='warning'?'#fcd34d':'#fecaca'}`;
+      el.style.color  = type==='success'?'#065f46':type==='warning'?'#92400e':'#991b1b';
+    }
+
+    let codeSent = false;
+
+    /* Step 1 → 2 */
+    document.getElementById('nextToStep2Btn').addEventListener('click', async () => {
+      const role     = document.getElementById('role').value;
+      const fullName = document.getElementById('full_name').value.trim();
+      const email    = document.getElementById('email').value.trim();
+      if (!role)     { showAlert('Please select your role.');     return; }
+      if (!fullName) { showAlert('Please enter your full name.'); return; }
+      if (!email || !email.includes('@')) { showAlert('Please enter a valid email address.'); return; }
+      document.getElementById('emailHintText').textContent = `Enter the 6-digit code sent to ${email}`;
+      if (!codeSent) {
+        await sendCode(false); // Send code and advance to step 2
+      }
+      goToStep(2);
+    });
+
+    /* Step 2 → 1 */
+    document.getElementById('backToStep1Btn').addEventListener('click', () => goToStep(1));
+
+    /* Step 2 → 3 */
+    document.getElementById('nextToStep3Btn').addEventListener('click', () => {
+      if (!emailVerified) { showAlert('Please verify your email first.', 'warning'); return; }
+      goToStep(3);
+    });
+
+    /* Step 3 → 2 */
+    document.getElementById('backToStep2Btn').addEventListener('click', () => goToStep(2));
+
+    /* ─── Course Options ─── */
+    const courseOptions = {
+      'UG': ['B.Tech','B.E.','BCA','B.Sc','B.Com','B.A.','BBA'],
+      'PG': ['M.Tech','M.E.','MCA','M.Sc','M.Com','M.A.','MBA']
+    };
+    const branchOptions = {
+      'B.Tech': ['CSE','ECE','EEE','Mechanical','Civil','IT','AI & ML','Data Science'],
+      'B.Sc':   ['Computer Science','Mathematics','Physics','Chemistry','Biology','Electronics'],
+      'M.Tech': ['CSE','ECE','Power Systems','Structural','Thermal','VLSI'],
+      'M.Sc':   ['Computer Science','Mathematics','Physics','Chemistry'],
+      'MBA':    ['Finance','HR','Marketing','Operations','IT']
+    };
+
+    document.getElementById('course_category').addEventListener('change', function() {
+      const courseSelect = document.getElementById('course_name');
+      courseSelect.innerHTML = '<option value="" selected disabled>Select Course</option>';
+      document.getElementById('branchContainer').classList.add('d-none');
+      if (courseOptions[this.value]) {
+        courseSelect.disabled = false;
+        courseOptions[this.value].forEach(c => { const o=document.createElement('option'); o.value=c; o.textContent=c; courseSelect.appendChild(o); });
+      } else { courseSelect.disabled = true; }
+    });
+
+    document.getElementById('course_name').addEventListener('change', function() {
+      const bc = document.getElementById('branchContainer');
+      const bs = document.getElementById('branch');
+      bs.innerHTML = '<option value="" selected disabled>Select Branch</option>';
+      if (branchOptions[this.value]) {
+        bc.classList.remove('d-none');
+        branchOptions[this.value].forEach(b => { const o=document.createElement('option'); o.value=b; o.textContent=b; bs.appendChild(o); });
+      } else { bc.classList.add('d-none'); }
+    });
+
+    document.getElementById('role').addEventListener('change', function() {
+      document.getElementById('studentFields').classList.toggle('d-none', this.value!=='student');
+      document.getElementById('facultyFields').classList.toggle('d-none', this.value!=='faculty');
+    });
+
+    /* ─── Send Code ─── */
+    async function sendCode(autoAdvance = true) {
+      const email = document.getElementById('email').value.trim();
+      if (!email || !email.includes('@')) { showAlert('Please enter a valid email first.'); return; }
+      emailVerified = false;
+      document.getElementById('verifiedBadge').classList.add('d-none');
+      document.getElementById('step1VerifiedBadge').classList.add('d-none');
+      document.getElementById('verification_code').value = '';
+      document.getElementById('step1_code').value = '';
+
+      const btn = document.getElementById('sendCodeBtn');
+      btn.disabled = true; btn.textContent = '...';
+
+      const res = await ApiClient.post('/auth/send-code', { email, purpose: 'register' });
+      if (res.ok) {
+        codeSent = true;
+        showAlert('Verification code sent to your email!', 'success');
+        document.getElementById('resendBtn').disabled = false;
+        document.getElementById('step1CodeGroup').classList.remove('d-none');
+        document.getElementById('emailHintText').textContent = `Enter the 6-digit code sent to ${email}`;
+        if (autoAdvance) {
+          goToStep(2);
         }
-        makeToggle('togglePwdBtn',        'togglePwdIcon',        'password');
-        makeToggle('toggleConfirmPwdBtn', 'toggleConfirmPwdIcon', 'confirm_password');
-        // ── Live confirm-password match feedback ───────────────────────────────
-        function checkPasswordMatch() {
-            const pwd     = document.getElementById('password').value;
-            const confirm = document.getElementById('confirm_password').value;
-            const msgEl   = document.getElementById('pwdMatchMsg');
-            const confInp = document.getElementById('confirm_password');
-            if (!confirm) {
-                // Nothing typed yet — reset silently
-                msgEl.className = 'form-text d-none';
-                confInp.classList.remove('is-valid', 'is-invalid');
-                return;
-            }
-            if (pwd === confirm) {
-                msgEl.textContent = '✅ Passwords match!';
-                msgEl.className = 'form-text text-success fw-semibold';
-                confInp.classList.replace('is-invalid', 'is-valid');
-                confInp.classList.add('is-valid');
-            } else {
-                msgEl.textContent = '❌ Passwords do not match.';
-                msgEl.className = 'form-text text-danger fw-semibold';
-                confInp.classList.replace('is-valid', 'is-invalid');
-                confInp.classList.add('is-invalid');
-            }
-        }
-        document.getElementById('password').addEventListener('input', checkPasswordMatch);
-        document.getElementById('confirm_password').addEventListener('input', checkPasswordMatch);
+      } else {
+        showAlert(res.data.message || 'Failed to send code.');
+      }
+      btn.disabled = false; btn.textContent = 'Resend';
+    }
+    document.getElementById('sendCodeBtn').addEventListener('click', () => sendCode(true));
+    document.getElementById('resendBtn').addEventListener('click', () => sendCode(false));
+
+    /* ─── Verify Code Handler ─── */
+    async function performVerification(codeVal, btnEl) {
+      const email = document.getElementById('email').value.trim();
+      const code  = codeVal.trim();
+      if (!code || code.length < 6) { showAlert('Please enter the 6-digit verification code.'); return; }
+      if (btnEl) { btnEl.disabled = true; btnEl.textContent = 'Verifying...'; }
+      const res = await ApiClient.post('/auth/verify-code', { email, code, purpose: 'register' });
+      if (res.ok && res.data.verified) {
+        emailVerified = true;
+        document.getElementById('verifiedBadge').classList.remove('d-none');
+        document.getElementById('step1VerifiedBadge').classList.remove('d-none');
+        document.getElementById('verifyHint').classList.add('d-none');
+        showAlert('✅ Email verified! Click Next to continue.', 'success');
         
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const alertEl = document.getElementById('alertMsg');
-            alertEl.className = 'alert d-none';
+        const mainVerifyBtn = document.getElementById('verifyCodeBtn');
+        mainVerifyBtn.textContent = '✓ Verified'; mainVerifyBtn.style.background = '#059669'; mainVerifyBtn.disabled = true;
+        const s1VerifyBtn = document.getElementById('step1VerifyBtn');
+        s1VerifyBtn.textContent = '✓ Verified'; s1VerifyBtn.style.background = '#059669'; s1VerifyBtn.disabled = true;
+      } else {
+        emailVerified = false;
+        showAlert(res.data?.message || 'Invalid or expired code.');
+        if (btnEl) { btnEl.textContent = 'Verify Email'; btnEl.disabled = false; }
+      }
+    }
 
-            // ── Password match guard ───────────────────────────────────────────
-            const pwd     = document.getElementById('password').value;
-            const confirm = document.getElementById('confirm_password').value;
-            if (!confirm) {
-                alertEl.textContent = 'Please confirm your password.';
-                alertEl.className = 'alert alert-danger';
-                document.getElementById('confirm_password').focus();
-                return;
-            }
-            if (pwd !== confirm) {
-                alertEl.textContent = 'Passwords do not match. Please re-enter them.';
-                alertEl.className = 'alert alert-danger';
-                document.getElementById('confirm_password').classList.add('is-invalid');
-                document.getElementById('confirm_password').focus();
-                return;
-            }
+    document.getElementById('verifyCodeBtn').addEventListener('click', function() {
+      performVerification(document.getElementById('verification_code').value, this);
+    });
 
-            const role = document.getElementById('role').value;
-            if (!role) {
-                alertEl.textContent = 'Please select your role.';
-                alertEl.className = 'alert alert-danger';
-                return;
-            }
+    document.getElementById('step1VerifyBtn').addEventListener('click', function() {
+      performVerification(document.getElementById('step1_code').value, this);
+    });
 
-            const verificationCode = document.getElementById('verification_code').value.trim();
-            if (!verificationCode) {
-                alertEl.textContent = 'Please enter the verification code sent to your email.';
-                alertEl.className = 'alert alert-danger';
-                return;
-            }
-            
-            if (!emailVerified) {
-                alertEl.textContent = 'Please verify your email first by clicking the "Verify Email" button.';
-                alertEl.className = 'alert alert-warning';
-                document.getElementById('verifyCodeBtn').classList.add('btn-pulse');
-                setTimeout(() => document.getElementById('verifyCodeBtn').classList.remove('btn-pulse'), 1500);
-                return;
-            }
-            const btn = document.getElementById('registerBtn');
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating Account...';
+    // Sync input fields between Step 1 and Step 2
+    document.getElementById('step1_code').addEventListener('input', function() {
+      document.getElementById('verification_code').value = this.value;
+      resetVerifyState();
+    });
 
-            const payload = {
-                email:             document.getElementById('email').value.trim().toLowerCase(),
-                password:          document.getElementById('password').value,
-                verification_code: verificationCode,
-                role:              role,
-                full_name:         document.getElementById('full_name').value.trim(),
-                // Student specific
-                class_name:      role === 'student' ? document.getElementById('class_name').value.trim() : '',
-                roll_number:     role === 'student' ? document.getElementById('roll_number').value.trim() : '',
-                course_category: role === 'student' ? document.getElementById('course_category').value : '',
-                course_name:     role === 'student' ? document.getElementById('course_name').value : '',
-                year_of_study:   role === 'student' ? document.getElementById('year_of_study').value : '',
-                branch:          role === 'student' ? document.getElementById('branch').value : '',
-                // Faculty specific
-                department:      role === 'faculty' ? document.getElementById('department').value.trim() : ''
-            };
+    document.getElementById('verification_code').addEventListener('input', function() {
+      document.getElementById('step1_code').value = this.value;
+      resetVerifyState();
+    });
 
-            const res = await ApiClient.post('/register', payload);
+    function resetVerifyState() {
+      if (emailVerified) {
+        emailVerified = false;
+        document.getElementById('verifiedBadge').classList.add('d-none');
+        document.getElementById('step1VerifiedBadge').classList.add('d-none');
+        document.getElementById('verifyHint').classList.remove('d-none');
+        const btn1 = document.getElementById('verifyCodeBtn');
+        btn1.textContent = 'Verify Email'; btn1.style.background = ''; btn1.disabled = false;
+        const btn2 = document.getElementById('step1VerifyBtn');
+        btn2.textContent = 'Verify'; btn2.style.background = ''; btn2.disabled = false;
+      }
+    }
 
-            if (res.ok) {
-                alertEl.textContent = res.data.message + ' Redirecting to login…';
-                alertEl.className = 'alert alert-success';
-                setTimeout(() => { window.location.href = 'login.html'; }, 1800);
-            } else {
-                alertEl.textContent = res.data.message || 'Registration failed. Please try again.';
-                alertEl.className = 'alert alert-danger';
-                btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-person-check me-2"></i>Create Account';
-            }
-        });
-    </script>
+    /* ─── Password Toggles ─── */
+    function makeToggle(btnId, iconId, inputId) {
+      document.getElementById(btnId).addEventListener('click', function() {
+        const inp = document.getElementById(inputId);
+        const icon = document.getElementById(iconId);
+        if (inp.type==='password') { inp.type='text'; icon.classList.replace('bi-eye','bi-eye-slash'); }
+        else { inp.type='password'; icon.classList.replace('bi-eye-slash','bi-eye'); }
+      });
+    }
+    makeToggle('togglePwdBtn','togglePwdIcon','password');
+    makeToggle('toggleConfirmPwdBtn','toggleConfirmPwdIcon','confirm_password');
+
+    /* ─── Password Match ─── */
+    function checkPasswordMatch() {
+      const pwd = document.getElementById('password').value;
+      const cfm = document.getElementById('confirm_password').value;
+      const msg = document.getElementById('pwdMatchMsg');
+      if (!cfm) { msg.className='form-text d-none'; return; }
+      if (pwd === cfm) {
+        msg.textContent = '✅ Passwords match!';
+        msg.className = 'form-text text-success fw-semibold';
+      } else {
+        msg.textContent = '❌ Passwords do not match.';
+        msg.className = 'form-text text-danger fw-semibold';
+      }
+    }
+    document.getElementById('password').addEventListener('input', checkPasswordMatch);
+    document.getElementById('confirm_password').addEventListener('input', checkPasswordMatch);
+
+    /* ─── Submit ─── */
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const pwd = document.getElementById('password').value;
+      const cfm = document.getElementById('confirm_password').value;
+      if (!cfm || pwd !== cfm) { showAlert('Passwords do not match.'); return; }
+      if (!emailVerified) { showAlert('Please verify your email first.', 'warning'); goToStep(2); return; }
+
+      const role  = document.getElementById('role').value;
+      const code  = document.getElementById('verification_code').value.trim();
+
+      const btn = document.getElementById('registerBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating Account...';
+
+      const payload = {
+        email:             document.getElementById('email').value.trim().toLowerCase(),
+        password:          pwd,
+        verification_code: code,
+        role,
+        full_name:         document.getElementById('full_name').value.trim(),
+        class_name:      role==='student' ? document.getElementById('class_name').value.trim() : '',
+        roll_number:     role==='student' ? document.getElementById('roll_number').value.trim() : '',
+        course_category: role==='student' ? document.getElementById('course_category').value : '',
+        course_name:     role==='student' ? document.getElementById('course_name').value : '',
+        year_of_study:   role==='student' ? document.getElementById('year_of_study').value : '',
+        branch:          role==='student' ? document.getElementById('branch').value : '',
+        department:      role==='faculty' ? document.getElementById('department').value : ''
+      };
+
+      const res = await ApiClient.post('/register', payload);
+      if (res.ok) {
+        showAlert(res.data.message + ' Redirecting to login…', 'success');
+        setTimeout(() => window.location.href = 'login.html', 1800);
+      } else {
+        showAlert(res.data.message || 'Registration failed. Please try again.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-person-check me-1"></i> Create Account';
+      }
+    });
+  </script>
 </body>
-
 </html>
