@@ -348,11 +348,15 @@ def admin_manage_user_by_id(current_user, user_id):
     if request.method == 'DELETE':
         if user['role'] == 'admin':
             conn.close()
-            return jsonify({'message': 'Admins cannot delete other administrators'}), 403
-        conn.execute("UPDATE users SET is_active = 0 WHERE id = %s", (user_id,))
-        conn.commit()
+            return jsonify({'message': 'Admins cannot delete other administrators'}), 400
+        try:
+            conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+            conn.commit()
+        except Exception:
+            conn.execute("UPDATE users SET is_active = 0 WHERE id = ?", (user_id,))
+            conn.commit()
         conn.close()
-        return jsonify({'message': 'User has been deactivated (soft-deleted)'})
+        return jsonify({'message': 'User deleted successfully'})
 
     elif request.method == 'PUT':
         data = request.json
@@ -567,13 +571,13 @@ def faculty_exams(current_user):
 @app.route('/api/faculty/exams/<int:exam_id>', methods=['GET'])
 @token_required
 def get_exam_details(current_user, exam_id):
-    if current_user['role'] != 'faculty':
+    if current_user['role'] not in ['faculty', 'admin']:
         return jsonify({'message': 'Unauthorized'}), 403
     conn = get_db_connection()
-    exam = conn.execute(
-        "SELECT * FROM exams WHERE id = %s AND faculty_id = %s",
-        (exam_id, current_user['id'])
-    ).fetchone()
+    if current_user['role'] == 'admin':
+        exam = conn.execute("SELECT * FROM exams WHERE id = %s", (exam_id,)).fetchone()
+    else:
+        exam = conn.execute("SELECT * FROM exams WHERE id = %s AND faculty_id = %s", (exam_id, current_user['id'])).fetchone()
     if not exam:
         conn.close()
         return jsonify({'message': 'Exam not found'}), 404
@@ -589,31 +593,27 @@ def get_exam_details(current_user, exam_id):
 @app.route('/api/faculty/exams/<int:exam_id>/publish', methods=['POST'])
 @token_required
 def publish_exam(current_user, exam_id):
-    if current_user['role'] != 'faculty':
+    if current_user['role'] not in ['faculty', 'admin']:
         return jsonify({'message': 'Unauthorized'}), 403
     conn = get_db_connection()
-    conn.execute(
-        "UPDATE exams SET is_published = 1 WHERE id = %s AND faculty_id = %s",
-        (exam_id, current_user['id'])
-    )
+    if current_user['role'] == 'admin':
+        conn.execute("UPDATE exams SET is_published = 1 WHERE id = %s", (exam_id,))
+    else:
+        conn.execute("UPDATE exams SET is_published = 1 WHERE id = %s AND faculty_id = %s", (exam_id, current_user['id']))
     conn.commit()
     conn.close()
     return jsonify({'message': 'Exam Published!'})
 
-@app.route('/api/faculty/exams/<int:exam_id>', methods=['DELETE'])
+@app.route('/api/admin/exams/<int:exam_id>', methods=['DELETE'])
 @token_required
-def delete_exam(current_user, exam_id):
-    if current_user['role'] != 'faculty':
+def admin_delete_exam(current_user, exam_id):
+    if current_user['role'] != 'admin':
         return jsonify({'message': 'Unauthorized'}), 403
     conn = get_db_connection()
-    exam = conn.execute(
-        "SELECT * FROM exams WHERE id = %s AND faculty_id = %s",
-        (exam_id, current_user['id'])
-    ).fetchone()
+    exam = conn.execute("SELECT * FROM exams WHERE id = %s", (exam_id,)).fetchone()
     if not exam:
         conn.close()
-        return jsonify({'message': 'Exam not found or unauthorized'}), 404
-
+        return jsonify({'message': 'Exam not found'}), 404
     try:
         conn.execute("DELETE FROM proctoring_logs WHERE attempt_id IN (SELECT id FROM exam_attempts WHERE exam_id = %s)", (exam_id,))
         conn.execute("DELETE FROM attempt_answers WHERE attempt_id IN (SELECT id FROM exam_attempts WHERE exam_id = %s)", (exam_id,))
@@ -624,7 +624,32 @@ def delete_exam(current_user, exam_id):
     except Exception as e:
         conn.close()
         return jsonify({'message': f'Error deleting exam: {str(e)}'}), 500
+    conn.close()
+    return jsonify({'message': 'Exam deleted successfully'})
 
+@app.route('/api/faculty/exams/<int:exam_id>', methods=['DELETE'])
+@token_required
+def faculty_delete_exam(current_user, exam_id):
+    if current_user['role'] not in ['faculty', 'admin']:
+        return jsonify({'message': 'Unauthorized'}), 403
+    conn = get_db_connection()
+    if current_user['role'] == 'admin':
+        exam = conn.execute("SELECT * FROM exams WHERE id = %s", (exam_id,)).fetchone()
+    else:
+        exam = conn.execute("SELECT * FROM exams WHERE id = %s AND faculty_id = %s", (exam_id, current_user['id'])).fetchone()
+    if not exam:
+        conn.close()
+        return jsonify({'message': 'Exam not found or unauthorized'}), 404
+    try:
+        conn.execute("DELETE FROM proctoring_logs WHERE attempt_id IN (SELECT id FROM exam_attempts WHERE exam_id = %s)", (exam_id,))
+        conn.execute("DELETE FROM attempt_answers WHERE attempt_id IN (SELECT id FROM exam_attempts WHERE exam_id = %s)", (exam_id,))
+        conn.execute("DELETE FROM exam_attempts WHERE exam_id = %s", (exam_id,))
+        conn.execute("DELETE FROM questions WHERE exam_id = %s", (exam_id,))
+        conn.execute("DELETE FROM exams WHERE id = %s", (exam_id,))
+        conn.commit()
+    except Exception as e:
+        conn.close()
+        return jsonify({'message': f'Error deleting exam: {str(e)}'}), 500
     conn.close()
     return jsonify({'message': 'Exam deleted successfully'})
 
@@ -1423,13 +1448,13 @@ def upload_storage_file(current_user):
 @app.route('/api/faculty/storage/files/<int:file_id>', methods=['DELETE'])
 @token_required
 def delete_storage_file(current_user, file_id):
-    if current_user['role'] != 'faculty':
+    if current_user['role'] not in ['faculty', 'admin']:
         return jsonify({'message': 'Unauthorized'}), 403
     conn = get_db_connection()
-    file_record = conn.execute(
-        "SELECT * FROM faculty_files WHERE id = %s AND faculty_id = %s",
-        (file_id, current_user['id'])
-    ).fetchone()
+    if current_user['role'] == 'admin':
+        file_record = conn.execute("SELECT * FROM faculty_files WHERE id = %s", (file_id,)).fetchone()
+    else:
+        file_record = conn.execute("SELECT * FROM faculty_files WHERE id = %s AND faculty_id = %s", (file_id, current_user['id'])).fetchone()
     if not file_record:
         conn.close()
         return jsonify({'message': 'File not found or unauthorized'}), 404
