@@ -1,78 +1,476 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <title>Admin Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Admin Dashboard - Agentic AI Exam System">
+  <title>Admin Dashboard - Agentic AI Exam System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/style.css">
 </head>
+<body>
+<div class="dashboard-root">
 
-<body class="bg-light">
-    <!-- Base Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="index.html">Agentic Exam System</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0" id="user-nav"></ul>
-            </div>
-        </div>
-    </nav>
-    <div class="container mt-4">
-        <h2 class="mb-4">Admin Dashboard</h2>
-        <div class="row">
-            <div class="col-md-4">
-                <div class="card bg-white shadow-sm border-0 mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">Manage Users</h5>
-                        <p class="card-text text-muted">Create Faculty and Student accounts.</p>
-                        <a href="manage_users.html" class="btn btn-outline-primary w-100">Go to Users</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card bg-white shadow-sm border-0 mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">Monitor Exams</h5>
-                        <p class="card-text text-muted">View live proctoring logs and violations.</p>
-                        <a href="monitor_exams.html" class="btn btn-outline-warning w-100">Monitor</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card bg-white shadow-sm border-0 mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">All Exams</h5>
-                        <p class="card-text text-muted">View and manage all exams in the system.</p>
-                        <a href="admin_exams.html" class="btn btn-outline-success w-100">View Exams</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card bg-white shadow-sm border-0 mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">All Results</h5>
-                        <p class="card-text text-muted">Check scores and status for all students.</p>
-                        <a href="admin_results.html" class="btn btn-outline-info w-100">View Results</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card bg-white shadow-sm border-0 mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">Faculty Files</h5>
-                        <p class="card-text text-muted">Browse all syllabus and uploaded files.</p>
-                        <a href="admin_files.html" class="btn btn-outline-secondary w-100">View Files</a>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar sidebar-admin">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon"><i class="bi bi-mortarboard-fill"></i></div>
+      <div>
+        <div class="sidebar-logo-text">Agentic AI</div>
+        <div class="sidebar-logo-sub">Exam System</div>
+      </div>
     </div>
+    <nav class="sidebar-nav">
+      <a href="admin_dashboard.html" class="nav-item-s active" id="nav-dashboard">
+        <span class="nav-icon"><i class="bi bi-grid-1x2-fill"></i></span> Dashboard
+      </a>
+      <a href="manage_users.html" class="nav-item-s" id="nav-users">
+        <span class="nav-icon"><i class="bi bi-people-fill"></i></span> Users
+      </a>
+      <a href="admin_exams.html" class="nav-item-s" id="nav-exams">
+        <span class="nav-icon"><i class="bi bi-journal-check"></i></span> Exams
+      </a>
+      <a href="monitor_exams.html" class="nav-item-s" id="nav-monitor">
+        <span class="nav-icon"><i class="bi bi-activity"></i></span> Monitoring
+        <span class="nav-badge">Live</span>
+      </a>
+      <a href="admin_results.html" class="nav-item-s" id="nav-reports">
+        <span class="nav-icon"><i class="bi bi-bar-chart-line-fill"></i></span> Reports
+      </a>
+      <a href="admin_files.html" class="nav-item-s" id="nav-files">
+        <span class="nav-icon"><i class="bi bi-folder-fill"></i></span> Faculty Files
+      </a>
+      <a href="landing.html" class="nav-item-s">
+        <span class="nav-icon"><i class="bi bi-house-door-fill"></i></span> Back to Home
+      </a>
+      <div class="sidebar-divider"></div>
+      <button class="nav-item-s" onclick="doLogout()" style="color:rgba(200,255,220,.8)">
+        <span class="nav-icon"><i class="bi bi-box-arrow-right"></i></span> Logout
+      </button>
+    </nav>
+  </aside>
 
-    <script src="js/api.js"></script>
-    <script>
-        ApiClient.checkAuth(['admin']);
-        ApiClient.setupNav();
-    </script>
+  <!-- ===== MAIN ===== -->
+  <div class="main-content">
+
+    <!-- Top Header -->
+    <header class="top-header" style="position:relative;">
+      <div class="header-greeting">
+        <h5 id="welcomeMsg">Welcome, Admin! ⚙️</h5>
+        <span>System overview and management</span>
+      </div>
+      <div class="header-actions">
+        <!-- Notification Bell -->
+        <div style="position:relative;">
+          <button class="notif-btn" id="notifBtn" onclick="toggleNotif(event)" title="Notifications">
+            <i class="bi bi-bell-fill"></i>
+            <span class="notif-badge" id="notifBadge">4</span>
+          </button>
+        </div>
+        <!-- Profile Avatar (top-right only) -->
+        <div style="position:relative;">
+          <button class="profile-btn" id="profileBtn" onclick="toggleProfile(event)">
+            <div class="profile-avatar" id="profileAvatar" style="background:linear-gradient(135deg,#059669,#10b981)">A</div>
+            <span class="profile-name" id="profileName">Admin</span>
+            <i class="bi bi-chevron-down" style="font-size:10px;color:#94a3b8;margin-left:2px;"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Notification Dropdown -->
+      <div class="notif-dropdown" id="notifDropdown">
+        <div class="notif-header">
+          <h6><i class="bi bi-bell-fill me-1" style="color:#059669"></i> Notifications</h6>
+          <a href="#" onclick="clearNotifs(event)">Mark all read</a>
+        </div>
+        <div id="notifList">
+          <div class="notif-item">
+            <div class="notif-dot green"></div>
+            <div>
+              <div class="notif-text">New user registered: <strong>Prasanna (Student)</strong></div>
+              <div class="notif-time">2 minutes ago</div>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-dot orange"></div>
+            <div>
+              <div class="notif-text">Exam <strong>DBMS</strong> published by Dr. Manasa</div>
+              <div class="notif-time">15 minutes ago</div>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-dot green"></div>
+            <div>
+              <div class="notif-text">System backup completed successfully</div>
+              <div class="notif-time">1 hour ago</div>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-dot red"></div>
+            <div>
+              <div class="notif-text">Proctoring violation detected in <strong>OS Exam</strong></div>
+              <div class="notif-time">2 hours ago</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Dropdown -->
+      <div class="profile-dropdown" id="profileDropdown">
+        <div class="profile-dd-header">
+          <div class="profile-dd-avatar" id="profileDdAvatar" style="background:linear-gradient(135deg,#059669,#10b981)">A</div>
+          <div class="profile-dd-name" id="profileDdName">Admin</div>
+          <div class="profile-dd-role">Administrator</div>
+        </div>
+        <a href="profile.html" class="profile-dd-item"><i class="bi bi-person-fill me-2" style="color:#059669"></i> My Profile</a>
+        <a href="manage_users.html" class="profile-dd-item"><i class="bi bi-people me-2 text-primary"></i> Manage Users</a>
+        <div class="profile-dd-divider"></div>
+        <button class="profile-dd-item danger" onclick="doLogout()"><i class="bi bi-box-arrow-right me-2"></i> Logout</button>
+      </div>
+    </header>
+
+    <!-- Page Body -->
+    <div class="page-body">
+
+      <!-- Stats Row -->
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon blue"><i class="bi bi-people-fill"></i></div>
+            <div>
+              <div class="stat-value" id="statUsers">—</div>
+              <div class="stat-label">Total Users</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon green"><i class="bi bi-journal-check"></i></div>
+            <div>
+              <div class="stat-value" id="statExams">—</div>
+              <div class="stat-label">Total Exams</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon purple"><i class="bi bi-graph-up-arrow"></i></div>
+            <div>
+              <div class="stat-value" id="statAttempts">—</div>
+              <div class="stat-label">Total Attempts</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon orange"><i class="bi bi-trophy-fill"></i></div>
+            <div>
+              <div class="stat-value" id="statPerf">—</div>
+              <div class="stat-label">Overall Performance</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Access -->
+      <div class="section-card mb-4">
+        <div class="section-card-header">
+          <h6><i class="bi bi-lightning-charge-fill me-2 text-warning"></i>Quick Access</h6>
+        </div>
+        <div class="section-card-body">
+          <div class="row g-3">
+            <div class="col-6 col-md-3">
+              <a href="manage_users.html" class="quick-card">
+                <div class="quick-card-icon" style="background:#eff6ff;color:#3b82f6"><i class="bi bi-person-plus-fill"></i></div>
+                <div class="quick-card-label">Manage Users</div>
+              </a>
+            </div>
+            <div class="col-6 col-md-3">
+              <a href="admin_exams.html" class="quick-card">
+                <div class="quick-card-icon" style="background:#f0fdf4;color:#22c55e"><i class="bi bi-journal-check"></i></div>
+                <div class="quick-card-label">All Exams</div>
+              </a>
+            </div>
+            <div class="col-6 col-md-3">
+              <a href="admin_results.html" class="quick-card">
+                <div class="quick-card-icon" style="background:#faf5ff;color:#a855f7"><i class="bi bi-bar-chart-line-fill"></i></div>
+                <div class="quick-card-label">View Reports</div>
+              </a>
+            </div>
+            <div class="col-6 col-md-3">
+              <a href="monitor_exams.html" class="quick-card">
+                <div class="quick-card-icon" style="background:#fef2f2;color:#ef4444"><i class="bi bi-activity"></i></div>
+                <div class="quick-card-label">Live Monitor</div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 mb-4">
+        <!-- Recent Exam Results -->
+        <div class="col-lg-8">
+          <div class="section-card">
+            <div class="section-card-header">
+              <h6><i class="bi bi-table me-2 text-primary"></i>Recent Exam Results</h6>
+              <a href="admin_results.html" class="view-all-link">View All →</a>
+            </div>
+            <div class="table-responsive">
+              <table class="dash-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Student</th>
+                    <th>Exam</th>
+                    <th>Score</th>
+                    <th>Status</th>
+                    <th>Submitted</th>
+                  </tr>
+                </thead>
+                <tbody id="recentResultsTable">
+                  <tr><td colspan="6" class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>Loading...
+                  </td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activities -->
+        <div class="col-lg-4">
+          <div class="section-card h-100">
+            <div class="section-card-header">
+              <h6><i class="bi bi-clock-history me-2 text-secondary"></i>Recent Activities</h6>
+            </div>
+            <div class="section-card-body" id="activityFeed">
+              <div class="text-center py-3 text-muted">
+                <div class="spinner-border spinner-border-sm" role="status"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users Overview -->
+      <div class="section-card mb-4">
+        <div class="section-card-header">
+          <h6><i class="bi bi-people-fill me-2 text-primary"></i>Users Overview</h6>
+          <a href="manage_users.html" class="btn btn-sm btn-outline-primary px-3 py-1" style="font-size:12px">Manage All</a>
+        </div>
+        <div class="table-responsive">
+          <table class="dash-table">
+            <thead>
+              <tr><th>ID</th><th>Full Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="usersTable">
+              <tr><td colspan="6" class="text-center py-4 text-muted">
+                <div class="spinner-border spinner-border-sm me-2" role="status"></div>Loading...
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /page-body -->
+  </div><!-- /main-content -->
+</div><!-- /dashboard-root -->
+
+<!-- Need Help FAB (admin green) -->
+<button class="help-fab help-fab-admin" id="helpFab" onclick="openHelp()">
+  <i class="bi bi-headset"></i> Need Help?
+</button>
+
+<!-- Help Modal -->
+<div class="help-modal-overlay" id="helpOverlay" onclick="closeHelpOnBg(event)">
+  <div class="help-modal">
+    <div class="help-modal-header admin-header">
+      <h6><i class="bi bi-headset me-2"></i>Admin Help &amp; Support</h6>
+      <button class="help-modal-close" onclick="closeHelp()"><i class="bi bi-x"></i></button>
+    </div>
+    <div class="help-modal-body">
+      <div class="help-item">
+        <div class="help-item-icon admin"><i class="bi bi-person-plus-fill"></i></div>
+        <div>
+          <div class="help-item-title">Managing Users</div>
+          <div class="help-item-desc">Go to "Manage Users" to create, activate, or deactivate faculty and student accounts.</div>
+        </div>
+      </div>
+      <div class="help-item">
+        <div class="help-item-icon admin"><i class="bi bi-activity"></i></div>
+        <div>
+          <div class="help-item-title">Live Monitoring</div>
+          <div class="help-item-desc">Use "Monitoring" in the sidebar to view real-time proctoring logs and detect violations.</div>
+        </div>
+      </div>
+      <div class="help-item">
+        <div class="help-item-icon admin"><i class="bi bi-bar-chart-line-fill"></i></div>
+        <div>
+          <div class="help-item-title">System Reports</div>
+          <div class="help-item-desc">Access "Reports" to view all student results, filter by exam or faculty, and export data.</div>
+        </div>
+      </div>
+      <div class="help-item">
+        <div class="help-item-icon admin"><i class="bi bi-envelope-fill"></i></div>
+        <div>
+          <div class="help-item-title">Technical Support</div>
+          <div class="help-item-desc">Contact the dev team at <strong>admin@agenticexam.edu</strong> for system-level issues.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/api.js"></script>
+<script>
+  ApiClient.checkAuth(['admin']);
+
+  // ── Header info ──
+  const username = localStorage.getItem('username') || 'Admin';
+  const fullName = localStorage.getItem('full_name') || username;
+  const initial  = (fullName.charAt(0) || 'A').toUpperCase();
+  document.getElementById('welcomeMsg').textContent    = `Welcome, ${fullName}! ⚙️`;
+  document.getElementById('profileName').textContent   = fullName;
+  document.getElementById('profileAvatar').textContent = initial;
+  document.getElementById('profileDdName').textContent = fullName;
+  document.getElementById('profileDdAvatar').textContent = initial;
+
+  // ── Dropdowns ──
+  function toggleNotif(e) {
+    e.stopPropagation();
+    document.getElementById('profileDropdown').classList.remove('open');
+    document.getElementById('notifDropdown').classList.toggle('open');
+  }
+  function toggleProfile(e) {
+    e.stopPropagation();
+    document.getElementById('notifDropdown').classList.remove('open');
+    document.getElementById('profileDropdown').classList.toggle('open');
+  }
+  document.addEventListener('click', () => {
+    document.getElementById('notifDropdown').classList.remove('open');
+    document.getElementById('profileDropdown').classList.remove('open');
+  });
+  function clearNotifs(e) {
+    e.preventDefault();
+    document.getElementById('notifList').innerHTML = '<div class="notif-empty"><i class="bi bi-check-all fs-4 d-block mb-1 text-success"></i>All caught up!</div>';
+    document.getElementById('notifBadge').style.display = 'none';
+  }
+
+  // ── Help ──
+  function openHelp()  { document.getElementById('helpOverlay').classList.add('open'); }
+  function closeHelp() { document.getElementById('helpOverlay').classList.remove('open'); }
+  function closeHelpOnBg(e) { if (e.target === document.getElementById('helpOverlay')) closeHelp(); }
+
+  // ── Logout ──
+  function doLogout() { ApiClient.clearTokens(); window.location.href = 'login.html'; }
+
+  // ── Load Users ──
+  async function loadUsers() {
+    const res = await ApiClient.get('/admin/users');
+    if (!res.ok) return;
+    const users = Array.isArray(res.data) ? res.data : (res.data.users || []);
+    document.getElementById('statUsers').textContent = users.length;
+
+    const tbody = document.getElementById('usersTable');
+    if (users.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No users found.</td></tr>`;
+      return;
+    }
+    // Show max 10 rows on dashboard
+    tbody.innerHTML = users.slice(0,10).map(u => `
+      <tr>
+        <td>${u.id}</td>
+        <td class="fw-semibold">${u.full_name || '—'}</td>
+        <td style="font-size:12px">${u.username}</td>
+        <td><span class="badge-${u.role==='admin'?'eval':u.role==='faculty'?'sub':'pub'}">${u.role}</span></td>
+        <td>${u.is_active ? '<span class="badge-pub">Active</span>' : '<span class="badge-draft">Inactive</span>'}</td>
+        <td>
+          <a href="manage_users.html" class="btn btn-sm btn-outline-primary py-1 px-2" style="font-size:11px">Manage</a>
+        </td>
+      </tr>`).join('');
+  }
+
+  // ── Load Results ──
+  async function loadResults() {
+    // Use /admin/attempts to get all attempts system-wide
+    const res = await ApiClient.get('/admin/attempts');
+    if (!res.ok) {
+      // fallback to faculty/results
+      const r2 = await ApiClient.get('/faculty/results');
+      if (!r2.ok) return;
+      renderResults(r2.data);
+      return;
+    }
+    // Map attempts data to result format
+    const attempts = Array.isArray(res.data) ? res.data : [];
+    renderResults(attempts);
+  }
+
+  function renderResults(data) {
+    const arr = Array.isArray(data) ? data : [];
+    document.getElementById('statAttempts').textContent = arr.length;
+    const scores = arr.filter(r=>r.score!=null).map(r=>parseFloat(r.score));
+    const avg    = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length)+'%' : 'N/A';
+    document.getElementById('statPerf').textContent = avg;
+    data = arr;
+
+    const tbody = document.getElementById('recentResultsTable');
+    if (data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No results yet.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.slice(0,8).map(r => `
+      <tr>
+        <td>#${r.id}</td>
+        <td class="fw-semibold">${r.student_name}</td>
+        <td>${r.exam_title}</td>
+        <td><span class="fw-bold" style="color:${r.score>=50?'#059669':'#dc2626'}">${r.score}%</span></td>
+        <td>${r.violation_count > 0
+          ? '<span class="badge-draft">⚠ Violation</span>'
+          : '<span class="badge-pub">✓ Clean</span>'}</td>
+        <td style="font-size:11px">${ApiClient.formatDateTime(r.end_time)}</td>
+      </tr>`).join('');
+  }
+
+  // ── Load Exams count ──
+  async function loadExamCount() {
+    const res = await ApiClient.get('/admin/exams');
+    if (!res.ok) {
+      const r2 = await ApiClient.get('/faculty/exams');
+      if (r2.ok) document.getElementById('statExams').textContent = (Array.isArray(r2.data)?r2.data:r2.data.exams||[]).length;
+      return;
+    }
+    const exams = Array.isArray(res.data) ? res.data : (res.data.exams || []);
+    document.getElementById('statExams').textContent = exams.length;
+  }
+
+  // ── Activity Feed ──
+  function renderActivityFeed() {
+    const activities = [
+      { dot:'green',  text:'New user <strong>Prasanna</strong> registered',          time:'2 mins ago'  },
+      { dot:'orange', text:'Exam <strong>DBMS</strong> published',                   time:'15 mins ago' },
+      { dot:'green',  text:'System backup completed',                                time:'1 hour ago'  },
+      { dot:'red',    text:'Proctoring violation in <strong>OS Exam</strong>',       time:'2 hours ago' },
+    ];
+    document.getElementById('activityFeed').innerHTML = activities.map(a => `
+      <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9;">
+        <div class="activity-dot ${a.dot}" style="margin-top:5px"></div>
+        <div>
+          <div style="font-size:12.5px;color:#374151">${a.text}</div>
+          <div style="font-size:10px;color:#94a3b8">${a.time}</div>
+        </div>
+      </div>`).join('') +
+      `<div style="padding-top:12px;text-align:center">
+        <a href="monitor_exams.html" style="font-size:12px;color:#059669;text-decoration:none;font-weight:600">View Live Monitor →</a>
+      </div>`;
+  }
+
+  loadUsers();
+  loadResults();
+  loadExamCount();
+  renderActivityFeed();
+</script>
 </body>
-
 </html>
