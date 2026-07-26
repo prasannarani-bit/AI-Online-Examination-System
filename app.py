@@ -337,44 +337,62 @@ def admin_manage_user_by_id(current_user, user_id):
         return jsonify({'message': 'Unauthorized'}), 403
 
     conn = get_db_connection()
+
     user = conn.execute(
-        "SELECT role FROM users WHERE id = %s", (user_id,)
+        "SELECT role FROM users WHERE id = %s",
+        (user_id,)
     ).fetchone()
 
     if not user:
         conn.close()
         return jsonify({'message': 'User not found'}), 404
 
+    # ==========================
+    # DELETE USER (SOFT DELETE)
+    # ==========================
     if request.method == 'DELETE':
-    if user['role'] == 'admin':
-        conn.close()
-        return jsonify({'message': 'Admins cannot delete other administrators'}), 400
 
-    try:
-        # Soft delete (deactivate user instead of removing)
-        conn.execute(
-            "UPDATE users SET is_active = %s WHERE id = %s",
-            (0, user_id)
-        )
+        if user['role'] == 'admin':
+            conn.close()
+            return jsonify({
+                'message': 'Admins cannot delete other administrators'
+            }), 400
 
-        conn.commit()
-        conn.close()
+        try:
+            # Instead of deleting the user, deactivate the account
+            conn.execute(
+                """
+                UPDATE users
+                SET is_active = %s
+                WHERE id = %s
+                """,
+                (0, user_id)
+            )
 
-        return jsonify({
-            'message': 'User deactivated successfully'
-        })
+            conn.commit()
+            conn.close()
 
-    except Exception as e:
-        conn.rollback()
-        conn.close()
+            return jsonify({
+                'message': 'User deactivated successfully'
+            }), 200
 
-        return jsonify({
-            'message': f'Error: {str(e)}'
-        }), 500
+        except Exception as e:
+            conn.rollback()
+            conn.close()
 
+            return jsonify({
+                'message': f'Error deactivating user: {str(e)}'
+            }), 500
+
+    # ==========================
+    # UPDATE USER
+    # ==========================
     elif request.method == 'PUT':
+
         data = request.json
+
         password_clause = ""
+
         params = [
             data.get('username'),
             data.get('full_name', ''),
@@ -396,20 +414,40 @@ def admin_manage_user_by_id(current_user, user_id):
         params.append(user_id)
 
         try:
+
             conn.execute(f"""
-                UPDATE users SET
-                    username = %s, full_name = %s, role = %s, department = %s,
-                    class_name = %s, roll_number = %s, course_category = %s,
-                    course_name = %s, year_of_study = %s, branch = %s, is_active = %s
+                UPDATE users
+                SET
+                    username=%s,
+                    full_name=%s,
+                    role=%s,
+                    department=%s,
+                    class_name=%s,
+                    roll_number=%s,
+                    course_category=%s,
+                    course_name=%s,
+                    year_of_study=%s,
+                    branch=%s,
+                    is_active=%s
                     {password_clause}
-                WHERE id = %s
+                WHERE id=%s
             """, tuple(params))
+
             conn.commit()
             conn.close()
-            return jsonify({'message': 'User updated successfully!'})
+
+            return jsonify({
+                'message': 'User updated successfully!'
+            })
+
         except Exception as e:
+
+            conn.rollback()
             conn.close()
-            return jsonify({'message': f'Error updating user: {str(e)}'}), 400
+
+            return jsonify({
+                'message': f'Error updating user: {str(e)}'
+            }), 400
 
 @app.route('/api/admin/exams', methods=['GET'])
 @token_required
