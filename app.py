@@ -346,17 +346,31 @@ def admin_manage_user_by_id(current_user, user_id):
         return jsonify({'message': 'User not found'}), 404
 
     if request.method == 'DELETE':
-        if user['role'] == 'admin':
-            conn.close()
-            return jsonify({'message': 'Admins cannot delete other administrators'}), 400
-        try:
-            conn.execute("DELETE FROM users WHERE id = %s", (user_id,))
-            conn.commit()
-        except Exception:
-            conn.execute("UPDATE users SET is_active = 0 WHERE id = %s", (user_id,))
-            conn.commit()
+    if user['role'] == 'admin':
         conn.close()
-        return jsonify({'message': 'User deleted successfully'})
+        return jsonify({'message': 'Admins cannot delete other administrators'}), 400
+
+    try:
+        # Soft delete (deactivate user instead of removing)
+        conn.execute(
+            "UPDATE users SET is_active = %s WHERE id = %s",
+            (0, user_id)
+        )
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'message': 'User deactivated successfully'
+        })
+
+    except Exception as e:
+        conn.rollback()
+        conn.close()
+
+        return jsonify({
+            'message': f'Error: {str(e)}'
+        }), 500
 
     elif request.method == 'PUT':
         data = request.json
