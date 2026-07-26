@@ -350,10 +350,10 @@ def admin_manage_user_by_id(current_user, user_id):
             conn.close()
             return jsonify({'message': 'Admins cannot delete other administrators'}), 400
         try:
-            conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+            conn.execute("DELETE FROM users WHERE id = %s", (user_id,))
             conn.commit()
         except Exception:
-            conn.execute("UPDATE users SET is_active = 0 WHERE id = ?", (user_id,))
+            conn.execute("UPDATE users SET is_active = 0 WHERE id = %s", (user_id,))
             conn.commit()
         conn.close()
         return jsonify({'message': 'User deleted successfully'})
