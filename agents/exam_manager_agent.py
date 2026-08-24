@@ -183,7 +183,7 @@ class ExamManagerAgent:
     def _call_groq(prompt, num_questions):
 
         MODELS_TO_TRY = [
-            "llama-3.1-8b-instant"
+            "openai/gpt-oss-20b"
         ]
 
         output = "No output"
